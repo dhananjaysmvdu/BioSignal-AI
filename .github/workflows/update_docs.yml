@@ -493,7 +493,45 @@ def format_audit_table(all_rows: list[dict]) -> str:
   return "\n".join(lines)
 
 audit_block = format_audit_table(rows_existing)
-base_cg = replace_block(base_cg, "<!-- AUDIT_TRAIL:BEGIN -->", "<!-- AUDIT_TRAIL:END -->", audit_block)
+def build_severity_chart(rows: list[dict]) -> str:
+  if not rows:
+    return "No incidents to visualize."
+  # Count severities
+  sev_colors = {"Low": "#10b981", "Medium": "#f59e0b", "High": "#ef4444"}
+  counts = {"Low":0,"Medium":0,"High":0}
+  for r in rows:
+    s = r.get('severity')
+    if s in counts:
+      counts[s] += 1
+  total = sum(counts.values())
+  if total == 0:
+    return "No incidents to visualize."
+  width, height = 180, 60
+  max_count = max(counts.values()) or 1
+  bar_width = 40
+  gap = 10
+  # positions: Low, Medium, High horizontally
+  order = ["Low","Medium","High"]
+  svg_parts = [f"<svg viewBox='0 0 {width} {height}' width='{width}' height='{height}' xmlns='http://www.w3.org/2000/svg'>"]
+  x_start = 10
+  for idx, sev in enumerate(order):
+    c = counts[sev]
+    h = int((c / max_count) * (height - 20))
+    x = x_start + idx * (bar_width + gap)
+    y = height - h - 10
+    svg_parts.append(f"<rect x='{x}' y='{y}' width='{bar_width}' height='{h}' fill='{sev_colors[sev]}' rx='3' />")
+    # label count above bar
+    svg_parts.append(f"<text x='{x + bar_width/2}' y='{y - 2}' font-size='10' text-anchor='middle' fill='#333'>{c}</text>")
+    # severity label below
+    svg_parts.append(f"<text x='{x + bar_width/2}' y='{height - 2}' font-size='9' text-anchor='middle' fill='#333'>{sev}</text>")
+  svg_parts.append("</svg>")
+  svg = "".join(svg_parts)
+  totals_line = f"Totals — High: {counts['High']}, Medium: {counts['Medium']}, Low: {counts['Low']} (Total: {total})"
+  return svg + "\n" + totals_line
+
+severity_svg = build_severity_chart(rows_existing)
+audit_block_full = audit_block + "\n\n" + severity_svg + f"\nLast update: {ts_now}"
+base_cg = replace_block(base_cg, "<!-- AUDIT_TRAIL:BEGIN -->", "<!-- AUDIT_TRAIL:END -->", audit_block_full)
 cg.write_text(base_cg, encoding='utf-8')
 
 # --- README.md ---
