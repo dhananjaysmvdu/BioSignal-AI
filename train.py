@@ -211,7 +211,7 @@ def main() -> None:
     mlflow_active = False
     if args.mlflow:
         try:
-            from src.logging_utils.mlflow_logger import init_mlflow, log_metrics as mlflow_log_metrics, log_artifacts as mlflow_log_artifacts, end_run as mlflow_end_run
+            from src.logging_utils.mlflow_logger import init_mlflow, log_metrics as mlflow_log_metrics, log_artifacts as mlflow_log_artifacts, end_run as mlflow_end_run, set_tags as mlflow_set_tags
             mlflow_active = init_mlflow(
                 run_name=f"train-{datetime.utcnow().strftime('%Y%m%d-%H%M%S')}",
                 params={
@@ -384,12 +384,12 @@ def main() -> None:
         if mlflow_active:
             try:
                 mlflow_log_metrics({
-                    "auc": float(auc) if not isinstance(auc, float) or not math.isnan(auc) else auc,
-                    "sensitivity": float(sens) if not isinstance(sens, float) or not math.isnan(sens) else sens,
-                    "specificity": float(spec) if not isinstance(spec, float) or not math.isnan(spec) else spec,
-                    "brier": float(brier) if not isinstance(brier, float) or not math.isnan(brier) else brier,
-                    "ece": float(ece) if not isinstance(ece, float) or not math.isnan(ece) else ece,
-                    "mc_dropout_entropy": float(avg_entropy) if not isinstance(avg_entropy, float) or not math.isnan(avg_entropy) else avg_entropy,
+                    "auc": float(auc),
+                    "sensitivity": float(sens),
+                    "specificity": float(spec),
+                    "brier": float(brier),
+                    "ece": float(ece),
+                    "mc_dropout_entropy": float(avg_entropy),
                 }, step=epoch + 1)
             except Exception:
                 pass
@@ -469,7 +469,9 @@ def main() -> None:
     # Log accumulated CSV artifacts and close MLflow run
     if mlflow_active:
         try:
-            from src.logging_utils.mlflow_logger import log_artifacts as mlflow_log_artifacts, end_run as mlflow_end_run
+            from src.logging_utils.mlflow_logger import log_artifacts as mlflow_log_artifacts, end_run as mlflow_end_run, set_tags as mlflow_set_tags
+            # Set tags indicating readiness status
+            mlflow_set_tags({"phase": "training", "regulatory_ready": False})
             mlflow_log_artifacts([metrics_path, Path("results")/"calibration_report.csv"])
             mlflow_end_run()
         except Exception:

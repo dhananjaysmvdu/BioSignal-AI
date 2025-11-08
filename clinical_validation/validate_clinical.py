@@ -177,7 +177,8 @@ def run_inference(args: argparse.Namespace) -> None:
     # Summaries
     if y_true:
         import csv as _csv
-        from sklearn.metrics import roc_auc_score, confusion_matrix, brier_score_loss
+        from sklearn.metrics import roc_auc_score, confusion_matrix, brier_score_loss, roc_curve
+        import matplotlib.pyplot as plt
         y_true_np = np.array(y_true); y_prob_np = np.array(y_prob)
         try:
             auc = roc_auc_score(y_true_np, y_prob_np)
@@ -194,8 +195,32 @@ def run_inference(args: argparse.Namespace) -> None:
         with open(out_dir / "summary.csv", 'w', newline='') as fh:
             w = _csv.DictWriter(fh, fieldnames=["auc","sensitivity","specificity","brier","ece"]) ; w.writeheader()
             w.writerow({"auc":auc,"sensitivity":sens,"specificity":spec,"brier":brier,"ece":ece})
+        # ROC plot
+        try:
+            fpr, tpr, _ = roc_curve(y_true_np, y_prob_np)
+            plt.figure(figsize=(6,5)); plt.plot(fpr,tpr,label=f"AUC={auc:.3f}")
+            plt.plot([0,1],[0,1],'--',color='gray'); plt.xlabel('FPR'); plt.ylabel('TPR'); plt.legend()
+            plt.savefig(out_dir/"roc.png", dpi=160); plt.close()
+        except Exception:
+            pass
+        # Calibration (reliability) diagram (binning)
+        try:
+            bins = np.linspace(0,1,11); idx = np.digitize(y_prob_np, bins)-1
+            xs, ys = [], []
+            for b in range(10):
+                m = idx==b
+                if not np.any(m):
+                    continue
+                xs.append(np.mean(y_prob_np[m])); ys.append(np.mean((y_prob_np[m]>=0.5)==y_true_np[m]))
+            plt.figure(figsize=(6,5)); plt.plot([0,1],[0,1],'--',color='gray');
+            if xs:
+                plt.plot(xs, ys, marker='o');
+            plt.xlabel('Confidence'); plt.ylabel('Accuracy'); plt.savefig(out_dir/"calibration.png", dpi=160); plt.close()
+        except Exception:
+            pass
         if mlflow_active:
             try:
+                # fairness deltas approximated from subgroup metrics if present later
                 mlflow_log_metrics({
                     "auc": float(auc),
                     "sensitivity": float(sens),
@@ -256,7 +281,23 @@ def run_inference(args: argparse.Namespace) -> None:
     # Log artifacts and end MLflow run
     if mlflow_active:
         try:
-            mlflow_log_artifacts([out_dir])
+            # Set run tags
+            from src.logging_utils.mlflow_logger import set_tags as mlflow_set_tags
+            mlflow_set_tags({"phase": "clinical_validation", "regulatory_ready": True})
+            # Log subgroup fairness aggregates if group_summary exists
+            fair_delta_ece = float('nan'); fair_delta_auc = float('nan')
+            group_path = out_dir / 'group_summary.csv'
+            if group_path.exists():
+                gdf = pd.read_csv(group_path)
+                if 'auc' in gdf.columns:
+                    fair_delta_auc = float(gdf['auc'].max() - gdf['auc'].min())
+                if 'ece' in gdf.columns:
+                    fair_delta_ece = float(gdf['ece'].max() - gdf['ece'].min())
+                mlflow_log_metrics({'delta_auc_groups': fair_delta_auc, 'delta_ece_groups': fair_delta_ece})
+            # Log figures and outputs
+            figs = [out_dir/"roc.png", out_dir/"calibration.png"]
+            paths = [p for p in figs if p.exists()] + [out_dir]
+            mlflow_log_artifacts(paths)
             mlflow_end_run()
         except Exception:
             pass

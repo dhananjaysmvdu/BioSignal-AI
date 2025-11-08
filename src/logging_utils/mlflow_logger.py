@@ -53,3 +53,17 @@ def end_run():  # pragma: no cover
         return
     mlflow.end_run()
     _ACTIVE["run"] = None
+
+def set_tags(tags: Dict[str, object]) -> None:
+    if mlflow is None or _ACTIVE["run"] is None:
+        return
+    mlflow.set_tags(tags)
+
+def log_figure(fig, artifact_file: str) -> None:
+    if mlflow is None or _ACTIVE["run"] is None:
+        return
+    try:
+        import matplotlib.pyplot as _plt  # noqa: F401
+        mlflow.log_figure(fig, artifact_file)
+    except Exception:
+        pass
