@@ -9,6 +9,7 @@ from pathlib import Path
 from typing import Dict, Iterable, Tuple
 
 import pandas as pd
+import numpy as np
 import torch
 from torch.optim import Adam
 from torch.optim.lr_scheduler import StepLR
@@ -18,6 +19,7 @@ from tqdm.auto import tqdm
 from src.data_loader import SkinDataset, create_sample_dataset
 from src.models.biosignal_model import BioSignalModel
 from src.preprocess import load_metadata_encoders, transform_metadata
+from sklearn.metrics import brier_score_loss, roc_auc_score, confusion_matrix
 
 
 def parse_args() -> argparse.Namespace:
@@ -140,6 +142,27 @@ def write_metrics_row(metrics_path: Path, row: Dict[str, float]) -> None:
         writer.writerow(row)
 
 
+def ece_score(probs: np.ndarray, labels: np.ndarray, n_bins: int = 10) -> float:
+    bins = np.linspace(0.0, 1.0, n_bins + 1)
+    idx = np.digitize(probs, bins) - 1
+    ece = 0.0
+    for b in range(n_bins):
+        mask = idx == b
+        if not np.any(mask):
+            continue
+        acc = (labels[mask] == (probs[mask] >= 0.5)).mean()
+        conf = probs[mask].mean()
+        ece += (np.sum(mask) / len(probs)) * abs(acc - conf)
+    return float(ece)
+
+
+def enable_mc_dropout(module: torch.nn.Module) -> None:
+    """Enable dropout layers during evaluation for MC Dropout sampling."""
+    for m in module.modules():
+        if isinstance(m, torch.nn.Dropout):
+            m.train()
+
+
 def main() -> None:
     args = parse_args()
 
@@ -222,6 +245,8 @@ def main() -> None:
         val_loss = 0.0
         correct = 0
         total_val = 0
+        all_probs: list[float] = []
+        all_labels: list[int] = []
         with torch.no_grad():
             val_iterator = tqdm(val_loader, desc=f"Epoch {epoch + 1}/{args.epochs} [val]", leave=False)
             for batch in val_iterator:
@@ -243,6 +268,8 @@ def main() -> None:
                 total_val += batch_size
                 preds = probs.argmax(dim=1)
                 correct += (preds == labels).sum().item()
+                all_probs.extend(probs[:, 1].detach().cpu().numpy().tolist())
+                all_labels.extend(labels.detach().cpu().numpy().tolist())
 
         avg_val_loss = val_loss / max(total_val, 1)
         val_acc = correct / max(total_val, 1)
@@ -271,6 +298,74 @@ def main() -> None:
                 "val_acc": val_acc,
             },
         )
+
+        # Calibration metrics and MC Dropout uncertainty
+        calib_dir = Path("results"); calib_dir.mkdir(exist_ok=True)
+        calib_path = calib_dir / "calibration_report.csv"
+        y_true = np.array(all_labels)
+        y_prob = np.array(all_probs)
+        try:
+            auc = roc_auc_score(y_true, y_prob)
+        except Exception:
+            auc = float("nan")
+        y_pred = (y_prob >= 0.5).astype(int)
+        if len(set(y_true)) > 1:
+            tn, fp, fn, tp = confusion_matrix(y_true, y_pred).ravel()
+            sens = tp / (tp + fn + 1e-8)
+            spec = tn / (tn + fp + 1e-8)
+        else:
+            sens = float("nan"); spec = float("nan")
+        brier = brier_score_loss(y_true, y_prob) if len(y_prob) > 0 else float("nan")
+        ece = ece_score(y_prob, y_true) if len(y_prob) > 0 else float("nan")
+
+        # MC Dropout predictive entropy (T=10)
+        T = 10
+        enable_mc_dropout(model)
+        entropies: list[float] = []
+        with torch.no_grad():
+            for batch in val_loader:
+                images, _, labels, raw_metadata = batch
+                images = images.to(device)
+                metadata_tensor = metadata_batch_to_tensor(
+                    raw_metadata, encoders, numeric_cols, cat_cols
+                ).to(device)
+                probs_T = []
+                for _ in range(T):
+                    _, p = model(images, metadata_tensor)
+                    probs_T.append(p[:, 1].detach().cpu().numpy())
+                P = np.stack(probs_T, axis=0).mean(axis=0)
+                P = np.clip(P, 1e-6, 1 - 1e-6)
+                ent = -(P * np.log(P) + (1 - P) * np.log(1 - P))
+                entropies.extend(ent.tolist())
+        avg_entropy = float(np.mean(entropies)) if entropies else float("nan")
+
+        file_exists = calib_path.exists()
+        with calib_path.open("a", newline="") as fh:
+            writer = csv.DictWriter(
+                fh,
+                fieldnames=[
+                    "epoch",
+                    "auc",
+                    "sensitivity",
+                    "specificity",
+                    "brier",
+                    "ece",
+                    "mc_dropout_entropy",
+                ],
+            )
+            if not file_exists:
+                writer.writeheader()
+            writer.writerow(
+                {
+                    "epoch": epoch + 1,
+                    "auc": auc,
+                    "sensitivity": sens,
+                    "specificity": spec,
+                    "brier": brier,
+                    "ece": ece,
+                    "mc_dropout_entropy": avg_entropy,
+                }
+            )
 
     print("Training complete. Latest metrics:")
     print(f"  Train loss: {avg_train_loss:.4f}")

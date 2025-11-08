@@ -1,10 +1,27 @@
-"""Data ingestion utilities for downloading and preparing raw skin lesion datasets."""
+"""Data ingestion utilities for downloading and preparing raw skin lesion datasets.
+
+Extended to support ISIC 2018/2019 and HAM10000 dataset indexing.
+Public dataset loaders assume images and metadata are already downloaded locally.
+Expected directory layouts (customizable):
+
+data/
+    isic2019/
+        metadata.csv  (must include image_path column relative to images/ subfolder or absolute)
+        images/
+    ham10000/
+        metadata.csv
+        images/
+
+Use helper `build_dataset(csv, root)` to create a `SkinDataset`. CLI allows selection:
+    python -m src.data_loader --dataset isic2019 --root data/isic2019
+"""
 
 from __future__ import annotations
 
 from pathlib import Path
 import random
-from typing import List, Tuple
+import argparse
+from typing import List, Tuple, Optional
 
 import numpy as np
 import pandas as pd
@@ -76,6 +93,126 @@ def create_sample_dataset(output_dir: str | Path, n: int = 10) -> Path:
     csv_path = output_path / "metadata.csv"
     metadata.to_csv(csv_path, index=False)
     return csv_path
+
+
+def _write_metadata_csv(frame: pd.DataFrame, out_csv: Path, image_root: Optional[Path] = None) -> Path:
+    out_csv.parent.mkdir(parents=True, exist_ok=True)
+    if image_root is None:
+        image_root = out_csv.parent / "images"
+    # Ensure required columns
+    cols = {c.lower(): c for c in frame.columns}
+    # Normalize columns
+    df = pd.DataFrame()
+    # image_path
+    if "image_path" in cols:
+        df["image_path"] = frame[cols["image_path"]]
+    elif "image" in cols:
+        # add extension if missing by probing common extensions
+        def to_path(x: str) -> str:
+            p = Path(str(x))
+            if p.suffix.lower() not in {".jpg", ".jpeg", ".png"}:
+                for ext in (".jpg", ".jpeg", ".png"):
+                    if (image_root / f"{p}{ext}").exists():
+                        return str(Path("images")/f"{p}{ext}")
+                # fallback
+                return str(Path("images")/f"{p}.jpg")
+            # make relative to images/
+            if not p.is_absolute():
+                return str(Path("images")/p.name)
+            return str(p)
+        df["image_path"] = frame[cols["image"]].astype(str).map(to_path)
+    else:
+        raise ValueError("Input metadata must have image_path or image column")
+
+    # label
+    if "label" in cols:
+        df["label"] = frame[cols["label"]]
+    elif "dx" in cols:
+        # HAM10000 diagnosis; mark mel/bcc/akiec as malignant, others benign
+        malignant = {"mel", "bcc", "akiec", "df", "vasc"}
+        df["label"] = frame[cols["dx"]].astype(str).str.lower().map(lambda x: "malignant" if x in malignant else "benign")
+    elif "mel" in cols:
+        # ISIC 2019 one-hot target; treat MEL==1 as malignant else benign baseline
+        df["label"] = frame[cols["mel"]].apply(lambda v: "malignant" if int(v)==1 else "benign")
+    else:
+        df["label"] = "benign"
+
+    # demographics and site
+    age_col = cols.get("age") or cols.get("age_approx")
+    sex_col = cols.get("sex") or cols.get("gender")
+    site_col = cols.get("anatom_site_general_challenge") or cols.get("lesion_site") or cols.get("localization")
+    df["age"] = pd.to_numeric(frame.get(age_col, 0), errors="coerce").fillna(0).astype(int)
+    df["gender"] = (
+        frame.get(sex_col, "unknown").astype(str).str.strip().str.lower().replace({"nan": "unknown"})
+    )
+    df["lesion_site"] = (
+        frame.get(site_col, "unknown").astype(str).str.strip().str.lower().replace({"nan": "unknown"})
+    )
+
+    df.to_csv(out_csv, index=False)
+    return out_csv
+
+
+def index_isic2019(root: Path) -> Path:
+    """Construct metadata.csv for ISIC 2019 if training CSVs are present.
+
+    Expected files (typical names):
+      - ISIC_2019_Training_Metadata.csv
+      - ISIC_2019_Training_GroundTruth.csv
+      - images/ (folder with image files)
+    """
+    meta_csv = None
+    gt_csv = None
+    for p in root.glob("*.csv"):
+        name = p.name.lower()
+        if "metadata" in name:
+            meta_csv = p
+        if "groundtruth" in name:
+            gt_csv = p
+    if not meta_csv or not gt_csv:
+        raise FileNotFoundError("Could not find ISIC 2019 metadata and ground truth CSVs in root")
+    meta = pd.read_csv(meta_csv)
+    gt = pd.read_csv(gt_csv)
+    # Ensure common key
+    key = "image" if "image" in gt.columns else list(set(gt.columns) & {"image_id", "image_name"})[0]
+    if key not in meta.columns:
+        # ISIC 2019 metadata may use 'image'
+        if "image" in meta.columns:
+            pass
+        else:
+            raise ValueError("No common key to merge ISIC 2019 CSVs")
+    df = pd.merge(meta, gt, on=key, how="inner")
+    # Normalize with helper
+    out_csv = root / "metadata.csv"
+    return _write_metadata_csv(df.rename(columns={key: "image"}), out_csv, image_root=root/"images")
+
+
+def index_isic2018(root: Path) -> Path:
+    """Construct metadata.csv for ISIC 2018 Task 3 if CSVs exist."""
+    # Typical names
+    meta_csv = next((p for p in root.glob("*Training_Metadata*.csv")), None)
+    gt_csv = next((p for p in root.glob("*Training_GroundTruth*.csv")), None)
+    if not meta_csv or not gt_csv:
+        raise FileNotFoundError("Could not find ISIC 2018 CSVs in root")
+    meta = pd.read_csv(meta_csv)
+    gt = pd.read_csv(gt_csv)
+    key = "image" if "image" in gt.columns else list(set(gt.columns) & {"image_id", "image_name"})[0]
+    df = pd.merge(meta, gt, on=key, how="inner")
+    out_csv = root / "metadata.csv"
+    return _write_metadata_csv(df.rename(columns={key: "image"}), out_csv, image_root=root/"images")
+
+
+def index_ham10000(root: Path) -> Path:
+    """Construct metadata.csv for HAM10000 expected files: HAM10000_metadata.csv and images folder."""
+    meta_csv = next((p for p in root.glob("*metadata*.csv")), None)
+    if not meta_csv:
+        raise FileNotFoundError("HAM10000 metadata CSV not found in root")
+    meta = pd.read_csv(meta_csv)
+    # HAM has 'image_id' and 'dx'
+    if "image_id" in meta.columns and "image_path" not in meta.columns:
+        meta = meta.assign(image=meta["image_id"].astype(str))
+    out_csv = root / "metadata.csv"
+    return _write_metadata_csv(meta, out_csv, image_root=root/"images")
 
 
 class SkinDataset(Dataset):
@@ -163,16 +300,51 @@ class SkinDataset(Dataset):
         return {value: idx for idx, value in enumerate(sorted(values))}
 
 
-if __name__ == "__main__":
-    sample_dir = Path("data") / "sample"
-    csv_file = sample_dir / "metadata.csv"
-    if not csv_file.exists():
-        print(f"Creating sample dataset at {sample_dir}...")
-        csv_file = create_sample_dataset(sample_dir, n=12)
+def build_dataset(root: Path, dataset: str) -> SkinDataset:
+    """Instantiate SkinDataset for supported dataset key.
 
-    dataset = SkinDataset(csv_file)
-    print(f"Dataset size: {len(dataset)}")
-    sample_image, sample_metadata, sample_label = dataset[0]
-    print(f"Image tensor shape: {sample_image.shape}")
-    print(f"Metadata tensor shape: {sample_metadata.shape}")
-    print(f"Label tensor: {sample_label}")
+    Args:
+        root: Path to dataset root containing metadata.csv.
+        dataset: One of {sample, isic2018, isic2019, ham10000}.
+    """
+    dataset = dataset.lower()
+    if dataset == "sample":
+        csv_path = root / "metadata.csv"
+        if not csv_path.exists():
+            print(f"Generating synthetic sample dataset at {root}...")
+            csv_path = create_sample_dataset(root, n=128)
+        return SkinDataset(csv_path)
+    elif dataset in {"isic2018", "isic2019", "ham10000"}:
+        csv_path = root / "metadata.csv"
+        if not csv_path.exists():
+            print(f"metadata.csv not found. Indexing {dataset} at {root} ...")
+            if dataset == "isic2019":
+                csv_path = index_isic2019(root)
+            elif dataset == "isic2018":
+                csv_path = index_isic2018(root)
+            else:
+                csv_path = index_ham10000(root)
+        return SkinDataset(csv_path)
+    else:
+        raise ValueError(f"Unsupported dataset key: {dataset}")
+
+
+def parse_args() -> argparse.Namespace:
+    p = argparse.ArgumentParser(description="Skin dataset loader CLI")
+    p.add_argument("--dataset", type=str, default="sample", help="Dataset key: sample|isic2018|isic2019|ham10000")
+    p.add_argument("--root", type=Path, default=Path("data")/"sample", help="Root directory containing metadata.csv")
+    p.add_argument("--show", action="store_true", help="Print first record summary")
+    return p.parse_args()
+
+
+def main_cli():
+    args = parse_args()
+    ds = build_dataset(args.root, args.dataset)
+    print(f"Loaded dataset '{args.dataset}' with {len(ds)} samples from {args.root}")
+    if args.show:
+        img, meta, label = ds[0]
+        print(f"Image shape: {img.shape}; Metadata: {meta.tolist()}; Label index: {int(label)}")
+
+
+if __name__ == "__main__":
+    main_cli()
