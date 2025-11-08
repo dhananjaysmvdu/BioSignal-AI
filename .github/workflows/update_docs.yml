@@ -203,6 +203,39 @@ mp_lines = [
   f"| Drift rate | {fmt_pct(drift_rate) if drift_rate is not None else 'N/A'} |",
 ]
 base_cg = replace_block(base_cg, "<!-- MODEL_PERFORMANCE:BEGIN -->", "<!-- MODEL_PERFORMANCE:END -->", "\n".join(mp_lines))
+
+# Uncertainty + Fairness summary for compliance
+unc = read_csv_metric(calib_csv, [
+  'predictive_entropy_mean','mean_uncertainty','avg_uncertainty',
+  'uncertainty','entropy','predictive_entropy'
+])
+
+def read_fairness_deltas() -> tuple:
+  candidates = [RESULTS / 'fairness' / 'fairness_summary.json', RESULTS / 'fairness_summary.json']
+  for p in candidates:
+    if p.exists():
+      try:
+        d = json.loads(p.read_text(encoding='utf-8'))
+        da = d.get('delta_auc')
+        de = d.get('delta_ece')
+        # Sometimes strings
+        da = float(str(da)) if da is not None else None
+        de = float(str(de)) if de is not None else None
+        return da, de
+      except Exception:
+        continue
+  return None, None
+
+delta_auc, delta_ece = read_fairness_deltas()
+unc_lines = [
+  "| Metric | Value |",
+  "|---|---|",
+  f"| Mean uncertainty | {fmt_num(unc, 2) if unc is not None else 'N/A'} |",
+  f"| ΔAUC | {fmt_num(delta_auc, 2) if delta_auc is not None else 'N/A'} |",
+  f"| ΔECE | {fmt_num(delta_ece, 2) if delta_ece is not None else 'N/A'} |",
+  f"| Last updated | {datetime.utcnow().isoformat()}Z |",
+]
+base_cg = replace_block(base_cg, "<!-- UNCERTAINTY_SUMMARY:BEGIN -->", "<!-- UNCERTAINTY_SUMMARY:END -->", "\n".join(unc_lines))
 cg.write_text(base_cg, encoding='utf-8')
 
 # --- README.md ---
@@ -223,6 +256,17 @@ readme = replace_block(readme, "<!-- NIGHTLY_STATUS:BEGIN -->", "<!-- NIGHTLY_ST
 # Metrics summary for README
 ms_lines = mp_lines  # reuse same structure
 readme = replace_block(readme, "<!-- METRICS_SUMMARY:BEGIN -->", "<!-- METRICS_SUMMARY:END -->", "\n".join(ms_lines))
+
+# Fairness summary for README
+fair_lines = [
+  "| Metric | Value |",
+  "|---|---|",
+  f"| Mean uncertainty | {fmt_num(unc, 2) if unc is not None else 'N/A'} |",
+  f"| ΔAUC | {fmt_num(delta_auc, 2) if delta_auc is not None else 'N/A'} |",
+  f"| ΔECE | {fmt_num(delta_ece, 2) if delta_ece is not None else 'N/A'} |",
+  f"| Last updated | {datetime.utcnow().isoformat()}Z |",
+]
+readme = replace_block(readme, "<!-- FAIRNESS_SUMMARY:BEGIN -->", "<!-- FAIRNESS_SUMMARY:END -->", "\n".join(fair_lines))
 rd.write_text(readme, encoding='utf-8')
 
 # --- literature_summary.md ---
