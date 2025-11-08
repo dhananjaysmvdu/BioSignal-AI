@@ -624,6 +624,187 @@ lit_text = replace_block(lit_text, "<!-- VALIDATION_DATE:BEGIN -->", "<!-- VALID
 lit.write_text(lit_text, encoding='utf-8')
 
 print('Docs updated via block replacement.')
+
+# --- Manuscript Draft Generation ---
+# Build docs/manuscript_draft.md from README, compliance, literature, metrics.json, versions.json
+import hashlib
+
+DOCS_OUT = DOCS / 'manuscript_draft.md'
+
+# Load sources
+readme_md = rd.read_text(encoding='utf-8') if rd.exists() else ""
+comp_path_candidates = [DOCS / 'compliance_guidelines.md', Path('notebooks') / 'docs' / 'compliance_guidelines.md']
+comp_md = ""
+for p in comp_path_candidates:
+  if p.exists():
+    comp_md = p.read_text(encoding='utf-8')
+    break
+lit_path = DOCS / 'literature_summary.md'
+lit_md = lit_path.read_text(encoding='utf-8') if lit_path.exists() else ""
+metrics_path = RESULTS / 'metrics.json'
+metrics = None
+if metrics_path.exists():
+  try:
+    metrics = json.loads(metrics_path.read_text(encoding='utf-8'))
+  except Exception:
+    metrics = None
+versions_path = Path('reports') / 'history' / 'versions.json'
+versions = []
+if versions_path.exists():
+  try:
+    versions = json.loads(versions_path.read_text(encoding='utf-8'))
+  except Exception:
+    versions = []
+
+# Compose sections
+def md_escape(s: str) -> str:
+  return s if s is not None else ''
+
+ts_now = datetime.utcnow().isoformat() + 'Z'
+title = 'BioSignal-X: Autonomous Clinical AI Governance Report — Manuscript Draft'
+
+# Abstract (auto)
+if metrics:
+  abstract = (
+    f"We present an autonomous clinical AI governance pipeline with current performance AUC={metrics.get('auc','N/A')}, "
+    f"ECE={metrics.get('ece','N/A')}, drift rate={metrics.get('drift_rate','N/A')}, and incident counts "
+    f"(H/M/L={metrics.get('incident_counts',{}).get('high','N/A')}/"
+    f"{metrics.get('incident_counts',{}).get('medium','N/A')}/"
+    f"{metrics.get('incident_counts',{}).get('low','N/A')}). "
+    f"Automated monitoring, fairness auditing, and publication workflows enable reproducible reporting."
+  )
+else:
+  abstract = (
+    "We present an autonomous clinical AI governance pipeline with automated monitoring, fairness auditing, and "
+    "versioned publication. Structured metrics export supports reproducible compliance reporting."
+  )
+
+# Introduction from README
+intro = readme_md.strip()
+
+# Related Work from literature_summary.md
+related = lit_md.strip()
+
+# Methods from compliance + training pipeline placeholder
+methods = (comp_md.strip() + "\n\nTraining pipeline: supervised learning with calibration (temperature scaling), uncertainty estimation (MC Dropout), "
+       "site-aware validation, and MLflow tracking.") if comp_md else (
+       "Training pipeline: supervised learning with calibration (temperature scaling), uncertainty estimation (MC Dropout), \n"
+       "site-aware validation, and MLflow tracking.")
+
+# Results from metrics.json + figures + trends
+def img_md(path: Path, title: str):
+  return f"![{title}]({path.as_posix()})" if path.exists() else f"{title}: (figure not available)"
+plots = RESULTS / 'plots'
+figs_md = [
+  img_md(plots / 'roc.png', 'ROC Curve'),
+  img_md(plots / 'pr.png', 'PR Curve'),
+  img_md(plots / 'calibration.png', 'Calibration Plot'),
+  img_md(plots / 'uncertainty.png', 'Uncertainty Distribution'),
+]
+metrics_table = ""
+if metrics:
+  ic = metrics.get('incident_counts', {})
+  metrics_table = (
+    "| Metric | Value |\n|---|---|\n"
+    f"| AUC | {metrics.get('auc','N/A')} |\n"
+    f"| ECE | {metrics.get('ece','N/A')} |\n"
+    f"| Drift rate | {metrics.get('drift_rate','N/A')} |\n"
+    f"| Incidents (H/M/L) | {ic.get('high','N/A')}/{ic.get('medium','N/A')}/{ic.get('low','N/A')} |\n"
+  )
+else:
+  metrics_table = "Metrics not available (results/metrics.json missing)."
+
+# Discussion: audit trail summary + stability
+audit_path = Path('logs') / 'audit_trail.csv'
+audit_summary = ""
+if audit_path.exists():
+  # count severities
+  hi = me = lo = 0
+  try:
+    import csv as _csv
+    with audit_path.open('r', encoding='utf-8') as f:
+      r = _csv.DictReader(f)
+      for row in r:
+        s = (row.get('severity') or '').strip()
+        if s == 'High': hi += 1
+        elif s == 'Medium': me += 1
+        elif s == 'Low': lo += 1
+  except Exception:
+    pass
+  audit_summary = f"Observed incidents — High: {hi}, Medium: {me}, Low: {lo}."
+else:
+  audit_summary = "No audit trail available."
+
+# Conclusion: deltas from versions.json
+conclusion = ""
+if versions and len(versions) >= 2:
+  cur = versions[-1]
+  prev = versions[-2]
+  def d(a,b):
+    try:
+      return float(a) - float(b)
+    except Exception:
+      return None
+  d_auc = d(cur.get('auc'), prev.get('auc'))
+  d_ece = d(cur.get('ece'), prev.get('ece'))
+  d_drift = d(cur.get('drift'), prev.get('drift'))
+  d_hi = d(cur.get('incidents_high'), prev.get('incidents_high'))
+  d_me = d(cur.get('incidents_medium'), prev.get('incidents_medium'))
+  d_lo = d(cur.get('incidents_low'), prev.get('incidents_low'))
+  def fmt(x):
+    return f"{x:+.3f}" if isinstance(x, (int,float)) else 'N/A'
+  conclusion = (
+    f"Compared to the previous version, performance changed as follows: ΔAUC {fmt(d_auc)}, ΔECE {fmt(d_ece)}, "
+    f"ΔDrift {fmt(d_drift)}, incidents Δ(H/M/L) {fmt(d_hi)}/{fmt(d_me)}/{fmt(d_lo)}."
+  )
+else:
+  conclusion = "This initial version establishes the governance baseline; subsequent versions will report deltas."
+
+pdf_link = "reports/BioSignalX_Report.pdf"
+
+manuscript = f"""
+# {title}
+
+Generated: {ts_now}
+
+Link to export PDF: [{pdf_link}]({pdf_link})
+
+1. Abstract
+
+{abstract}
+
+2. Introduction
+
+{intro}
+
+3. Related Work
+
+{related}
+
+4. Methods
+
+{methods}
+
+5. Results
+
+{metrics_table}
+
+{'\n'.join(figs_md)}
+
+6. Discussion
+
+{audit_summary}
+
+7. Conclusion
+
+{conclusion}
+
+References: [1], [2], [3]
+"""
+
+DOCS_OUT.parent.mkdir(parents=True, exist_ok=True)
+DOCS_OUT.write_text(manuscript, encoding='utf-8')
+print('Manuscript draft written to', DOCS_OUT)
 PY
       - name: Commit changes
         uses: stefanzweifel/git-auto-commit-action@v5
