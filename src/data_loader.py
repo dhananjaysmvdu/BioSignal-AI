@@ -21,7 +21,7 @@ from __future__ import annotations
 from pathlib import Path
 import random
 import argparse
-from typing import List, Tuple, Optional
+from typing import List, Tuple, Optional, Dict
 
 import numpy as np
 import pandas as pd
@@ -327,6 +327,34 @@ def build_dataset(root: Path, dataset: str) -> SkinDataset:
         return SkinDataset(csv_path)
     else:
         raise ValueError(f"Unsupported dataset key: {dataset}")
+
+
+def stratified_split_by_site(frame: pd.DataFrame, test_ratio: float = 0.2) -> Tuple[List[int], List[int]]:
+    """Split indices so that each site contributes to both train/val where possible.
+
+    Uses a simple per-site holdout proportion.
+    If no site column, falls back to a random split.
+    """
+    if "site" not in frame.columns:
+        indices = list(range(len(frame)))
+        random.shuffle(indices)
+        split = int((1 - test_ratio) * len(indices))
+        return indices[:split], indices[split:]
+
+    train_idx: List[int] = []
+    val_idx: List[int] = []
+    for site, sub in frame.groupby("site"):
+        idxs = list(sub.index)
+        random.shuffle(idxs)
+        k = max(1, int(test_ratio * len(idxs)))
+        val_idx.extend(idxs[:k])
+        train_idx.extend(idxs[k:])
+    if not train_idx or not val_idx:  # fallback
+        indices = list(range(len(frame)))
+        random.shuffle(indices)
+        split = int((1 - test_ratio) * len(indices))
+        return indices[:split], indices[split:]
+    return train_idx, val_idx
 
 
 def parse_args() -> argparse.Namespace:

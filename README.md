@@ -46,6 +46,26 @@ Any deployment in healthcare contexts must follow institutional review and regul
 - Group-level summaries by site and demographics (sex, age bins, skin type where available).
 - Inter-site variance analysis in `benchmarks/compare_baselines.ipynb` produces CSV and boxplot artifacts.
 
+## MLflow Experiment Tracking
+Optional MLflow integration logs hyperparameters, per-epoch metrics (loss, accuracy, AUC, ECE, Brier, MC Dropout entropy), and artifacts (checkpoints, calibration CSVs, clinical validation outputs). Enable with `--mlflow` flag after setting `MLFLOW_TRACKING_URI` and optional `MLFLOW_EXPERIMENT` environment variables.
+
+Example (PowerShell):
+```
+$env:MLFLOW_TRACKING_URI="http://localhost:5000"; $env:MLFLOW_EXPERIMENT="BioSignalX"; python train.py --epochs 5 --mlflow
+```
+
+## Drift Detection
+Automated cohort shift monitoring via `monitoring/drift_detector.py` computes Jensen–Shannon divergence across numeric (e.g., age) and categorical (e.g., lesion_site, gender) features.
+
+Run a drift check comparing a historical reference vs current intake:
+```
+python -m monitoring.drift_detector --ref data/reference/metadata.csv --cur data/current/metadata.csv --out logs/drift_report.json
+```
+Outputs a JSON report with per-feature scores and an overall drift rate suitable for scheduled jobs (e.g., weekly CI).
+
+## Evaluation Report Notebook
+Notebook `notebooks/generate_eval_report.ipynb` (planned) will aggregate calibration (`results/calibration_report.csv`), fairness, inter-site variability, and clinical validation summaries into a consolidated PDF/table bundle for publication or internal review.
+
 ## Regulatory Alignment
 - See `docs/compliance_guidelines.md` for SaMD, EU MDR, and ISO references with capability mapping.
 - Calibration reporting (ECE, Brier), traceability logs, and versioned artifacts support reproducibility.
@@ -54,6 +74,9 @@ Any deployment in healthcare contexts must follow institutional review and regul
 - Training logs: `results/calibration_report.csv`, `checkpoints/metrics.csv`.
 - Traceability: `logs/traceability.json` records model hash, config, dataset, and timestamps.
 - Literature and experimental roadmap guide bias audits and reader study planning.
+
+## Post-Market Surveillance (Planned)
+Upcoming modules will extend drift detection, adverse event logging, and periodic performance re-evaluation aligned with ISO 14971 risk controls and IEC 62304 maintenance procedures.
 
 ## Citation
 If you use BioSignal-X in your research, please cite using the included `CITATION.cff` file or the following:

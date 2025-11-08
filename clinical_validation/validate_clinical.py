@@ -124,6 +124,22 @@ def run_inference(args: argparse.Namespace) -> None:
     results: List[CaseResult] = []
     y_true, y_prob = [], []
 
+    # Optional MLflow logging
+    mlflow_active = False
+    if getattr(args, "mlflow", False):
+        try:
+            from src.logging_utils.mlflow_logger import init_mlflow, log_metrics as mlflow_log_metrics, log_artifacts as mlflow_log_artifacts, end_run as mlflow_end_run
+            mlflow_active = init_mlflow(
+                run_name=f"clinical-validate-{Path(args.csv).stem}-{pd.Timestamp.utcnow().strftime('%Y%m%d-%H%M%S')}",
+                params={
+                    "mc_samples": int(args.mc_samples),
+                    "num_cases": int(len(df)),
+                    "model": str(args.model) if args.model else "random-init",
+                },
+            )
+        except Exception:
+            mlflow_active = False
+
     for idx, row in df.iterrows():
         img_path = Path(row["image_path"]) if Path(row["image_path"]).is_absolute() else csv_path.parent / row["image_path"]
         image = Image.open(img_path).convert("RGB")
@@ -178,6 +194,17 @@ def run_inference(args: argparse.Namespace) -> None:
         with open(out_dir / "summary.csv", 'w', newline='') as fh:
             w = _csv.DictWriter(fh, fieldnames=["auc","sensitivity","specificity","brier","ece"]) ; w.writeheader()
             w.writerow({"auc":auc,"sensitivity":sens,"specificity":spec,"brier":brier,"ece":ece})
+        if mlflow_active:
+            try:
+                mlflow_log_metrics({
+                    "auc": float(auc),
+                    "sensitivity": float(sens),
+                    "specificity": float(spec),
+                    "brier": float(brier),
+                    "ece": float(ece),
+                })
+            except Exception:
+                pass
 
     # Per-site/per-demographic summaries if present
     group_cols = [c for c in ["site","sex","skin_type","age"] if c in df.columns]
@@ -202,7 +229,7 @@ def run_inference(args: argparse.Namespace) -> None:
                 else:
                     sens=float('nan'); spec=float('nan')
                 metrics.append({"group": f"{col}:{level}", "auc": float(auc), "sens": float(sens), "spec": float(spec)})
-        pd.DataFrame(metrics).to_csv(out_dir/"group_summary.csv", index=False)
+    pd.DataFrame(metrics).to_csv(out_dir/"group_summary.csv", index=False)
 
     # Traceability log
     trace_dir = Path("logs"); trace_dir.mkdir(exist_ok=True)
@@ -226,6 +253,14 @@ def run_inference(args: argparse.Namespace) -> None:
     except Exception:
         pass
 
+    # Log artifacts and end MLflow run
+    if mlflow_active:
+        try:
+            mlflow_log_artifacts([out_dir])
+            mlflow_end_run()
+        except Exception:
+            pass
+
 
 def parse_args() -> argparse.Namespace:
     p = argparse.ArgumentParser()
@@ -233,6 +268,7 @@ def parse_args() -> argparse.Namespace:
     p.add_argument("--model", type=Path, default=None)
     p.add_argument("--out", type=Path, default=Path("results/clinical_outputs"))
     p.add_argument("--mc-samples", type=int, default=20)
+    p.add_argument("--mlflow", action="store_true")
     return p.parse_args()
 
 

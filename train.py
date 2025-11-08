@@ -16,7 +16,7 @@ from torch.optim.lr_scheduler import StepLR
 from torch.utils.data import DataLoader, Subset
 from tqdm.auto import tqdm
 
-from src.data_loader import SkinDataset, create_sample_dataset
+from src.data_loader import SkinDataset, create_sample_dataset, stratified_split_by_site
 from src.models.biosignal_model import BioSignalModel
 from src.preprocess import load_metadata_encoders, transform_metadata
 from sklearn.metrics import brier_score_loss, roc_auc_score, confusion_matrix
@@ -35,6 +35,8 @@ def parse_args() -> argparse.Namespace:
         action="store_true",
         help="Resume from the latest checkpoint in the checkpoints directory",
     )
+    parser.add_argument("--site-split", action="store_true", help="Use site-aware stratified split if site column present")
+    parser.add_argument("--mlflow", action="store_true", help="Enable MLflow logging if configured")
     return parser.parse_args()
 
 
@@ -72,15 +74,21 @@ def load_encoders(metadata_path: Path) -> Tuple[Dict[str, object], Iterable[str]
 def prepare_dataloaders(
     dataset: SkinDataset,
     batch_size: int,
+    *,
+    site_split: bool = False,
 ) -> Tuple[DataLoader, DataLoader]:
     num_samples = len(dataset)
     if num_samples < 2:
         raise ValueError("Dataset must contain at least two samples for train/val split")
 
-    indices = torch.randperm(num_samples).tolist()
-    split = math.ceil(0.8 * num_samples)
-    train_indices = indices[:split]
-    val_indices = indices[split:]
+    if site_split and hasattr(dataset, "frame"):
+        # Use site-aware split if possible; fallback handled inside helper
+        train_indices, val_indices = stratified_split_by_site(dataset.frame, test_ratio=0.2)
+    else:
+        indices = torch.randperm(num_samples).tolist()
+        split = math.ceil(0.8 * num_samples)
+        train_indices = indices[:split]
+        val_indices = indices[split:]
 
     if not val_indices:
         val_indices = train_indices[-1:]
@@ -186,7 +194,7 @@ def main() -> None:
 
     metadata_dim = transform_metadata(dataset.frame, encoders, numeric_cols, cat_cols).shape[1]
 
-    train_loader, val_loader = prepare_dataloaders(dataset, args.batch_size)
+    train_loader, val_loader = prepare_dataloaders(dataset, args.batch_size, site_split=args.site_split)
 
     model = BioSignalModel(metadata_dim=metadata_dim)
     model.to(device)
@@ -198,6 +206,25 @@ def main() -> None:
     checkpoint_dir = Path("checkpoints")
     checkpoint_dir.mkdir(exist_ok=True)
     metrics_path = checkpoint_dir / "metrics.csv"
+
+    # Optional MLflow logging
+    mlflow_active = False
+    if args.mlflow:
+        try:
+            from src.logging_utils.mlflow_logger import init_mlflow, log_metrics as mlflow_log_metrics, log_artifacts as mlflow_log_artifacts, end_run as mlflow_end_run
+            mlflow_active = init_mlflow(
+                run_name=f"train-{datetime.utcnow().strftime('%Y%m%d-%H%M%S')}",
+                params={
+                    "epochs": args.epochs,
+                    "batch_size": args.batch_size,
+                    "lr": args.lr,
+                    "resume": args.resume,
+                    "device": str(device),
+                    "dataset_size": len(dataset),
+                },
+            )
+        except Exception:
+            mlflow_active = False
 
     start_epoch = 0
     if args.resume:
@@ -281,6 +308,17 @@ def main() -> None:
             f"Epoch {epoch + 1}/{args.epochs} :: train_loss={avg_train_loss:.4f} val_loss={avg_val_loss:.4f} val_acc={val_acc:.3f}"
         )
 
+        # MLflow: log basic metrics early (will also log calibration below)
+        if mlflow_active:
+            try:
+                mlflow_log_metrics({
+                    "train_loss": float(avg_train_loss),
+                    "val_loss": float(avg_val_loss),
+                    "val_acc": float(val_acc),
+                }, step=epoch + 1)
+            except Exception:
+                pass
+
         checkpoint_path = checkpoint_dir / f"model_epoch{epoch + 1}.pt"
         torch.save(
             {
@@ -342,6 +380,20 @@ def main() -> None:
                 entropies.extend(ent.tolist())
         avg_entropy = float(np.mean(entropies)) if entropies else float("nan")
 
+        # MLflow: log calibration/uncertainty metrics
+        if mlflow_active:
+            try:
+                mlflow_log_metrics({
+                    "auc": float(auc) if not isinstance(auc, float) or not math.isnan(auc) else auc,
+                    "sensitivity": float(sens) if not isinstance(sens, float) or not math.isnan(sens) else sens,
+                    "specificity": float(spec) if not isinstance(spec, float) or not math.isnan(spec) else spec,
+                    "brier": float(brier) if not isinstance(brier, float) or not math.isnan(brier) else brier,
+                    "ece": float(ece) if not isinstance(ece, float) or not math.isnan(ece) else ece,
+                    "mc_dropout_entropy": float(avg_entropy) if not isinstance(avg_entropy, float) or not math.isnan(avg_entropy) else avg_entropy,
+                }, step=epoch + 1)
+            except Exception:
+                pass
+
         file_exists = calib_path.exists()
         with calib_path.open("a", newline="") as fh:
             writer = csv.DictWriter(
@@ -370,7 +422,7 @@ def main() -> None:
                 }
             )
 
-        # Traceability logging
+    # Traceability logging
         trace_dir = Path("logs"); trace_dir.mkdir(exist_ok=True)
         trace_file = trace_dir / "traceability.json"
         # Model hash
@@ -402,10 +454,26 @@ def main() -> None:
         except Exception:
             pass
 
+        # Log artifacts for this epoch (checkpoint); defer CSVs to end
+        if mlflow_active:
+            try:
+                mlflow_log_artifacts([checkpoint_path])
+            except Exception:
+                pass
+
     print("Training complete. Latest metrics:")
     print(f"  Train loss: {avg_train_loss:.4f}")
     print(f"  Val loss:   {avg_val_loss:.4f}")
     print(f"  Val acc:    {val_acc:.3f}")
+
+    # Log accumulated CSV artifacts and close MLflow run
+    if mlflow_active:
+        try:
+            from src.logging_utils.mlflow_logger import log_artifacts as mlflow_log_artifacts, end_run as mlflow_end_run
+            mlflow_log_artifacts([metrics_path, Path("results")/"calibration_report.csv"])
+            mlflow_end_run()
+        except Exception:
+            pass
 
 
 if __name__ == "__main__":
