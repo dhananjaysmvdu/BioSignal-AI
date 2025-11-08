@@ -38,6 +38,8 @@ jobs:
           from pathlib import Path
           from datetime import datetime
           import sqlite3
+          import base64
+          import subprocess
 
           ROOT = Path('.')
           DOCS = ROOT / 'docs'
@@ -255,6 +257,162 @@ jobs:
           (BUILD / 'combined.html').write_text(html, encoding='utf-8')
           print('Built combined HTML')
 
+      # --- Versioning & performance delta tracking ---
+      # Attempt to extract key metrics (AUC/ECE/Drift + incident counts) from existing artifacts.
+      def extract_first_numeric(line):
+        try:
+          return float(line.strip().split(',')[0])
+        except Exception:
+          return None
+
+      # Derive simple metrics from benchmark + calibration CSVs (fallback patterns)
+      auc_val = None
+      ece_val = None
+      drift_val = None
+      try:
+        if bench:
+          # naive search for AUC tokens
+          for line in bench.splitlines():
+            low = line.lower()
+            if 'auc' in low and ',' in line:
+              parts = [p for p in line.replace(';',',').split(',') if p.strip()]
+              # find first float-like
+              for p in parts:
+                try:
+                  v = float(p)
+                  if 0 <= v <= 1.5: # plausible AUC
+                    auc_val = v
+                    raise StopIteration
+                except Exception:
+                  continue
+                  
+        if calib:
+          for line in calib.splitlines():
+            low = line.lower()
+            if 'ece' in low and ',' in line:
+              parts = [p for p in line.replace(';',',').split(',') if p.strip()]
+              for p in parts:
+                try:
+                  v = float(p)
+                  if 0 <= v <= 1: # plausible ECE
+                    ece_val = v
+                    raise StopIteration
+                except Exception:
+                  continue
+      except StopIteration:
+        pass
+
+      # Drift metric from any fairness or drift report if present
+      fairness_summary_path = RESULTS / 'fairness_summary.json'
+      drift_report_path = RESULTS / 'drift_report.json'
+      try:
+        if drift_report_path.exists():
+          d = json.loads(drift_report_path.read_text(encoding='utf-8'))
+          # look for drift_rate
+          def deep_find(o):
+            if isinstance(o, dict):
+              for k,v in o.items():
+                if 'drift' in k.lower() and isinstance(v,(int,float)):
+                  return float(v)
+              for v in o.values():
+                r = deep_find(v)
+                if r is not None:
+                  return r
+            if isinstance(o, list):
+              for it in o:
+                r = deep_find(it)
+                if r is not None:
+                  return r
+            return None
+          drift_val = deep_find(d)
+      except Exception:
+        pass
+
+      # Incident counts from audit CSV
+      high = med = lowc = 0
+      if audit:
+        for line in audit.splitlines()[1:]:  # skip header
+          parts = line.split(',')
+          if len(parts) >= 6:
+            sev = parts[5].strip()
+            if sev == 'High': high += 1
+            elif sev == 'Medium': med += 1
+            elif sev == 'Low': lowc += 1
+
+      # Obtain commit hash
+      try:
+        commit_hash = subprocess.check_output(['git','rev-parse','--short','HEAD'], text=True).strip()
+      except Exception:
+        commit_hash = 'unknown'
+
+      version_dir = Path('reports') / 'history'
+      version_dir.mkdir(parents=True, exist_ok=True)
+      versions_index = version_dir / 'versions.json'
+      versions = []
+      if versions_index.exists():
+        try:
+          versions = json.loads(versions_index.read_text(encoding='utf-8'))
+        except Exception:
+          versions = []
+
+      prev = versions[-1] if versions else None
+      deltas_html = "<p>No previous version available for delta comparison.</p>"
+      if prev:
+        def fmt(v):
+          return f"{v:.4f}" if isinstance(v,(int,float)) else 'N/A'
+        def delta(new, old):
+          if isinstance(new,(int,float)) and isinstance(old,(int,float)):
+            return f"{new-old:+.4f}"
+          return 'N/A'
+        deltas_html = f"""
+        <table style='border-collapse:collapse;'>
+        <tr><th style='text-align:left;padding:4px;'>Metric</th><th style='text-align:left;padding:4px;'>Current</th><th style='text-align:left;padding:4px;'>Previous</th><th style='text-align:left;padding:4px;'>Delta</th></tr>
+        <tr><td style='padding:4px;'>AUC</td><td style='padding:4px;'>{fmt(auc_val)}</td><td style='padding:4px;'>{fmt(prev.get('auc'))}</td><td style='padding:4px;'>{delta(auc_val, prev.get('auc'))}</td></tr>
+        <tr><td style='padding:4px;'>ECE</td><td style='padding:4px;'>{fmt(ece_val)}</td><td style='padding:4px;'>{fmt(prev.get('ece'))}</td><td style='padding:4px;'>{delta(ece_val, prev.get('ece'))}</td></tr>
+        <tr><td style='padding:4px;'>Drift</td><td style='padding:4px;'>{fmt(drift_val)}</td><td style='padding:4px;'>{fmt(prev.get('drift'))}</td><td style='padding:4px;'>{delta(drift_val, prev.get('drift'))}</td></tr>
+        <tr><td style='padding:4px;'>High Incidents</td><td style='padding:4px;'>{high}</td><td style='padding:4px;'>{prev.get('incidents_high','N/A')}</td><td style='padding:4px;'>{delta(high, prev.get('incidents_high'))}</td></tr>
+        <tr><td style='padding:4px;'>Medium Incidents</td><td style='padding:4px;'>{med}</td><td style='padding:4px;'>{prev.get('incidents_medium','N/A')}</td><td style='padding:4px;'>{delta(med, prev.get('incidents_medium'))}</td></tr>
+        <tr><td style='padding:4px;'>Low Incidents</td><td style='padding:4px;'>{lowc}</td><td style='padding:4px;'>{prev.get('incidents_low','N/A')}</td><td style='padding:4px;'>{delta(lowc, prev.get('incidents_low'))}</td></tr>
+        </table>
+        """
+
+      # Inject Performance Change Log section into HTML (prepend near top by rewriting file)
+      html_original = (BUILD / 'combined.html').read_text(encoding='utf-8')
+      insertion_marker = '<div class=\'cover\'>'
+      change_section = f"""
+      <div class='section'>
+      <h2>Performance Change Log</h2>
+      {deltas_html}
+      </div>
+      """
+      if insertion_marker in html_original:
+        parts = html_original.split(insertion_marker)
+        html_modified = parts[0] + insertion_marker + change_section + parts[1]
+      else:
+        html_modified = change_section + html_original
+      (BUILD / 'combined.html').write_text(html_modified, encoding='utf-8')
+
+      # Update versions index
+      entry = {
+      'commit_hash': commit_hash,
+      'generation_time_utc': ts,
+      'auc': auc_val,
+      'ece': ece_val,
+      'drift': drift_val,
+      'incidents_high': high,
+      'incidents_medium': med,
+      'incidents_low': lowc,
+      }
+            
+      versions.append(entry)
+      versions_index.write_text(json.dumps(versions, indent=2), encoding='utf-8')
+
+      # Decide versioned filename pattern
+      date_str = datetime.utcnow().strftime('%Y-%m-%d')
+      version_pdf_name = f"BioSignalX_Report_{date_str}_{commit_hash}.pdf"
+      (BUILD / 'versioned_name.txt').write_text(version_pdf_name, encoding='utf-8')
+      print('Version metadata updated.')
+
       - name: Export PDF (WeasyPrint)
         id: weasy
         continue-on-error: true
@@ -297,8 +455,16 @@ jobs:
         run: |
           mkdir -p reports
           cp build/pub/BioSignalX_Report.pdf reports/BioSignalX_Report.pdf
+          # Copy versioned history file
+          mkdir -p reports/history
+          if [ -f build/pub/versioned_name.txt ]; then \
+             VNAME=$(cat build/pub/versioned_name.txt); \
+             cp build/pub/BioSignalX_Report.pdf reports/history/$VNAME; \
+          fi
+          # Copy updated versions.json
+          if [ -f reports/history/versions.json ]; then echo 'versions.json present'; else echo 'versions.json missing?'; fi
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add reports/BioSignalX_Report.pdf
-          git commit -m "ci: add automated publication/export workflow" || echo "No changes to commit"
+          git add reports/BioSignalX_Report.pdf reports/history/*.pdf reports/history/versions.json
+          git commit -m "ci: versioned publication export with performance delta tracking" || echo "No changes to commit"
           git push
