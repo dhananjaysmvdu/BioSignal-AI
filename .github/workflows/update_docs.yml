@@ -372,6 +372,48 @@ ts_extra.append(
 )
 ts_content = "\n".join(ts_lines + ts_extra)
 base_cg = replace_block(base_cg, "<!-- TEMPORAL_STABILITY:BEGIN -->", "<!-- TEMPORAL_STABILITY:END -->", ts_content)
+
+# --- Trend notes (compliance) ---
+def parse_existing_notes(text: str) -> list[str]:
+  # Extract existing TREND_NOTES block content lines (excluding markers)
+  m = re.search(r"<!-- TREND_NOTES:BEGIN -->(.*?)<!-- TREND_NOTES:END -->", text, re.S)
+  if not m:
+    return []
+  block = m.group(1).strip('\n')
+  lines = [ln for ln in block.splitlines() if ln.strip()]
+  return lines
+
+notes = parse_existing_notes(base_cg)
+auc_delta = None
+ece_delta = None
+if len(epoch_rows) >= 2:
+  prev_ep, prev_auc, prev_ece = epoch_rows[-2]
+  last_ep, last_auc, last_ece = epoch_rows[-1]
+  if last_auc is not None and prev_auc is not None:
+    auc_delta = last_auc - prev_auc
+  if last_ece is not None and prev_ece is not None:
+    ece_delta = last_ece - prev_ece
+
+new_notes = []
+ts_now = datetime.utcnow().isoformat() + 'Z'
+def fmt_delta(d, precision=3):
+  return f"{d:+.{precision}f}" if d is not None else 'N/A'
+
+if auc_delta is not None and abs(auc_delta) > 0.02:
+  direction = 'increased' if auc_delta > 0 else 'decreased'
+  new_notes.append(f"[{ts_now}] AUC {direction} by {abs(auc_delta):.3f} on epoch {epoch_rows[-1][0]} (possible dataset or model change).")
+elif auc_delta is not None:
+  new_notes.append(f"[{ts_now}] AUC stable (Δ {fmt_delta(auc_delta)}).")
+
+if ece_delta is not None and abs(ece_delta) > 0.01:
+  direction = 'improved' if ece_delta < 0 else 'worsened'
+  new_notes.append(f"[{ts_now}] ECE {direction} by {abs(ece_delta):.3f} on epoch {epoch_rows[-1][0]} (calibration shift).")
+elif ece_delta is not None:
+  new_notes.append(f"[{ts_now}] ECE stable (Δ {fmt_delta(ece_delta)}).")
+
+combined = (new_notes + notes)[:5]  # keep last 5 (newest first)
+trend_block = "\n".join(combined) if combined else f"[{ts_now}] No trend data available."
+base_cg = replace_block(base_cg, "<!-- TREND_NOTES:BEGIN -->", "<!-- TREND_NOTES:END -->", trend_block)
 cg.write_text(base_cg, encoding='utf-8')
 
 # --- README.md ---
@@ -430,6 +472,30 @@ pt_extra.append(
 )
 pt_content = "\n".join(pt_lines + pt_extra)
 readme = replace_block(readme, "<!-- PERFORMANCE_TREND:BEGIN -->", "<!-- PERFORMANCE_TREND:END -->", pt_content)
+
+# --- Trend notes (README) ---
+readme_notes = []
+m = re.search(r"<!-- TREND_NOTES:BEGIN -->(.*?)<!-- TREND_NOTES:END -->", readme, re.S)
+if m:
+  existing_block = m.group(1).strip('\n')
+  readme_notes = [ln for ln in existing_block.splitlines() if ln.strip()]
+readme_new = []
+ts_now = datetime.utcnow().isoformat() + 'Z'
+if auc_delta is not None and abs(auc_delta) > 0.02:
+  direction = 'increased' if auc_delta > 0 else 'decreased'
+  readme_new.append(f"[{ts_now}] AUC {direction} by {abs(auc_delta):.3f} (epoch {epoch_rows[-1][0]}).")
+elif auc_delta is not None:
+  readme_new.append(f"[{ts_now}] AUC stable (Δ {fmt_delta(auc_delta)}).")
+
+if ece_delta is not None and abs(ece_delta) > 0.01:
+  direction = 'improved' if ece_delta < 0 else 'worsened'
+  readme_new.append(f"[{ts_now}] ECE {direction} by {abs(ece_delta):.3f} (epoch {epoch_rows[-1][0]}).")
+elif ece_delta is not None:
+  readme_new.append(f"[{ts_now}] ECE stable (Δ {fmt_delta(ece_delta)}).")
+
+readme_combined = (readme_new + readme_notes)[:5]
+trend_block_readme = "\n".join(readme_combined) if readme_combined else f"[{ts_now}] No trend data available."
+readme = replace_block(readme, "<!-- TREND_NOTES:BEGIN -->", "<!-- TREND_NOTES:END -->", trend_block_readme)
 rd.write_text(readme, encoding='utf-8')
 
 # --- literature_summary.md ---
