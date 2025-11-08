@@ -1,0 +1,18 @@
+cff-version: 1.2.0
+title: "BioSignal-X: AI-Powered Biomedical Signal Analysis and Visualization"
+authors:
+  - family-names: "Dhananjay"
+    given-names: "Mrityunjay"
+    affiliation: "Acharya Narendra Dev College, University of Delhi"
+    orcid: ""
+abstract: >
+  BioSignal-X is a multimodal AI framework for biosignal and lesion image classification,
+  combining deep learning, explainability (Grad-CAM), and biomedical data visualization.
+  It’s deployed via Hugging Face Spaces using Streamlit, enabling real-time inference and
+  transparent model interpretability for clinical research.
+repository-code: "https://github.com/dhananjaysmvdu/BioSignal-AI"
+url: "https://huggingface.co/spaces/LogDMax/BioSignal-X"
+license: MIT
+version: "1.0.0"
+date-released: "2025-11-09"
+message: "If you use this project, please cite it as below."
