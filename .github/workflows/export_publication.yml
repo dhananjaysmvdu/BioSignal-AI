@@ -37,6 +37,7 @@ jobs:
           import os, json
           from pathlib import Path
           from datetime import datetime
+          import sqlite3
 
           ROOT = Path('.')
           DOCS = ROOT / 'docs'
@@ -54,6 +55,136 @@ jobs:
           calib = read_p(RESULTS / 'calibration_report.csv')
           bench = read_p(RESULTS / 'benchmark_metrics.csv')
           audit = read_p(LOGS / 'audit_trail.csv')
+
+      # Collect figure artifacts
+      FIG_DIR = RESULTS / 'plots'
+      figs = {
+      'roc': FIG_DIR / 'roc.png',
+      'pr': FIG_DIR / 'pr.png',
+      'calibration': FIG_DIR / 'calibration.png',
+      'uncertainty': FIG_DIR / 'uncertainty.png',
+      }
+      embedded_imgs = []
+      for label, path in figs.items():
+        if path.exists():
+          # embed as data URI (png base64) for portability
+          import base64
+          b64 = base64.b64encode(path.read_bytes()).decode('utf-8')
+          embedded_imgs.append(f"<h3>{label.title()} Curve</h3><img src='data:image/png;base64,{b64}' alt='{label} plot' style='width:80%;border:1px solid #ddd;padding:4px;margin-bottom:12px;'/>")
+        else:
+          embedded_imgs.append(f"<h3>{label.title()} Curve</h3><p style='color:#999;'>Not available</p>")
+
+      # MLflow summary (SQLite or directory)
+      mlflow_summary = "<p style='color:#999;'>No MLflow tracking data found.</p>"
+      mlflow_db = ROOT / 'mlflow.db'
+      mlruns_dir = ROOT / 'mlruns'
+      if mlflow_db.exists():
+        try:
+          conn = sqlite3.connect(str(mlflow_db))
+          cur = conn.cursor()
+          # mlflow DB schema typical tables: runs, metrics, tags
+          # Get latest run by start_time
+          cur.execute("SELECT run_uuid, start_time FROM runs ORDER BY start_time DESC LIMIT 1")
+          row = cur.fetchone()
+          if row:
+            run_id, start_time = row
+            # Pull metrics of interest
+            def get_metric(key):
+              cur.execute("SELECT value FROM metrics WHERE run_uuid=? AND key=? ORDER BY step DESC LIMIT 1", (run_id, key))
+              m = cur.fetchone()
+              return m[0] if m else None
+            auc_m = get_metric('AUC') or get_metric('auc') or get_metric('roc_auc')
+            ece_m = get_metric('ECE') or get_metric('ece')
+            loss_m = get_metric('loss') or get_metric('val_loss')
+            acc_m = get_metric('accuracy') or get_metric('acc')
+            # Tags
+            def get_tag(key):
+              cur.execute("SELECT value FROM tags WHERE run_uuid=? AND key=? LIMIT 1", (run_id, key))
+              t = cur.fetchone()
+              return t[0] if t else None
+            phase = get_tag('phase')
+            reg = get_tag('regulatory_ready')
+            mlflow_summary = """
+            <table style='border-collapse:collapse;'>
+            <tr><th colspan='2' style='text-align:left;padding:4px;border-bottom:1px solid #ccc;'>Latest MLflow Run</th></tr>
+            <tr><td style='padding:4px;'>Run ID</td><td style='padding:4px;'>{run_id}</td></tr>
+            <tr><td style='padding:4px;'>Start Time</td><td style='padding:4px;'>{start_time}</td></tr>
+            <tr><td style='padding:4px;'>Phase</td><td style='padding:4px;'>{phase or 'N/A'}</td></tr>
+            <tr><td style='padding:4px;'>Regulatory Ready</td><td style='padding:4px;'>{reg or 'N/A'}</td></tr>
+            <tr><td style='padding:4px;'>AUC</td><td style='padding:4px;'>{auc_m if auc_m is not None else 'N/A'}</td></tr>
+            <tr><td style='padding:4px;'>ECE</td><td style='padding:4px;'>{ece_m if ece_m is not None else 'N/A'}</td></tr>
+            <tr><td style='padding:4px;'>Loss</td><td style='padding:4px;'>{loss_m if loss_m is not None else 'N/A'}</td></tr>
+            <tr><td style='padding:4px;'>Accuracy</td><td style='padding:4px;'>{acc_m if acc_m is not None else 'N/A'}</td></tr>
+            </table>
+            """
+          conn.close()
+        except Exception as e:
+          mlflow_summary = f"<p style='color:#c00;'>Failed to read MLflow DB: {e}</p>"
+      elif mlruns_dir.exists():
+        try:
+          # Traverse subdirectories to find latest meta.yaml
+          # mlruns/<experiment_id>/<run_id>/meta.yaml typical
+          import yaml
+          latest_meta = None
+          latest_time = -1
+          for meta in mlruns_dir.rglob('meta.yaml'):
+            try:
+              data = yaml.safe_load(meta.read_text(encoding='utf-8'))
+              st = data.get('start_time', -1)
+              if st and st > latest_time:
+                latest_time = st
+                latest_meta = data
+            except Exception:
+              continue
+          if latest_meta:
+            run_id = latest_meta.get('run_id') or latest_meta.get('run_uuid')
+            start_time = latest_meta.get('start_time')
+            # metrics may be in metrics file; gather basics if present
+            auc_m = ece_m = loss_m = acc_m = None
+            # Attempt reading metric files
+            run_dir = mlruns_dir / str(latest_meta.get('experiment_id', '0')) / str(run_id)
+            for mfile in run_dir.glob('metrics/*'):
+              try:
+                key = mfile.name
+                val_lines = mfile.read_text(encoding='utf-8').strip().splitlines()
+                if val_lines:
+                  # each line: value timestamp step
+                  last_line = val_lines[-1].split()
+                  val = float(last_line[0])
+                  if key.lower() in ['auc','roc_auc','auroc','rocauc']:
+                    auc_m = val
+                  elif key.lower() == 'ece':
+                    ece_m = val
+                  elif key.lower() in ['loss','val_loss']:
+                    loss_m = val
+                  elif key.lower() in ['accuracy','acc']:
+                    acc_m = val
+              except Exception:
+                continue
+            tags_file = run_dir / 'tags' / 'tags.yaml'
+            phase = reg = None
+            if tags_file.exists():
+              try:
+                tag_data = yaml.safe_load(tags_file.read_text(encoding='utf-8'))
+                phase = tag_data.get('phase')
+                reg = tag_data.get('regulatory_ready')
+              except Exception:
+                pass
+            mlflow_summary = f"""
+            <table style='border-collapse:collapse;'>
+            <tr><th colspan='2' style='text-align:left;padding:4px;border-bottom:1px solid #ccc;'>Latest MLflow Run</th></tr>
+            <tr><td style='padding:4px;'>Run ID</td><td style='padding:4px;'>{run_id or 'N/A'}</td></tr>
+            <tr><td style='padding:4px;'>Start Time</td><td style='padding:4px;'>{start_time or 'N/A'}</td></tr>
+            <tr><td style='padding:4px;'>Phase</td><td style='padding:4px;'>{phase or 'N/A'}</td></tr>
+            <tr><td style='padding:4px;'>Regulatory Ready</td><td style='padding:4px;'>{reg or 'N/A'}</td></tr>
+            <tr><td style='padding:4px;'>AUC</td><td style='padding:4px;'>{auc_m if auc_m is not None else 'N/A'}</td></tr>
+            <tr><td style='padding:4px;'>ECE</td><td style='padding:4px;'>{ece_m if ece_m is not None else 'N/A'}</td></tr>
+            <tr><td style='padding:4px;'>Loss</td><td style='padding:4px;'>{loss_m if loss_m is not None else 'N/A'}</td></tr>
+            <tr><td style='padding:4px;'>Accuracy</td><td style='padding:4px;'>{acc_m if acc_m is not None else 'N/A'}</td></tr>
+            </table>
+            """
+        except Exception as e:
+          mlflow_summary = f"<p style='color:#c00;'>Failed to parse mlruns: {e}</p>"
 
           title = 'BioSignal-X: Autonomous Clinical AI Governance Report'
           author = 'Mrityunjay'
@@ -81,6 +212,16 @@ jobs:
               <h1>{title}</h1>
               <p>Author: {author}</p>
               <p>Generated: {ts}</p>
+            </div>
+
+            <div class='section'>
+              <h2>Model Performance Visualization</h2>
+              {''.join(embedded_imgs)}
+            </div>
+
+            <div class='section'>
+              <h2>Latest MLflow Summary</h2>
+              {mlflow_summary}
             </div>
 
             <div class='section'>
