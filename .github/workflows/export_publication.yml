@@ -1,0 +1,163 @@
+name: Export Publication Report
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 4 * * 1" # Weekly on Mondays at 04:00 UTC
+
+jobs:
+  export-publication:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      actions: read
+      id-token: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies from lock
+        run: |
+          python -m pip install --upgrade pip
+          if [ -f requirements.lock ]; then pip install -r requirements.lock; else pip install nbconvert weasyprint jinja2; fi
+
+      - name: Prepare report workspace
+        run: |
+          mkdir -p reports
+          mkdir -p build/pub
+
+      - name: Gather inputs and build combined HTML
+        shell: python
+        run: |
+          import os, json
+          from pathlib import Path
+          from datetime import datetime
+
+          ROOT = Path('.')
+          DOCS = ROOT / 'docs'
+          RESULTS = ROOT / 'results'
+          LOGS = ROOT / 'logs'
+          BUILD = ROOT / 'build' / 'pub'
+          BUILD.mkdir(parents=True, exist_ok=True)
+
+          def read_p(p):
+            return Path(p).read_text(encoding='utf-8') if Path(p).exists() else ''
+
+          readme = read_p('README.md')
+          comp = read_p(DOCS / 'compliance_guidelines.md')
+          lit = read_p(DOCS / 'literature_summary.md')
+          calib = read_p(RESULTS / 'calibration_report.csv')
+          bench = read_p(RESULTS / 'benchmark_metrics.csv')
+          audit = read_p(LOGS / 'audit_trail.csv')
+
+          title = 'BioSignal-X: Autonomous Clinical AI Governance Report'
+          author = 'Mrityunjay'
+          ts = datetime.utcnow().isoformat() + 'Z'
+
+          # Very lightweight HTML assembly
+          html = f"""
+          <!doctype html>
+          <html lang='en'>
+          <head>
+            <meta charset='utf-8'/>
+            <meta name='viewport' content='width=device-width, initial-scale=1'/>
+            <title>{title}</title>
+            <style>
+              body {{ font-family: Arial, sans-serif; margin: 24px; }}
+              h1,h2,h3 {{ color: #111; }}
+              pre, code {{ font-family: Consolas, monospace; font-size: 12px; }}
+              .cover {{ border-bottom: 1px solid #ddd; margin-bottom: 24px; padding-bottom: 12px; }}
+              .section {{ margin: 18px 0; }}
+              .mono {{ white-space: pre-wrap; background: #fafafa; border: 1px solid #eee; padding: 10px; }}
+            </style>
+          </head>
+          <body>
+            <div class='cover'>
+              <h1>{title}</h1>
+              <p>Author: {author}</p>
+              <p>Generated: {ts}</p>
+            </div>
+
+            <div class='section'>
+              <h2>README</h2>
+              <div class='mono'>{readme.replace('<','&lt;').replace('>','&gt;')}</div>
+            </div>
+
+            <div class='section'>
+              <h2>Compliance Guidelines</h2>
+              <div class='mono'>{comp.replace('<','&lt;').replace('>','&gt;')}</div>
+            </div>
+
+            <div class='section'>
+              <h2>Literature Summary</h2>
+              <div class='mono'>{lit.replace('<','&lt;').replace('>','&gt;')}</div>
+            </div>
+
+            <div class='section'>
+              <h2>Evaluation Artifacts</h2>
+              <h3>Calibration Report (CSV)</h3>
+              <pre class='mono'>{calib}</pre>
+              <h3>Benchmark Metrics (CSV)</h3>
+              <pre class='mono'>{bench}</pre>
+              <h3>Audit Trail (CSV)</h3>
+              <pre class='mono'>{audit}</pre>
+            </div>
+          </body>
+          </html>
+          """
+
+          (BUILD / 'combined.html').write_text(html, encoding='utf-8')
+          print('Built combined HTML')
+
+      - name: Export PDF (WeasyPrint)
+        id: weasy
+        continue-on-error: true
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          from weasyprint import HTML
+
+          html_path = Path('build/pub/combined.html')
+          pdf_path = Path('build/pub/BioSignalX_Report.pdf')
+          HTML(filename=str(html_path)).write_pdf(str(pdf_path))
+          print('PDF written:', pdf_path)
+          PY
+
+      - name: Fallback Export (nbconvert)
+        if: steps.weasy.outcome == 'failure'
+        run: |
+          pip install nbconvert
+          python - <<'PY'
+          from pathlib import Path
+          import nbformat as nbf
+          from nbconvert import PDFExporter
+
+          html = Path('build/pub/combined.html').read_text(encoding='utf-8')
+          nb = nbf.v4.new_notebook()
+          nb.cells.append(nbf.v4.new_markdown_cell(html))
+          pdf_exporter = PDFExporter()
+          (body, resources) = pdf_exporter.from_notebook_node(nb)
+          Path('build/pub/BioSignalX_Report.pdf').write_bytes(body)
+          print('PDF written via nbconvert')
+          PY
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: BioSignalX_Report
+          path: build/pub/BioSignalX_Report.pdf
+
+      - name: Commit PDF to repo
+        run: |
+          mkdir -p reports
+          cp build/pub/BioSignalX_Report.pdf reports/BioSignalX_Report.pdf
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add reports/BioSignalX_Report.pdf
+          git commit -m "ci: add automated publication/export workflow" || echo "No changes to commit"
+          git push
