@@ -414,6 +414,86 @@ elif ece_delta is not None:
 combined = (new_notes + notes)[:5]  # keep last 5 (newest first)
 trend_block = "\n".join(combined) if combined else f"[{ts_now}] No trend data available."
 base_cg = replace_block(base_cg, "<!-- TREND_NOTES:BEGIN -->", "<!-- TREND_NOTES:END -->", trend_block)
+
+# --- Incident classification & audit trail ---
+def classify_incident(notes_list: list[str]) -> tuple[str,str]:
+  """Return (type, severity)."""
+  if not notes_list:
+    return "Stable", "Low"
+  latest = notes_list[0].lower()
+  if "auc decreased" in latest or "ece worsened" in latest:
+    return "Performance Drop", "High"
+  if "auc increased" in latest:
+    return "Data Shift", "Medium"
+  if "ece improved" in latest:
+    return "Calibration Improvement", "Low"
+  return "Stable", "Low"
+
+incident_type, severity = classify_incident(new_notes)
+incident_epoch = epoch_rows[-1][0] if epoch_rows else 'N/A'
+def safe_float(x):
+  try:
+    return f"{float(x):.6f}" if x is not None else ''
+  except Exception:
+    return ''
+row_timestamp = ts_now
+delta_auc_str = safe_float(auc_delta)
+delta_ece_str = safe_float(ece_delta)
+
+# Write/append to logs/audit_trail.csv with dedup (timestamp+epoch)
+LOG_DIR = Path('logs')
+LOG_DIR.mkdir(exist_ok=True)
+audit_csv = LOG_DIR / 'audit_trail.csv'
+existing_keys = set()
+rows_existing = []
+if audit_csv.exists():
+  try:
+    import csv as _csv
+    with audit_csv.open('r', encoding='utf-8') as f:
+      r = _csv.DictReader(f)
+      for line in r:
+        k = (line.get('timestamp'), line.get('epoch'))
+        existing_keys.add(k)
+        rows_existing.append(line)
+  except Exception:
+    pass
+new_key = (row_timestamp, str(incident_epoch))
+if new_key not in existing_keys:
+  rows_existing.append({
+    'timestamp': row_timestamp,
+    'epoch': incident_epoch,
+    'type': incident_type,
+    'delta_auc': delta_auc_str,
+    'delta_ece': delta_ece_str,
+    'severity': severity,
+  })
+  try:
+    import csv as _csv
+    with audit_csv.open('w', encoding='utf-8', newline='') as f:
+      w = _csv.DictWriter(f, fieldnames=['timestamp','epoch','type','delta_auc','delta_ece','severity'])
+      w.writeheader()
+      for rline in rows_existing:
+        w.writerow(rline)
+  except Exception:
+    pass
+
+# Build AUDIT_TRAIL block (last 5 incidents, newest first)
+def format_audit_table(all_rows: list[dict]) -> str:
+  if not all_rows:
+    return "No incidents recorded."
+  # sort descending by timestamp
+  try:
+    sorted_rows = sorted(all_rows, key=lambda d: d.get('timestamp',''), reverse=True)[:5]
+  except Exception:
+    sorted_rows = all_rows[-5:]
+  lines = ["| Timestamp | Epoch | Type | ΔAUC | ΔECE | Severity |", "|---|---|---|---|---|---|"]
+  for r in sorted_rows:
+    lines.append(f"| {r.get('timestamp','')} | {r.get('epoch','')} | {r.get('type','')} | {r.get('delta_auc','')} | {r.get('delta_ece','')} | {r.get('severity','')} |")
+  lines.append(f"Updated: {ts_now}")
+  return "\n".join(lines)
+
+audit_block = format_audit_table(rows_existing)
+base_cg = replace_block(base_cg, "<!-- AUDIT_TRAIL:BEGIN -->", "<!-- AUDIT_TRAIL:END -->", audit_block)
 cg.write_text(base_cg, encoding='utf-8')
 
 # --- README.md ---
