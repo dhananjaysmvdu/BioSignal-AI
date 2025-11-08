@@ -177,6 +177,41 @@ def rolling_stats(values: list[float], window: int):
   var = sum((x-mean)**2 for x in tail)/(len(tail)-1)
   return mean, math.sqrt(var)
 
+def last_value(values: list[float]):
+  for v in reversed(values):
+    if v is not None:
+      return v
+  return None
+
+def generate_sparkline_svg(values: list[float], width: int = 150, height: int = 50, stroke: str = 'green') -> str | None:
+  pts = [v for v in values if v is not None]
+  if len(pts) < 2:
+    return None
+  vmin, vmax = min(pts), max(pts)
+  # avoid zero division; if flat line, center it
+  if vmax - vmin < 1e-12:
+    y = height/2
+    path = f"M 0 {y} L {width} {y}"
+    return f"<svg viewBox=\"0 0 {width} {height}\" width=\"{width}\" height=\"{height}\" xmlns=\"http://www.w3.org/2000/svg\"><path d=\"{path}\" fill=\"none\" stroke=\"{stroke}\" stroke-width=\"2\"/></svg>"
+  n = len(values)
+  # compute points; skip None by carrying last known
+  coords = []
+  last_y = None
+  for i, v in enumerate(values):
+    x = (i/(n-1)) * (width-1)
+    if v is None:
+      if last_y is None:
+        continue
+      y = last_y
+    else:
+      y = height - ((v - vmin) / (vmax - vmin)) * (height-1)
+      last_y = y
+    coords.append((x, y))
+  if len(coords) < 2:
+    return None
+  d = " ".join([("M" if idx == 0 else "L") + f" {x:.1f} {y:.1f}" for idx, (x, y) in enumerate(coords)])
+  return f"<svg viewBox=\"0 0 {width} {height}\" width=\"{width}\" height=\"{height}\" xmlns=\"http://www.w3.org/2000/svg\"><path d=\"{d}\" fill=\"none\" stroke=\"{stroke}\" stroke-width=\"2\"/></svg>"
+
 def find_in_obj(obj, candidate_keys: list[str]):
   # Depth-first search for first numeric match by key name
   def _search(o):
@@ -315,7 +350,28 @@ ts_lines = [
   f"| ECE | {fmt_num(ece_mean,3) if ece_mean is not None else 'N/A'} | {fmt_num(ece_std,3) if ece_std is not None else 'N/A'} | {last_epoch if last_epoch is not None else 'N/A'} |",
   f"| Updated | {datetime.utcnow().isoformat()}Z |  |  |",
 ]
-base_cg = replace_block(base_cg, "<!-- TEMPORAL_STABILITY:BEGIN -->", "<!-- TEMPORAL_STABILITY:END -->", "\n".join(ts_lines))
+auc_svg = generate_sparkline_svg(auc_series, stroke="#10b981")  # green
+ece_svg = generate_sparkline_svg(ece_series, stroke="#f59e0b")  # orange
+auc_last = last_value(auc_series)
+ece_last = last_value(ece_series)
+ts_extra = []
+if auc_svg or ece_svg:
+  ts_extra.append("")
+  ts_extra.append("AUC trend:")
+  ts_extra.append(auc_svg if auc_svg else "No trend data available")
+  ts_extra.append("")
+  ts_extra.append("ECE trend:")
+  ts_extra.append(ece_svg if ece_svg else "No trend data available")
+else:
+  ts_extra.append("")
+  ts_extra.append("No trend data available")
+ts_extra.append("")
+ts_extra.append(
+  f"Averages — AUC mean: {fmt_num(auc_mean,3) if auc_mean is not None else 'N/A'}, last: {fmt_num(auc_last,3) if auc_last is not None else 'N/A'}; "
+  f"ECE mean: {fmt_num(ece_mean,3) if ece_mean is not None else 'N/A'}, last: {fmt_num(ece_last,3) if ece_last is not None else 'N/A'}"
+)
+ts_content = "\n".join(ts_lines + ts_extra)
+base_cg = replace_block(base_cg, "<!-- TEMPORAL_STABILITY:BEGIN -->", "<!-- TEMPORAL_STABILITY:END -->", ts_content)
 cg.write_text(base_cg, encoding='utf-8')
 
 # --- README.md ---
@@ -356,7 +412,24 @@ pt_lines = [
   f"| ECE | {fmt_num(ece_mean,3) if ece_mean is not None else 'N/A'} | {fmt_num(ece_std,3) if ece_std is not None else 'N/A'} | {last_epoch if last_epoch is not None else 'N/A'} |",
   f"| Updated | {datetime.utcnow().isoformat()}Z |  |  |",
 ]
-readme = replace_block(readme, "<!-- PERFORMANCE_TREND:BEGIN -->", "<!-- PERFORMANCE_TREND:END -->", "\n".join(pt_lines))
+pt_extra = []
+if auc_svg or ece_svg:
+  pt_extra.append("")
+  pt_extra.append("AUC trend:")
+  pt_extra.append(auc_svg if auc_svg else "No trend data available")
+  pt_extra.append("")
+  pt_extra.append("ECE trend:")
+  pt_extra.append(ece_svg if ece_svg else "No trend data available")
+else:
+  pt_extra.append("")
+  pt_extra.append("No trend data available")
+pt_extra.append("")
+pt_extra.append(
+  f"Averages — AUC mean: {fmt_num(auc_mean,3) if auc_mean is not None else 'N/A'}, last: {fmt_num(auc_last,3) if auc_last is not None else 'N/A'}; "
+  f"ECE mean: {fmt_num(ece_mean,3) if ece_mean is not None else 'N/A'}, last: {fmt_num(ece_last,3) if ece_last is not None else 'N/A'}"
+)
+pt_content = "\n".join(pt_lines + pt_extra)
+readme = replace_block(readme, "<!-- PERFORMANCE_TREND:BEGIN -->", "<!-- PERFORMANCE_TREND:END -->", pt_content)
 rd.write_text(readme, encoding='utf-8')
 
 # --- literature_summary.md ---
