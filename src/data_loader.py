@@ -332,10 +332,19 @@ def build_dataset(root: Path, dataset: str) -> SkinDataset:
 def stratified_split_by_site(frame: pd.DataFrame, test_ratio: float = 0.2) -> Tuple[List[int], List[int]]:
     """Split indices so that each site contributes to both train/val where possible.
 
-    Uses a simple per-site holdout proportion.
-    If no site column, falls back to a random split.
+    Site column is inferred from common names: site|source_site|center|institution|dataset|collection_site.
+    Falls back to random split when none found.
     """
-    if "site" not in frame.columns:
+    site_col_candidates = [
+        "site",
+        "source_site",
+        "center",
+        "institution",
+        "dataset",
+        "collection_site",
+    ]
+    site_col = next((c for c in site_col_candidates if c in frame.columns), None)
+    if site_col is None:
         indices = list(range(len(frame)))
         random.shuffle(indices)
         split = int((1 - test_ratio) * len(indices))
@@ -343,7 +352,7 @@ def stratified_split_by_site(frame: pd.DataFrame, test_ratio: float = 0.2) -> Tu
 
     train_idx: List[int] = []
     val_idx: List[int] = []
-    for site, sub in frame.groupby("site"):
+    for site, sub in frame.groupby(site_col):
         idxs = list(sub.index)
         random.shuffle(idxs)
         k = max(1, int(test_ratio * len(idxs)))
