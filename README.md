@@ -41,6 +41,20 @@ BioSignal-X is a research and educational framework. Predictions are not validat
 The project encourages responsible use of medical AI, transparency in model interpretability, and fairness across demographic groups.  
 Any deployment in healthcare contexts must follow institutional review and regulatory standards.
 
+## Clinical Validation
+- External cohort evaluation via `clinical_validation/validate_clinical.py` with MC Dropout uncertainty and per-case JSON outputs.
+- Group-level summaries by site and demographics (sex, age bins, skin type where available).
+- Inter-site variance analysis in `benchmarks/compare_baselines.ipynb` produces CSV and boxplot artifacts.
+
+## Regulatory Alignment
+- See `docs/compliance_guidelines.md` for SaMD, EU MDR, and ISO references with capability mapping.
+- Calibration reporting (ECE, Brier), traceability logs, and versioned artifacts support reproducibility.
+
+## Governance & Traceability
+- Training logs: `results/calibration_report.csv`, `checkpoints/metrics.csv`.
+- Traceability: `logs/traceability.json` records model hash, config, dataset, and timestamps.
+- Literature and experimental roadmap guide bias audits and reader study planning.
+
 ## Citation
 If you use BioSignal-X in your research, please cite using the included `CITATION.cff` file or the following:
 

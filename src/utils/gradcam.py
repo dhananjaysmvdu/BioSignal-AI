@@ -1,4 +1,4 @@
-"""Grad-CAM visualization helpers for interpreting convolutional models."""
+"""Explainability helpers: Grad-CAM plus optional Captum methods (Integrated Gradients, DeepLIFT)."""
 
 from __future__ import annotations
 
@@ -12,6 +12,11 @@ from PIL import Image
 import torch
 
 from src.preprocess import load_metadata_encoders, transform_metadata, fit_metadata_encoders
+try:
+    from captum.attr import IntegratedGradients, DeepLift
+except Exception:  # captum optional
+    IntegratedGradients = None
+    DeepLift = None
 from src.data_loader import SkinDataset
 
 
@@ -93,6 +98,27 @@ class GradCAM:
         heatmap /= (heatmap.max() + 1e-8)
         return heatmap.cpu().numpy()
 
+    def captum_attributions(self, image_tensor: torch.Tensor, metadata_tensor: torch.Tensor, method: str = "ig") -> Optional[np.ndarray]:
+        if IntegratedGradients is None:
+            return None
+        self.model.eval()
+        def fwd(x):
+            logits, _ = self.model(x, metadata_tensor)
+            return logits[:, 1]
+        if method == "ig":
+            ig = IntegratedGradients(fwd)
+            attr = ig.attribute(image_tensor, baselines=image_tensor*0, n_steps=32)
+        else:
+            if DeepLift is None:
+                return None
+            dl = DeepLift(fwd)
+            attr = dl.attribute(image_tensor, baselines=image_tensor*0)
+        # Aggregate channels
+        att = attr.abs().mean(dim=1, keepdim=False)
+        att = att[0].detach().cpu().numpy()
+        att = (att - att.min()) / (att.max() + 1e-8)
+        return att
+
     def __del__(self):
         for handle in self.hook_handles:
             handle.remove()
@@ -162,3 +188,14 @@ if __name__ == "__main__":
     output_path = results_dir / "gradcam_test.png"
     blended.save(output_path)
     print(f"Grad-CAM overlay saved to {output_path}")
+    # Captum demo if available
+    try:
+        cam2 = GradCAM(model, metadata_dim=metadata_dim)
+        ig_map = cam2.captum_attributions(image_batch, metadata_tensor, method="ig")
+        if ig_map is not None:
+            import cv2
+            ig_uint8 = (ig_map*255).astype('uint8')
+            ig_color = cv2.applyColorMap(ig_uint8, cv2.COLORMAP_MAGMA)
+            Image.fromarray(cv2.cvtColor(ig_color, cv2.COLOR_BGR2RGB)).save(results_dir/"integrated_gradients_test.png")
+    except Exception:
+        pass

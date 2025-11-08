@@ -20,6 +20,9 @@ from src.data_loader import SkinDataset, create_sample_dataset
 from src.models.biosignal_model import BioSignalModel
 from src.preprocess import load_metadata_encoders, transform_metadata
 from sklearn.metrics import brier_score_loss, roc_auc_score, confusion_matrix
+from datetime import datetime
+import hashlib
+import json
 
 
 def parse_args() -> argparse.Namespace:
@@ -366,6 +369,38 @@ def main() -> None:
                     "mc_dropout_entropy": avg_entropy,
                 }
             )
+
+        # Traceability logging
+        trace_dir = Path("logs"); trace_dir.mkdir(exist_ok=True)
+        trace_file = trace_dir / "traceability.json"
+        # Model hash
+        state_bytes = b"".join([p.detach().cpu().numpy().tobytes() for p in model.state_dict().values()])
+        model_hash = hashlib.sha256(state_bytes).hexdigest()[:16]
+        record = {
+            "event": "train_epoch",
+            "epoch": epoch + 1,
+            "timestamp": datetime.utcnow().isoformat() + "Z",
+            "model_hash": model_hash,
+            "train_loss": avg_train_loss,
+            "val_loss": avg_val_loss,
+            "val_acc": val_acc,
+            "auc": auc,
+            "ece": ece,
+            "brier": brier,
+            "mc_dropout_entropy": avg_entropy,
+        }
+        try:
+            if trace_file.exists():
+                existing = json.loads(trace_file.read_text(encoding='utf-8'))
+                if isinstance(existing, list):
+                    existing.append(record)
+                else:
+                    existing = [existing, record]
+            else:
+                existing = [record]
+            trace_file.write_text(json.dumps(existing, indent=2), encoding='utf-8')
+        except Exception:
+            pass
 
     print("Training complete. Latest metrics:")
     print(f"  Train loss: {avg_train_loss:.4f}")
