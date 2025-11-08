@@ -1,8 +1,25 @@
+---
+title: "BioSignal-X: AI-Powered Biomedical Signal Analysis"
+tags: ["streamlit", "biosignals", "deep-learning", "explainable-ai", "healthcare"]
+license: "mit"
+datasets: []
+---
+
 # BioSignal-AI
 
-[![CI](https://img.shields.io/badge/CI-pending-lightgrey.svg)](#) [![License](https://img.shields.io/badge/license-Apache--2.0-lightgrey.svg)](#)
+[![Hugging Face Spaces](https://img.shields.io/badge/%F0%9F%A4%97%20View%20on%20Hugging%20Face%20Spaces-blue)](https://huggingface.co/spaces/LogDMax/BioSignal-X) [![CI](https://img.shields.io/badge/CI-pending-lightgrey.svg)](#) [![License](https://img.shields.io/badge/license-Apache--2.0-lightgrey.svg)](#)
 
 *Multimodal dermatology research toolkit for pairing dermoscopy imagery with contextual patient data.*
+
+## Project Overview
+- **Title:** BioSignal-X
+- **Description:** AI-driven biosignal analysis platform integrating deep learning with biomedical data visualization and explainability (Grad-CAM).
+- **Deployed at:** https://huggingface.co/spaces/LogDMax/BioSignal-X
+- **Maintainer:** dhananjaysmvdu
+- **License:** MIT
+
+## Launch Demo
+- Explore the live application on Hugging Face Spaces: https://huggingface.co/spaces/LogDMax/BioSignal-X
 
 ## Problem Statement
 Dermatology lacks reproducible baselines for combining dermoscopic images with metadata such as demographics, lesion history, and acquisition context. BioSignal-AI aims to deliver a research-grade pipeline that ingests paired inputs, harmonizes modalities, and trains classifiers capable of leveraging both visual and tabular signals for skin lesion risk stratification.
