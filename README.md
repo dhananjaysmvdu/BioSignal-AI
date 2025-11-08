@@ -3,6 +3,7 @@ title: "BioSignal-X: AI-Powered Biomedical Signal Analysis"
 tags: ["streamlit", "biosignals", "deep-learning", "explainable-ai", "healthcare"]
 license: "mit"
 datasets: []
+author: "Mrityunjay Dhananjay"
 ---
 
 # BioSignal-AI
@@ -61,3 +62,11 @@ BioSignal-AI is a research prototype only; it is **not** validated for clinical 
 
 Triggered Hugging Face deployment via Copilot Agent.
 ✅ Redeployment triggered by Copilot Agent — target Space: LogDMax/BioSignal-X.
+
+## Author & Acknowledgment
+**Project Lead & Developer:** Mrityunjay Dhananjay  
+B.Sc. (Hons) Biomedical Science, Acharya Narendra Dev College, University of Delhi  
+
+BioSignal-X was conceptualized, developed, and deployed by Mrityunjay Dhananjay.  
+The project integrates biomedical AI research, explainable deep learning, and multimodal data visualization through Streamlit and Hugging Face Spaces.  
+Special thanks to the open-source community and free research tools that made this project possible.
