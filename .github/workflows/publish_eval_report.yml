@@ -1,0 +1,54 @@
+name: Nightly Evaluation Report Publish
+
+on:
+  schedule:
+    - cron: '0 3 * * *'
+  workflow_dispatch:
+
+jobs:
+  publish-eval-report:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: Install system dependencies for WeasyPrint
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libcairo2 libpango-1.0-0 libgdk-pixbuf2.0-0 libffi-dev shared-mime-info
+
+      - name: Install Python dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install pandas numpy matplotlib seaborn scikit-learn jinja2 mlflow jupyter nbconvert weasyprint
+
+      - name: Configure git author
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: Execute evaluation notebook
+        env:
+          MLFLOW_TRACKING_URI: sqlite:///mlflow.db
+          MLFLOW_EXPERIMENT: BioSignalX
+        run: |
+          python -m jupyter nbconvert --to notebook --execute notebooks/generate_eval_report.ipynb --output executed_eval.ipynb
+
+      - name: Ensure HTML and PDF are present
+        run: |
+          test -f results/report_summary.html || (echo "HTML missing" && exit 1)
+          test -f results/report_summary.pdf || (echo "PDF missing" && exit 1)
+
+      - name: Commit evaluation report artifacts
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "Stabilize evaluation pipeline and enable nightly report publishing."
+          file_pattern: |
+            results/report_summary.html
+            results/report_summary.pdf
+          branch: ${{ github.head_ref || github.ref_name }}
