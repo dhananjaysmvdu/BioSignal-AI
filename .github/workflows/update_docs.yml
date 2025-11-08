@@ -52,7 +52,7 @@ jobs:
         shell: bash
         run: |
       python - <<'PY'
-import os, json, re, csv
+import os, json, re, csv, math
 from datetime import datetime
 from pathlib import Path
 
@@ -112,6 +112,70 @@ def read_csv_metric(path: Path, candidate_columns: list[str]):
       return sum(vals)/len(vals)
   except Exception:
     return None
+
+def read_epoch_metrics(path: Path, auc_cols=None, ece_cols=None, epoch_cols=None):
+  """Return list of (epoch, auc, ece) tuples if possible."""
+  if auc_cols is None:
+    auc_cols = ['auc','roc_auc','auroc','rocauc']
+  if ece_cols is None:
+    ece_cols = ['ece','expected_calibration_error']
+  if epoch_cols is None:
+    epoch_cols = ['epoch','step','iteration']
+  if not path.exists():
+    return []
+  try:
+    with path.open('r', encoding='utf-8') as f:
+      reader = csv.DictReader(f)
+      if not reader.fieldnames:
+        return []
+      # map normalized names
+      norm_map = {_norm(fn): fn for fn in reader.fieldnames}
+      def pick(cols):
+        for c in cols:
+          nc = _norm(c)
+          if nc in norm_map:
+            return norm_map[nc]
+        # fuzzy contains
+        for c in cols:
+          nc = _norm(c)
+          for k in reader.fieldnames:
+            if nc in _norm(k):
+              return k
+        return None
+      epoch_col = pick(epoch_cols)
+      auc_col = pick(auc_cols)
+      ece_col = pick(ece_cols)
+      rows = []
+      for row in reader:
+        try:
+          ep = int(float(row[epoch_col])) if epoch_col and row.get(epoch_col) not in (None,'') else None
+        except Exception:
+          ep = None
+        try:
+          auc_v = float(str(row[auc_col]).replace('%','')) if auc_col and row.get(auc_col) not in (None,'') else None
+        except Exception:
+          auc_v = None
+        try:
+          ece_v = float(str(row[ece_col]).replace('%','')) if ece_col and row.get(ece_col) not in (None,'') else None
+        except Exception:
+          ece_v = None
+        if ep is not None and (auc_v is not None or ece_v is not None):
+          rows.append((ep, auc_v, ece_v))
+      rows.sort(key=lambda t: t[0])
+      return rows
+  except Exception:
+    return []
+
+def rolling_stats(values: list[float], window: int):
+  vals = [v for v in values if v is not None]
+  if len(vals) == 0:
+    return None, None
+  tail = vals[-window:] if len(vals) >= window else vals
+  mean = sum(tail)/len(tail)
+  if len(tail) < 2:
+    return mean, None
+  var = sum((x-mean)**2 for x in tail)/(len(tail)-1)
+  return mean, math.sqrt(var)
 
 def find_in_obj(obj, candidate_keys: list[str]):
   # Depth-first search for first numeric match by key name
@@ -236,6 +300,22 @@ unc_lines = [
   f"| Last updated | {datetime.utcnow().isoformat()}Z |",
 ]
 base_cg = replace_block(base_cg, "<!-- UNCERTAINTY_SUMMARY:BEGIN -->", "<!-- UNCERTAINTY_SUMMARY:END -->", "\n".join(unc_lines))
+
+# Temporal stability (rolling stats)
+epoch_rows = read_epoch_metrics(calib_csv)
+auc_series = [r[1] for r in epoch_rows if r[1] is not None]
+ece_series = [r[2] for r in epoch_rows if r[2] is not None]
+last_epoch = epoch_rows[-1][0] if epoch_rows else None
+auc_mean, auc_std = rolling_stats(auc_series, 5)
+ece_mean, ece_std = rolling_stats(ece_series, 5)
+ts_lines = [
+  "| Metric | Mean | Std Dev | Last Epoch |",
+  "|---|---|---|---|",
+  f"| AUC | {fmt_num(auc_mean,3) if auc_mean is not None else 'N/A'} | {fmt_num(auc_std,3) if auc_std is not None else 'N/A'} | {last_epoch if last_epoch is not None else 'N/A'} |",
+  f"| ECE | {fmt_num(ece_mean,3) if ece_mean is not None else 'N/A'} | {fmt_num(ece_std,3) if ece_std is not None else 'N/A'} | {last_epoch if last_epoch is not None else 'N/A'} |",
+  f"| Updated | {datetime.utcnow().isoformat()}Z |  |  |",
+]
+base_cg = replace_block(base_cg, "<!-- TEMPORAL_STABILITY:BEGIN -->", "<!-- TEMPORAL_STABILITY:END -->", "\n".join(ts_lines))
 cg.write_text(base_cg, encoding='utf-8')
 
 # --- README.md ---
@@ -267,6 +347,16 @@ fair_lines = [
   f"| Last updated | {datetime.utcnow().isoformat()}Z |",
 ]
 readme = replace_block(readme, "<!-- FAIRNESS_SUMMARY:BEGIN -->", "<!-- FAIRNESS_SUMMARY:END -->", "\n".join(fair_lines))
+
+# Performance trend (README)
+pt_lines = [
+  "| Metric | Mean | Std Dev | Last Epoch |",
+  "|---|---|---|---|",
+  f"| AUC | {fmt_num(auc_mean,3) if auc_mean is not None else 'N/A'} | {fmt_num(auc_std,3) if auc_std is not None else 'N/A'} | {last_epoch if last_epoch is not None else 'N/A'} |",
+  f"| ECE | {fmt_num(ece_mean,3) if ece_mean is not None else 'N/A'} | {fmt_num(ece_std,3) if ece_std is not None else 'N/A'} | {last_epoch if last_epoch is not None else 'N/A'} |",
+  f"| Updated | {datetime.utcnow().isoformat()}Z |  |  |",
+]
+readme = replace_block(readme, "<!-- PERFORMANCE_TREND:BEGIN -->", "<!-- PERFORMANCE_TREND:END -->", "\n".join(pt_lines))
 rd.write_text(readme, encoding='utf-8')
 
 # --- literature_summary.md ---
