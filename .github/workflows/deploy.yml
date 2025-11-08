@@ -1,0 +1,59 @@
+name: Deploy Streamlit App
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  test-and-deploy:
+    runs-on: ubuntu-latest
+    env:
+      HF_TOKEN: ${{ secrets.HF_TOKEN }}
+      PROJECT_NAME: ${{ vars.PROJECT_NAME }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install streamlit reportlab pytest huggingface_hub
+
+      - name: Run pytest
+        run: pytest
+
+      - name: Deploy to Hugging Face Spaces
+        if: success()
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+          PROJECT_NAME: ${{ vars.PROJECT_NAME }}
+        run: |
+          python - <<'PY'
+          import os
+          from pathlib import Path
+          from huggingface_hub import HfApi
+
+          token = os.environ.get("HF_TOKEN")
+          project_name = os.environ.get("PROJECT_NAME")
+          if not token:
+              raise SystemExit("HF_TOKEN secret is required for deployment.")
+          if not project_name:
+              raise SystemExit("PROJECT_NAME variable must be provided (e.g. username/app-name).")
+
+          api = HfApi(token=token)
+          api.upload_folder(
+              folder_path=Path('.').resolve(),
+              repo_type="space",
+              repo_id=project_name,
+              path_in_repo="",
+              ignore_patterns=[".git", ".github", "__pycache__", "*.pyc", "*.pyo", "*.pyd", ".pytest_cache"],
+          )
+          PY

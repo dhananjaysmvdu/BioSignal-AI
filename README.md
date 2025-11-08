@@ -41,3 +41,5 @@ BioSignal-AI/
 
 ## Ethical Use & Citation
 BioSignal-AI is a research prototype only; it is **not** validated for clinical diagnosis, triage, or therapeutic decisions. Always consult board-certified dermatologists when interpreting results. If you publish work derived from this repository, cite the tool as: “BioSignal-AI: Multimodal Skin Lesion Classification Toolkit (2025).” When sharing findings, disclose dataset biases, annotation quality, and any demographic limitations observed during evaluation.
+
+Triggered Hugging Face deployment via Copilot Agent.
