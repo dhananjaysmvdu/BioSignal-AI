@@ -1,0 +1,25 @@
+[tool.ruff]
+# Global configuration
+# Python target version for checks and autofixes
+target-version = "py311"
+# Enforce a project-wide line length
+line-length = 100
+
+[tool.ruff.lint]
+# Rule selection and behavior
+# Critical rule families (F,E) and warning families (W,B,I)
+# - F: Pyflakes (errors)
+# - E/W: pycodestyle (errors/warnings)
+# - B: flake8-bugbear (warnings)
+# - I: isort import rules (warnings)
+select = ["F", "E", "W", "B", "I"]
+# Project-specific ignores
+ignore = ["E501", "W503", "B905"]
+# Allow autofixes for these families
+fixable = ["F", "E", "I"]
+# Do not autofix Bugbear rules to keep changes explicit in reviews
+unfixable = ["B"]
+
+# Severity model for CI (documented for developers):
+# - Critical: F, E (build must fail on violations)
+# - Warning:  W, B, I (non-blocking; visible in CI summary)
