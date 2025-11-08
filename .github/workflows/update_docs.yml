@@ -51,8 +51,8 @@ jobs:
       - name: Generate Docs Updates
         shell: bash
         run: |
-          python - <<'PY'
-import os, json
+      python - <<'PY'
+import os, json, re, csv
 from datetime import datetime
 from pathlib import Path
 
@@ -60,61 +60,179 @@ ROOT = Path('.')
 DOCS = ROOT / 'docs'
 DOCS.mkdir(exist_ok=True)
 RESULTS = ROOT / 'results'
-# 1) compliance_guidelines.md: append CI & evaluation summaries
+
+def replace_block(text: str, begin: str, end: str, new_content: str) -> str:
+  pattern = re.compile(rf"{re.escape(begin)}.*?{re.escape(end)}", re.S)
+  block = f"{begin}\n{new_content.rstrip()}\n{end}"
+  if re.search(pattern, text):
+    return re.sub(pattern, block, text)
+  else:
+    # append with two newlines
+    return text.rstrip() + "\n\n" + block + "\n"
+
+def _norm(s: str) -> str:
+  return re.sub(r"[^a-z0-9]", "", s.lower())
+
+def read_csv_metric(path: Path, candidate_columns: list[str]):
+  if not path.exists():
+    return None
+  try:
+    with path.open('r', encoding='utf-8') as f:
+      reader = csv.DictReader(f)
+      if not reader.fieldnames:
+        return None
+      fields_norm = {_norm(x): x for x in reader.fieldnames}
+      col = None
+      for c in candidate_columns:
+        key = _norm(c)
+        if key in fields_norm:
+          col = fields_norm[key]
+          break
+      if not col:
+        # try contains-based match
+        for c in candidate_columns:
+          key = _norm(c)
+          for k in reader.fieldnames:
+            if key in _norm(k):
+              col = k
+              break
+          if col:
+            break
+      if not col:
+        return None
+      vals = []
+      for row in reader:
+        try:
+          v = float(str(row.get(col, '')).strip().replace('%',''))
+          vals.append(v)
+        except Exception:
+          continue
+      if not vals:
+        return None
+      return sum(vals)/len(vals)
+  except Exception:
+    return None
+
+def find_in_obj(obj, candidate_keys: list[str]):
+  # Depth-first search for first numeric match by key name
+  def _search(o):
+    if isinstance(o, dict):
+      # direct key hit
+      for k, v in o.items():
+        nk = _norm(k)
+        if nk in {_norm(c) for c in candidate_keys} or any(_norm(c) in nk for c in candidate_keys):
+          try:
+            return float(str(v).replace('%',''))
+          except Exception:
+            pass
+      # recurse
+      for v in o.values():
+        r = _search(v)
+        if r is not None:
+          return r
+    elif isinstance(o, list):
+      for it in o:
+        r = _search(it)
+        if r is not None:
+          return r
+    return None
+  return _search(obj)
+
+def fmt_num(x, decimals=3):
+  try:
+    return f"{float(x):.{decimals}f}"
+  except Exception:
+    return "N/A"
+
+def fmt_pct(x):
+  try:
+    x = float(x)
+    if x <= 1.0:
+      x = x * 100.0
+    return f"{x:.1f}%"
+  except Exception:
+    return "N/A"
+
+# --- Compliance Guidelines ---
 cg = DOCS / 'compliance_guidelines.md'
-ci_summary = f"\n\n## CI Summary (Auto)\n- Last run: {datetime.utcnow().isoformat()}Z\n- Tests: see Actions summary\n- Lint: Ruff (F/E errors block, W/B/I warn)\n"
-# evaluation summary (if exists)
+base_cg = cg.read_text(encoding='utf-8') if cg.exists() else "# Compliance Guidelines\n"
+ci_block = [
+  f"- Last run: {datetime.utcnow().isoformat()}Z",
+  "- Tests: see Actions summary",
+  "- Lint: Ruff (F/E errors block, W/B/I warn)",
+]
 fs = RESULTS / 'fairness_summary.json'
-site_metrics = RESULTS / 'site_metrics.csv'
-eval_summary = "\n## Evaluation Summary (Auto)\n"
+eval_lines = []
 if fs.exists():
-    try:
-        data = json.loads(fs.read_text(encoding='utf-8'))
-        eval_summary += f"- Fairness groups: {len(data.get('aggregates', []))}\n- ΔAUC (max): {data.get('delta_auc')}\n- ΔECE (max): {data.get('delta_ece')}\n"
-    except Exception:
-        eval_summary += "- Fairness summary not parsable.\n"
+  try:
+    data = json.loads(fs.read_text(encoding='utf-8'))
+    eval_lines.append(f"- Fairness groups: {len(data.get('aggregates', []))}")
+    eval_lines.append(f"- ΔAUC (max): {data.get('delta_auc')}")
+    eval_lines.append(f"- ΔECE (max): {data.get('delta_ece')}")
+  except Exception:
+    eval_lines.append("- Fairness summary not parsable.")
 else:
-    eval_summary += "- No fairness summary found.\n"
-text = "# Compliance Guidelines\n" if not cg.exists() else cg.read_text(encoding='utf-8')
-text = text.rstrip() + ci_summary + eval_summary
-cg.write_text(text, encoding='utf-8')
+  eval_lines.append("- No fairness summary found.")
 
-# 2) README badges & nightly status
+base_cg = replace_block(base_cg, "<!-- CI_SUMMARY:BEGIN -->", "<!-- CI_SUMMARY:END -->", "\n".join(ci_block))
+base_cg = replace_block(base_cg, "<!-- EVAL_SUMMARY:BEGIN -->", "<!-- EVAL_SUMMARY:END -->", "\n".join(eval_lines))
+
+# Model performance indicators
+calib_csv = RESULTS / 'calibration_report.csv'
+bench_csv = RESULTS / 'benchmark_metrics.csv'
+drift_json = RESULTS / 'drift_report.json'
+
+auc = read_csv_metric(bench_csv, ['auc', 'roc_auc', 'auroc', 'rocauc'])
+ece = read_csv_metric(calib_csv, ['ece', 'expected_calibration_error'])
+drift_rate = None
+if drift_json.exists():
+  try:
+    j = json.loads(drift_json.read_text(encoding='utf-8'))
+    drift_rate = find_in_obj(j, ['drift_rate','driftrate','drift_rate_pct','drift_detected_rate','rate'])
+  except Exception:
+    drift_rate = None
+
+last_run = f"Last run: {datetime.utcnow().isoformat()}Z"
+mp_lines = [
+  last_run,
+  "",
+  "| Metric | Value |",
+  "|---|---|",
+  f"| AUC | {fmt_num(auc) if auc is not None else 'N/A'} |",
+  f"| ECE | {fmt_num(ece) if ece is not None else 'N/A'} |",
+  f"| Drift rate | {fmt_pct(drift_rate) if drift_rate is not None else 'N/A'} |",
+]
+base_cg = replace_block(base_cg, "<!-- MODEL_PERFORMANCE:BEGIN -->", "<!-- MODEL_PERFORMANCE:END -->", "\n".join(mp_lines))
+cg.write_text(base_cg, encoding='utf-8')
+
+# --- README.md ---
 rd = ROOT / 'README.md'
-if rd.exists():
-    r = rd.read_text(encoding='utf-8')
-else:
-    r = "# BioSignal-AI\n"
-# inject/update badges block
-badge_block = (
-    "\n[![Tests](https://github.com/${{ github.repository }}/actions/workflows/tests.yml/badge.svg)](https://github.com/${{ github.repository }}/actions/workflows/tests.yml) "
-    "[![Nightly Report](https://github.com/${{ github.repository }}/actions/workflows/publish_eval_report.yml/badge.svg)](https://github.com/${{ github.repository }}/actions/workflows/publish_eval_report.yml) "
-    "[![Docs Sync](https://github.com/${{ github.repository }}/actions/workflows/update_docs.yml/badge.svg)](https://github.com/${{ github.repository }}/actions/workflows/update_docs.yml)\n"
+readme = rd.read_text(encoding='utf-8') if rd.exists() else "# BioSignal-AI\n"
+badge_md = (
+  "[![Tests](https://github.com/${{ github.repository }}/actions/workflows/tests.yml/badge.svg)](https://github.com/${{ github.repository }}/actions/workflows/tests.yml) "
+  "[![Nightly Report](https://github.com/${{ github.repository }}/actions/workflows/publish_eval_report.yml/badge.svg)](https://github.com/${{ github.repository }}/actions/workflows/publish_eval_report.yml) "
+  "[![Docs Sync](https://github.com/${{ github.repository }}/actions/workflows/update_docs.yml/badge.svg)](https://github.com/${{ github.repository }}/actions/workflows/update_docs.yml)"
 )
-if 'actions/workflows/tests.yml/badge.svg' in r:
-    # replace existing badges line
-    import re
-    r = re.sub(r"\n\[!\[Tests].*update_docs.yml\)\n", "\n"+badge_block, r, flags=re.S)
-else:
-    r = r.rstrip()+"\n"+badge_block
-
-# latest nightly status
+readme = replace_block(readme, "<!-- CI_BADGES:BEGIN -->", "<!-- CI_BADGES:END -->", badge_md)
 nightly = RESULTS / 'report_summary.html'
-if nightly.exists():
-    status = f"\nLatest nightly report generated at: {datetime.utcnow().isoformat()}Z (see results/report_summary.html)\n"
-else:
-    status = "\nLatest nightly report not found.\n"
-rd.write_text(r+status, encoding='utf-8')
+nightly_line = (
+  f"Latest nightly report generated at: {datetime.utcnow().isoformat()}Z (see results/report_summary.html)"
+  if nightly.exists() else "Latest nightly report not found." )
+readme = replace_block(readme, "<!-- NIGHTLY_STATUS:BEGIN -->", "<!-- NIGHTLY_STATUS:END -->", nightly_line)
 
-# 3) literature_summary.md: append last validation date
+# Metrics summary for README
+ms_lines = mp_lines  # reuse same structure
+readme = replace_block(readme, "<!-- METRICS_SUMMARY:BEGIN -->", "<!-- METRICS_SUMMARY:END -->", "\n".join(ms_lines))
+rd.write_text(readme, encoding='utf-8')
+
+# --- literature_summary.md ---
 lit = DOCS / 'literature_summary.md'
-line = f"\nLast validation date: {datetime.utcnow().strftime('%Y-%m-%d %H:%M UTC')}\n"
-if lit.exists():
-    lit.write_text(lit.read_text(encoding='utf-8').rstrip()+line, encoding='utf-8')
-else:
-    lit.write_text("Literature Summary\n"+line, encoding='utf-8')
+lit_text = lit.read_text(encoding='utf-8') if lit.exists() else "Literature Summary\n"
+validation_line = f"Last validation date: {datetime.utcnow().strftime('%Y-%m-%d %H:%M UTC')}"
+lit_text = replace_block(lit_text, "<!-- VALIDATION_DATE:BEGIN -->", "<!-- VALIDATION_DATE:END -->", validation_line)
+lit.write_text(lit_text, encoding='utf-8')
 
-print('Docs updated.')
+print('Docs updated via block replacement.')
 PY
       - name: Commit changes
         uses: stefanzweifel/git-auto-commit-action@v5
