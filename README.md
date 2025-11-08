@@ -23,21 +23,35 @@ BioSignal-X advances biomedical AI by fusing dermoscopic imagery with patient me
 - Biomedical research alignment with reproducible preprocessing and training utilities
 
 ## Model Card
-- **Architecture:** EfficientNet-B0 visual backbone paired with a feed-forward metadata encoder and fusion head for joint decision making.
-- **Inputs:** Dermoscopic image tensors (RGB, 3×224×224) combined with normalized patient metadata vectors.
-- **Outputs:** Softmax probabilities for lesion risk categories along with Grad-CAM heatmaps for visual interpretability.
-- **Training Data:** Synthetic demonstration dataset shipped in this repository; future configurations target ISIC skin lesion archives and complementary biosignal cohorts.
-- **Intended Use:** Biomedical education, prototyping multimodal research workflows, and evaluating explainable AI strategies in dermatology.
+**Architecture:** BioSignal-X integrates an EfficientNet-B0 visual backbone with a metadata fusion layer, enabling joint processing of dermoscopic images and demographic or clinical features.  
+**Input Format:** RGB lesion images (224×224) with associated metadata tensors.  
+**Output:** Binary or multiclass prediction logits and Grad-CAM heatmaps visualizing model focus regions.  
+**Training Data:** Synthetic data generated for development; future versions target open biomedical datasets such as ISIC 2019 (skin lesions) and PhysioNet signals.  
+**Intended Use:** Biomedical education, interpretability research, and AI-driven visualization — *not for diagnostic use.*
 
-## Dataset Information
-- Placeholder synthetic dataset generated via `src/data_loader.py` for local experimentation.
-- Planned integration with public biomedical datasets such as [ISIC 2019 Challenge](https://challenge.isic-archive.com/data/) and [PhysioNet biosignal archives](https://physionet.org/).
-- Users must obtain, preprocess, and validate external datasets independently before training production models.
+## Dataset
+Current version uses synthetic datasets to simulate real-world variability.  
+Future integration planned with:
+- [ISIC 2019 Challenge Dataset](https://challenge.isic-archive.com/data/)
+- [PhysioNet Biomedical Signals](https://physionet.org/)  
+Users may fine-tune or replace datasets through configurable `data_loader.py`.
 
 ## Ethical Considerations
-- Intended strictly for research, education, and prototyping; **Not for clinical diagnosis.**
-- Performance depends heavily on dataset quality, demographic coverage, and labeling accuracy.
-- Users should document biases, uncertainty, and evaluation metrics before communicating findings or downstream decisions.
+BioSignal-X is a research and educational framework. Predictions are not validated for clinical application.  
+The project encourages responsible use of medical AI, transparency in model interpretability, and fairness across demographic groups.  
+Any deployment in healthcare contexts must follow institutional review and regulatory standards.
+
+## Citation
+If you use BioSignal-X in your research, please cite using the included `CITATION.cff` file or the following:
+
+```bibtex
+@software{dhananjay2025biosignalx,
+	author = {Dhananjay, Mrityunjay},
+	title = {BioSignal-X: AI-Powered Biomedical Signal Analysis and Visualization},
+	year = {2025},
+	url = {https://huggingface.co/spaces/LogDMax/BioSignal-X}
+}
+```
 
 ## Project Overview
 - **Title:** BioSignal-X
