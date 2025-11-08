@@ -12,6 +12,16 @@ author: "Mrityunjay Dhananjay"
 
 *Multimodal dermatology research toolkit for pairing dermoscopy imagery with contextual patient data.*
 
+## Research Abstract
+BioSignal-X advances biomedical AI by fusing dermoscopic imagery with patient metadata to train multimodal classifiers capable of nuanced lesion assessment. The platform integrates Grad-CAM visualization for interpretability, Streamlit for interactive analysis, and Hugging Face Spaces for accessible deployment—supporting rapid experimentation and transparent clinical research workflows.
+
+## Key Features
+- Multimodal learning pipeline combining image embeddings with tabular biosignal metadata
+- Explainability via Grad-CAM overlays and PDF report generation
+- Real-time inference delivered through a Streamlit user interface
+- Seamless deployment to Hugging Face Spaces with automated CI triggers
+- Biomedical research alignment with reproducible preprocessing and training utilities
+
 ## Project Overview
 - **Title:** BioSignal-X
 - **Description:** AI-driven biosignal analysis platform integrating deep learning with biomedical data visualization and explainability (Grad-CAM).
