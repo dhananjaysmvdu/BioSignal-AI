@@ -22,6 +22,23 @@ BioSignal-X advances biomedical AI by fusing dermoscopic imagery with patient me
 - Seamless deployment to Hugging Face Spaces with automated CI triggers
 - Biomedical research alignment with reproducible preprocessing and training utilities
 
+## Model Card
+- **Architecture:** EfficientNet-B0 visual backbone paired with a feed-forward metadata encoder and fusion head for joint decision making.
+- **Inputs:** Dermoscopic image tensors (RGB, 3×224×224) combined with normalized patient metadata vectors.
+- **Outputs:** Softmax probabilities for lesion risk categories along with Grad-CAM heatmaps for visual interpretability.
+- **Training Data:** Synthetic demonstration dataset shipped in this repository; future configurations target ISIC skin lesion archives and complementary biosignal cohorts.
+- **Intended Use:** Biomedical education, prototyping multimodal research workflows, and evaluating explainable AI strategies in dermatology.
+
+## Dataset Information
+- Placeholder synthetic dataset generated via `src/data_loader.py` for local experimentation.
+- Planned integration with public biomedical datasets such as [ISIC 2019 Challenge](https://challenge.isic-archive.com/data/) and [PhysioNet biosignal archives](https://physionet.org/).
+- Users must obtain, preprocess, and validate external datasets independently before training production models.
+
+## Ethical Considerations
+- Intended strictly for research, education, and prototyping; **Not for clinical diagnosis.**
+- Performance depends heavily on dataset quality, demographic coverage, and labeling accuracy.
+- Users should document biases, uncertainty, and evaluation metrics before communicating findings or downstream decisions.
+
 ## Project Overview
 - **Title:** BioSignal-X
 - **Description:** AI-driven biosignal analysis platform integrating deep learning with biomedical data visualization and explainability (Grad-CAM).
