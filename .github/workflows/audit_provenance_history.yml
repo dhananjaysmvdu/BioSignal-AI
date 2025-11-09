@@ -348,3 +348,27 @@ jobs:
               git push
             fi
           fi
+
+  learn-meta:
+    needs: [record-human-review]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Integrate human feedback into policy
+        run: |
+          python scripts/workflow_utils/learn_from_reviews.py > meta_out.json
+          echo "🧠 Learned from human oversight feedback." >> $GITHUB_STEP_SUMMARY
+      - name: Commit meta-learning updates
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add configs/governance_policy.json reports/audit_summary.md
+          if git diff --cached --quiet; then
+            echo "No meta-learning changes to commit."
+          else
+            git commit -m "ci: integrate human feedback into adaptive governance learning loop"
+            git push
+          fi
