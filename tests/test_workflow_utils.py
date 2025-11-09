@@ -104,3 +104,42 @@ def test_artifact_integrity_ok_missing_and_mismatch(tmp_path, capsys):
     aic.main()
     status3 = Path('build/pub/integrity_status.txt').read_text(encoding='utf-8').strip()
     assert status3 == 'DRIFT'
+
+
+def test_drift_detector_handles_missing_and_empty(tmp_path):
+    from monitoring.drift_detector import detect_drift
+
+    # Missing files
+    ref = tmp_path / 'ref.csv'
+    cur = tmp_path / 'cur.csv'
+    rep = detect_drift(ref, cur, threshold=0.1)
+    assert rep['overall_drift_rate'] == 0.0
+    assert 'feature_drifts' in rep and isinstance(rep['feature_drifts'], dict)
+    assert 'timestamp' in rep
+
+    # Empty files
+    ref.write_text('', encoding='utf-8')
+    cur.write_text('', encoding='utf-8')
+    rep2 = detect_drift(ref, cur, threshold=0.1)
+    assert rep2['overall_drift_rate'] == 0.0
+    assert 'feature_drifts' in rep2 and isinstance(rep2['feature_drifts'], dict)
+    assert 'timestamp' in rep2
+
+
+def test_drift_detector_output_structure_and_shift(tmp_path):
+    from monitoring.drift_detector import detect_drift
+    import pandas as pd
+
+    ref = tmp_path / 'ref.csv'
+    cur = tmp_path / 'cur.csv'
+    # Create synthetic data with a shifted numeric distribution
+    pd.DataFrame({'x':[0,0.1,0.2,0.1,0.0, -0.1, 0.05, 0.2, -0.05, 0.1], 'y':['a','a','b','a','b','b','a','b','a','b']}).to_csv(ref, index=False)
+    pd.DataFrame({'x':[5,5.2,5.1,4.9,5.3,4.8,5.0,5.4,5.1,5.2], 'y':['a','b','b','b','a','b','b','a','a','b']}).to_csv(cur, index=False)
+
+    rep = detect_drift(ref, cur, threshold=0.1)
+    # Required keys present
+    for k in ('overall_drift_rate','feature_drifts','timestamp'):
+        assert k in rep
+    assert isinstance(rep['feature_drifts'], dict)
+    # Expect non-zero drift rate due to large shift in 'x'
+    assert rep['overall_drift_rate'] > 0.0

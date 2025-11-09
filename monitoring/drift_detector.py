@@ -64,6 +64,19 @@ def num_jsd(a: pd.Series, b: pd.Series, bins: int = 20) -> float:
 
 
 def detect_drift(ref_csv: Path, cur_csv: Path, threshold: float = 0.1) -> Dict[str, object]:
+    # Graceful handling for missing or empty CSVs
+    if (not ref_csv.exists()) or (not cur_csv.exists()) or ref_csv.stat().st_size == 0 or cur_csv.stat().st_size == 0:
+        report: Dict[str, object] = {
+            "reference": str(ref_csv),
+            "current": str(cur_csv),
+            "threshold": threshold,
+            "features": {},
+            "feature_drifts": {},
+            "overall_drift_rate": 0.0,
+            "timestamp": pd.Timestamp.utcnow().isoformat() + "Z",
+        }
+        return report
+
     ref = pd.read_csv(ref_csv)
     cur = pd.read_csv(cur_csv)
     report: Dict[str, object] = {
@@ -90,6 +103,8 @@ def detect_drift(ref_csv: Path, cur_csv: Path, threshold: float = 0.1) -> Dict[s
         features[c] = {"type": "categorical", "jsd": score, "drift": bool(score > threshold if not np.isnan(score) else False)}
 
     report["features"] = features
+    # Back-compat + explicit alias expected by some consumers
+    report["feature_drifts"] = features
     # Overall drift proportion
     valid = [v for v in features.values() if not np.isnan(v["jsd"]) if isinstance(v["jsd"], float)]
     rate = float(np.mean([1.0 if v["drift"] else 0.0 for v in valid])) if valid else 0.0
