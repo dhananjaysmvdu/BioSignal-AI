@@ -1,23 +1,33 @@
 #!/usr/bin/env python3
-"""Predictive adaptation planner using historical outcome data.
+"""Causal-based predictive adaptation planner.
 
-Builds a simple linear regression model from adaptation history to forecast
-the likely impact (GHS Δ, MSI Δ) of current coefficient configuration.
+Revised to use causal influence metrics (reports/causal_influence.json) to
+propose the next optimal coefficient configuration and estimate projected
+governance health improvement.
 
-Enables proactive governance by simulating outcomes before applying changes.
+Computation per coefficient c:
+    step_size = 0.02 * (1 + confidence_level / 100)
+    Δc = influence_c * step_size
+    new_c = clamp(c + Δc, 0, 1)
 
-Features → Targets:
-  [confidence_weight, drift_weight, human_feedback_weight] → [ghs_delta, msi_delta]
-
-Uses pure-Python least-squares regression (no numpy/scikit-learn dependencies).
+Projected improvement:
+    Δpredicted = Σ(influence_c * Δc)
+    predicted_improvement_percent = Δpredicted * 100
 
 Inputs:
-  - logs/adaptation_outcomes.json: historical coefficients and their deltas
-  - configs/governance_policy.json: current coefficients to predict for
+    - reports/causal_influence.json
+    - configs/governance_policy.json
+    - optional: reports/governance_health.json (for current GHS, else assume baseline 50)
+    - optional: reports/meta_stability.json (not directly used but could enrich rationale)
 
 Outputs:
-  - reports/predicted_adaptation.json: forecast with expected deltas and outcome
-  - reports/audit_summary.md: idempotent marker-based update
+    - reports/adaptation_plan.json (proposed coefficients & predicted improvement)
+    - audit_summary.md marker block <!-- PREDICTIVE_PLAN:BEGIN/END -->
+
+Graceful fallbacks:
+    - Missing causal influence file ⇒ all influences = 0 (neutral proposal)
+    - Missing policy ⇒ default coefficients {0.75, 0.5, 0.5}
+    - Missing health ⇒ baseline current_GHS = 50.0
 """
 from __future__ import annotations
 import os
@@ -29,17 +39,15 @@ from typing import Dict, Any, List, Tuple, Optional
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
 REPORTS = os.path.join(ROOT, 'reports')
 CONFIGS = os.path.join(ROOT, 'configs')
-LOGS = os.path.join(ROOT, 'logs')
-
-OUTCOMES_JSON = os.path.join(LOGS, 'adaptation_outcomes.json')
 POLICY_JSON = os.path.join(CONFIGS, 'governance_policy.json')
-PREDICTED_JSON = os.path.join(REPORTS, 'predicted_adaptation.json')
+CAUSAL_JSON = os.path.join(REPORTS, 'causal_influence.json')
+HEALTH_JSON = os.path.join(REPORTS, 'governance_health.json')
+META_STABILITY_JSON = os.path.join(REPORTS, 'meta_stability.json')  # optional
+PLAN_JSON = os.path.join(REPORTS, 'adaptation_plan.json')
 AUDIT_SUMMARY = os.path.join(REPORTS, 'audit_summary.md')
 
-BEGIN_MARKER = '<!-- PREDICTIVE_ADAPTATION:BEGIN -->'
-END_MARKER = '<!-- PREDICTIVE_ADAPTATION:END -->'
-
-MIN_HISTORY = 5  # Minimum records needed for reliable prediction
+BEGIN_MARKER = '<!-- PREDICTIVE_PLAN:BEGIN -->'
+END_MARKER = '<!-- PREDICTIVE_PLAN:END -->'
 
 
 def _load_json(path: str, default):
@@ -50,302 +58,127 @@ def _load_json(path: str, default):
         return default
 
 
-def _extract_training_data(outcomes: List[Dict[str, Any]]) -> Tuple[List[List[float]], List[float], List[float]]:
-    """
-    Extract features (coefficients) and targets (deltas) from outcomes.
-    
-    Returns: (X, y_ghs, y_msi)
-      X: list of [conf, drift, human] coefficient vectors
-      y_ghs: list of ghs_delta values
-      y_msi: list of msi_delta values
-    """
-    X = []
-    y_ghs = []
-    y_msi = []
-    
-    for outcome in outcomes:
-        # Skip first-run entries without meaningful deltas
-        if outcome.get('note') == 'first evaluation, no prior baseline':
-            continue
-        
-        coeffs = outcome.get('current_coefficients', {})
-        ghs_delta = outcome.get('ghs_delta')
-        msi_delta = outcome.get('msi_delta')
-        
-        if coeffs and ghs_delta is not None and msi_delta is not None:
-            conf = float(coeffs.get('confidence_weight', 0.0))
-            drift = float(coeffs.get('drift_weight', 0.0))
-            human = float(coeffs.get('human_feedback_weight', 0.0))
-            
-            X.append([conf, drift, human])
-            y_ghs.append(float(ghs_delta))
-            y_msi.append(float(msi_delta))
-    
-    return X, y_ghs, y_msi
-
-
-def _fit_linear_regression(X: List[List[float]], y: List[float]) -> Optional[List[float]]:
-    """
-    Fit linear regression using least-squares (pure Python).
-    
-    Model: y = β₀ + β₁*x₁ + β₂*x₂ + β₃*x₃
-    
-    Solves: (X^T X) β = X^T y
-    
-    Returns: [β₀, β₁, β₂, β₃] or None if insufficient data
-    """
-    if len(X) < 2 or len(y) < 2:
-        return None
-    
-    n = len(X)
-    k = len(X[0])  # number of features
-    
-    # Add intercept column (ones)
-    X_aug = [[1.0] + row for row in X]
-    
-    # Compute X^T X
-    XtX = [[0.0] * (k + 1) for _ in range(k + 1)]
-    for i in range(k + 1):
-        for j in range(k + 1):
-            for row in X_aug:
-                XtX[i][j] += row[i] * row[j]
-    
-    # Compute X^T y
-    Xty = [0.0] * (k + 1)
-    for i in range(k + 1):
-        for row, y_val in zip(X_aug, y):
-            Xty[i] += row[i] * y_val
-    
-    # Solve using Gaussian elimination
+def _load_json(path: str, default):
     try:
-        beta = _solve_linear_system(XtX, Xty)
-        return beta
+        with open(path, 'r', encoding='utf-8') as f:
+            return json.load(f)
     except Exception:
-        return None
+        return default
 
 
-def _solve_linear_system(A: List[List[float]], b: List[float]) -> List[float]:
-    """
-    Solve Ax = b using Gaussian elimination with partial pivoting.
-    """
-    n = len(b)
-    # Create augmented matrix
-    M = [A[i][:] + [b[i]] for i in range(n)]
-    
-    # Forward elimination
-    for i in range(n):
-        # Partial pivoting
-        max_row = i
-        for k in range(i + 1, n):
-            if abs(M[k][i]) > abs(M[max_row][i]):
-                max_row = k
-        M[i], M[max_row] = M[max_row], M[i]
-        
-        # Check for singular matrix
-        if abs(M[i][i]) < 1e-10:
-            raise ValueError("Singular matrix")
-        
-        # Eliminate column
-        for k in range(i + 1, n):
-            factor = M[k][i] / M[i][i]
-            for j in range(i, n + 1):
-                M[k][j] -= factor * M[i][j]
-    
-    # Back substitution
-    x = [0.0] * n
-    for i in range(n - 1, -1, -1):
-        x[i] = M[i][n]
-        for j in range(i + 1, n):
-            x[i] -= M[i][j] * x[j]
-        x[i] /= M[i][i]
-    
-    return x
+def _clamp(v: float, lo: float = 0.0, hi: float = 1.0) -> float:
+    return lo if v < lo else hi if v > hi else v
 
 
-def _predict(beta: List[float], features: List[float]) -> float:
-    """
-    Make prediction: y = β₀ + β₁*x₁ + β₂*x₂ + β₃*x₃
-    """
-    result = beta[0]  # intercept
-    for i, feat in enumerate(features):
-        result += beta[i + 1] * feat
-    return result
+def _build_plan(current_coeffs: Dict[str, float], causal: Dict[str, Any], current_ghs: float) -> Dict[str, Any]:
+    influences = causal.get('normalized_influence', {}) if causal else {}
+    confidence = causal.get('confidence', 0) if causal else 0
+    # Step size formula
+    step_size = 0.02 * (1 + (confidence / 100.0))
+
+    proposed = {}
+    deltas = {}
+    # Only known keys
+    for key in ['confidence_weight', 'drift_weight', 'human_feedback_weight']:
+        base = float(current_coeffs.get(key, 0.0))
+        influence = float(influences.get(key, 0.0))
+        delta = influence * step_size
+        new_val = _clamp(base + delta)
+        proposed[key] = round(new_val, 4)
+        deltas[key] = delta
+
+    # Projected improvement using Σ(influence * Δc) * 100
+    predicted_raw = sum(float(influences.get(k, 0.0)) * deltas[k] for k in deltas)
+    predicted_improvement_pct = predicted_raw * 100.0
+    projected_ghs = current_ghs + predicted_improvement_pct
+
+    rationale_parts = []
+    if influences:
+        for k, v in influences.items():
+            if abs(v) > 0:
+                direction = 'increase' if v > 0 else 'decrease'
+                rationale_parts.append(f"{k} {direction} (influence {v:+.2f})")
+    if not rationale_parts:
+        rationale_parts.append('No significant causal signals; keeping coefficients stable.')
+
+    rationale = ' ; '.join(rationale_parts)
+
+    return {
+        'timestamp': datetime.now(timezone.utc).replace(microsecond=0).isoformat().replace('+00:00', '') + 'Z',
+        'confidence_level': confidence,
+        'step_size': round(step_size, 4),
+        'current_coefficients': current_coeffs,
+        'proposed_coefficients': proposed,
+        'predicted_improvement_percent': round(predicted_improvement_pct, 2),
+        'projected_governance_health': round(projected_ghs, 2),
+        'rationale': rationale,
+        'influences_used': influences,
+    }
 
 
-def _classify_expected_outcome(ghs_pred: float, msi_pred: float) -> str:
-    """
-    Classify predicted outcome based on expected deltas.
-    """
-    if ghs_pred > 0 and msi_pred > 0:
-        return 'improve'
-    elif ghs_pred < 0 or msi_pred < 0:
-        return 'regress'
-    else:
-        return 'neutral'
-
-
-def _update_audit_summary(
-    ghs_pred: float,
-    msi_pred: float,
-    outcome: str,
-    timestamp: str,
-    reliable: bool = True
-):
+def _update_audit_summary(plan: Dict[str, Any]):
     if not os.path.exists(AUDIT_SUMMARY):
         return
-    with open(AUDIT_SUMMARY, 'r', encoding='utf-8') as f:
-        content = f.read()
-    
-    if not reliable:
-        block = f"""{BEGIN_MARKER}
-## Predictive Forecast
+    try:
+        with open(AUDIT_SUMMARY, 'r', encoding='utf-8') as f:
+            content = f.read()
+    except Exception:
+        return
 
-**Status:** Unreliable (insufficient historical data)  
-**Forecast:** Neutral deltas predicted  
-**Timestamp:** {timestamp}
-{END_MARKER}"""
-    else:
-        block = f"""{BEGIN_MARKER}
-## Predictive Forecast
+    ts = plan.get('timestamp', '')
+    imp = plan.get('predicted_improvement_percent', 0.0)
+    conf = plan.get('confidence_level', 0)
+    coeffs = plan.get('proposed_coefficients', {})
+    block = (
+        f"{BEGIN_MARKER}\n"
+        f"Predicted next-cycle improvement: {imp:+.1f}% (confidence {conf}%)\n"
+        f"Proposed coefficients: conf={coeffs.get('confidence_weight', 0):.4f}, drift={coeffs.get('drift_weight', 0):.4f}, human={coeffs.get('human_feedback_weight', 0):.4f}\n"
+        f"Timestamp: {ts}\n"
+        f"{END_MARKER}"
+    )
 
-**Expected GHS Δ:** {ghs_pred:+.1f}%  
-**Expected MSI Δ:** {msi_pred:+.1f}%  
-**Projected Outcome:** {outcome.capitalize()}  
-**Timestamp:** {timestamp}
-{END_MARKER}"""
-    
     if BEGIN_MARKER in content and END_MARKER in content:
-        # Replace existing block
         pattern = re.escape(BEGIN_MARKER) + r'.*?' + re.escape(END_MARKER)
         content = re.sub(pattern, block, content, flags=re.DOTALL)
     else:
-        # Append block
         content = content.rstrip() + '\n\n' + block + '\n'
-    
+
     with open(AUDIT_SUMMARY, 'w', encoding='utf-8') as f:
         f.write(content)
 
 
 def main() -> int:
     os.makedirs(REPORTS, exist_ok=True)
-    
-    # Load outcomes history
-    outcomes = _load_json(OUTCOMES_JSON, [])
-    if not isinstance(outcomes, list):
-        outcomes = []
-    
-    # Load current policy
+
+    # Load policy coefficients
     policy = _load_json(POLICY_JSON, {})
-    current_coeffs = policy.get('learning_coefficients', {})
-    if not current_coeffs:
-        current_coeffs = {
-            'confidence_weight': 0.75,
-            'drift_weight': 0.5,
-            'human_feedback_weight': 0.5
-        }
-    
-    current_features = [
-        float(current_coeffs.get('confidence_weight', 0.75)),
-        float(current_coeffs.get('drift_weight', 0.5)),
-        float(current_coeffs.get('human_feedback_weight', 0.5))
-    ]
-    
-    ts = datetime.now(timezone.utc).replace(microsecond=0).isoformat().replace('+00:00', '') + 'Z'
-    
-    # Extract training data
-    X, y_ghs, y_msi = _extract_training_data(outcomes)
-    
-    # Check if sufficient history
-    if len(X) < MIN_HISTORY:
-        # Insufficient data: predict neutral
-        prediction = {
-            'timestamp': ts,
-            'predicted_deltas': {'ghs': 0.0, 'msi': 0.0},
-            'expected_outcome': 'neutral',
-            'reliable': False,
-            'note': f'insufficient history ({len(X)}/{MIN_HISTORY} records)'
-        }
-        
-        with open(PREDICTED_JSON, 'w', encoding='utf-8') as f:
-            json.dump(prediction, f, indent=2)
-        
-        _update_audit_summary(0.0, 0.0, 'neutral', ts, reliable=False)
-        
-        print(json.dumps({
-            'status': 'unreliable',
-            'predicted_outcome': 'neutral',
-            'training_samples': len(X)
-        }))
-        return 0
-    
-    # Fit regression models
-    beta_ghs = _fit_linear_regression(X, y_ghs)
-    beta_msi = _fit_linear_regression(X, y_msi)
-    
-    if not beta_ghs or not beta_msi:
-        # Model fitting failed
-        prediction = {
-            'timestamp': ts,
-            'predicted_deltas': {'ghs': 0.0, 'msi': 0.0},
-            'expected_outcome': 'neutral',
-            'reliable': False,
-            'note': 'model fitting failed'
-        }
-        
-        with open(PREDICTED_JSON, 'w', encoding='utf-8') as f:
-            json.dump(prediction, f, indent=2)
-        
-        _update_audit_summary(0.0, 0.0, 'neutral', ts, reliable=False)
-        
-        print(json.dumps({
-            'status': 'unreliable',
-            'predicted_outcome': 'neutral',
-            'reason': 'model_fitting_failed'
-        }))
-        return 0
-    
-    # Make predictions
-    ghs_pred = _predict(beta_ghs, current_features)
-    msi_pred = _predict(beta_msi, current_features)
-    
-    # Classify outcome
-    outcome = _classify_expected_outcome(ghs_pred, msi_pred)
-    
-    # Build prediction record
-    prediction = {
-        'timestamp': ts,
-        'predicted_deltas': {
-            'ghs': round(ghs_pred, 2),
-            'msi': round(msi_pred, 2)
-        },
-        'expected_outcome': outcome,
-        'reliable': True,
-        'training_samples': len(X),
-        'model_coefficients': {
-            'ghs_model': [round(b, 4) for b in beta_ghs],
-            'msi_model': [round(b, 4) for b in beta_msi]
-        },
-        'input_features': {
-            'confidence_weight': current_features[0],
-            'drift_weight': current_features[1],
-            'human_feedback_weight': current_features[2]
-        }
+    current_coeffs = policy.get('learning_coefficients') or {
+        'confidence_weight': 0.75,
+        'drift_weight': 0.5,
+        'human_feedback_weight': 0.5
     }
-    
-    # Write prediction
-    with open(PREDICTED_JSON, 'w', encoding='utf-8') as f:
-        json.dump(prediction, f, indent=2)
-    
-    # Update audit summary
-    _update_audit_summary(ghs_pred, msi_pred, outcome, ts, reliable=True)
-    
-    # Output summary
+
+    # Load causal influence (may be missing)
+    causal = _load_json(CAUSAL_JSON, {})
+    if not isinstance(causal, dict):
+        causal = {}
+
+    # Load current governance health (optional)
+    health = _load_json(HEALTH_JSON, {})
+    current_ghs = float(health.get('governance_health_score', 50.0)) if isinstance(health, dict) else 50.0
+
+    plan = _build_plan(current_coeffs, causal, current_ghs)
+
+    # Persist adaptation plan
+    with open(PLAN_JSON, 'w', encoding='utf-8') as f:
+        json.dump(plan, f, indent=2)
+
+    _update_audit_summary(plan)
+
     print(json.dumps({
-        'status': 'reliable',
-        'predicted_outcome': outcome,
-        'ghs_delta': round(ghs_pred, 2),
-        'msi_delta': round(msi_pred, 2),
-        'training_samples': len(X)
+        'status': 'ok',
+        'predicted_improvement_percent': plan['predicted_improvement_percent'],
+        'confidence': plan['confidence_level']
     }))
     return 0
 

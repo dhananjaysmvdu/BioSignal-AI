@@ -878,35 +878,26 @@ jobs:
         id: predict
         run: |
           python scripts/workflow_utils/predictive_adaptation_planner.py > predict_out.json
-          STATUS=$(jq -r '.status' predict_out.json || echo 'unreliable')
-          OUTCOME=$(jq -r '.predicted_outcome' predict_out.json || echo 'neutral')
-          GHS_DELTA=$(jq -r '.ghs_delta' predict_out.json || echo 0)
-          MSI_DELTA=$(jq -r '.msi_delta' predict_out.json || echo 0)
-          SAMPLES=$(jq -r '.training_samples' predict_out.json || echo 0)
+          STATUS=$(jq -r '.status' predict_out.json || echo 'ok')
+          IMP=$(jq -r '.predicted_improvement_percent' predict_out.json || echo 0)
+          CONF=$(jq -r '.confidence' predict_out.json || echo 0)
           echo "status=${STATUS}" >> $GITHUB_OUTPUT
-          echo "outcome=${OUTCOME}" >> $GITHUB_OUTPUT
-          echo "ghs_delta=${GHS_DELTA}" >> $GITHUB_OUTPUT
-          echo "msi_delta=${MSI_DELTA}" >> $GITHUB_OUTPUT
-          if [ "$STATUS" = "reliable" ]; then
-            echo "🔮 Predictive forecast: ${OUTCOME} (GHS Δ ${GHS_DELTA}%, MSI Δ ${MSI_DELTA}%) — trained on ${SAMPLES} outcomes." >> $GITHUB_STEP_SUMMARY
-          else
-            echo "⏭️ Predictive forecast: ${OUTCOME} (insufficient data: ${SAMPLES} samples)." >> $GITHUB_STEP_SUMMARY
-          fi
+          echo "improvement=${IMP}" >> $GITHUB_OUTPUT
+          echo "confidence=${CONF}" >> $GITHUB_OUTPUT
+          echo "� Predictive adaptation plan generated — next-cycle coefficients estimated." >> $GITHUB_STEP_SUMMARY
       - name: Commit prediction forecast
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add reports/predicted_adaptation.json reports/audit_summary.md
+          git add reports/adaptation_plan.json reports/audit_summary.md
           if git diff --cached --quiet; then
             echo "No prediction changes to commit."
           else
-            git commit -m "ci: add predictive adaptation planner for proactive governance forecasting"
+            git commit -m "ci: generate predictive adaptation plan using causal influence analysis"
             git push
           fi
       - name: Append prediction summary
         run: |
-          STATUS="${{ steps.predict.outputs.status }}"
-          OUTCOME="${{ steps.predict.outputs.outcome }}"
-          if [ "$STATUS" = "reliable" ]; then
-            echo "🔮 Predictive adaptation forecast: next cycle expected to ${OUTCOME}." >> $GITHUB_STEP_SUMMARY
-          fi
+          IMP="${{ steps.predict.outputs.improvement }}"
+          CONF="${{ steps.predict.outputs.confidence }}"
+          echo "� Planned improvement: ${IMP}% (confidence ${CONF}%)." >> $GITHUB_STEP_SUMMARY
