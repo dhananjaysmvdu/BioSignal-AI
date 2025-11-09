@@ -333,8 +333,40 @@ def _render_html(runs: List[Dict[str, Any]], metrics: Dict[str, Any], history: D
         except Exception:
             pass
 
+    # Verification Mode Timeline Data
+    ver_entries = []
+    if isinstance(history, list):
+        for e in history:
+            ts = e.get("timestamp")
+            mode = e.get("signature_verification_mode")
+            if ts and mode:
+                ver_entries.append({"timestamp": ts, "mode": mode})
+    total_full = sum(1 for v in ver_entries if v["mode"] == "full")
+    total_partial = sum(1 for v in ver_entries if v["mode"] == "partial")
+    last_mode = ver_entries[-1]["mode"] if ver_entries else "N/A"
+    pct_full = int(round(100 * total_full / max(1, len(ver_entries))))
+    ver_labels = [v["timestamp"] for v in ver_entries]
+    ver_modes = [v["mode"] for v in ver_entries]
+
     # Tiny charting: inline canvas drawing without external libs
     html = f"""
+      <section id="verification_mode_timeline" style="margin-top:40px">
+        <h2>Verification Mode Timeline</h2>
+        <div style="max-width:700px;">
+          <canvas id="verModeChart" height="60" style="width:100%;max-width:700px;"></canvas>
+        </div>
+        <div style="margin-top:12px;">
+          <table style="width:auto;min-width:320px;font-size:14px;">
+            <tr><th>Total Full Verifications</th><td>{total_full}</td></tr>
+          <tr><th>Total Partial Verifications</th><td>{total_partial}</td></tr>
+          <tr><th>Last Recorded Mode</th><td>{last_mode.title() if last_mode!='N/A' else last_mode}</td></tr>
+          <tr><th>Percentage of Full Runs</th><td>{pct_full}%</td></tr>
+        </table>
+      </div>
+      <div style="margin-top:10px;font-size:13px;color:#666;">
+        {'No verification mode history available.' if not ver_entries else ''}
+      </div>
+    </section>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -491,6 +523,46 @@ def _render_html(runs: List[Dict[str, Any]], metrics: Dict[str, Any], history: D
   </section>
 <script>
 (function() {{
+  // Verification Mode Timeline Chart
+  const verLabels = {json.dumps(ver_labels)};
+  const verModes = {json.dumps(ver_modes)};
+  function drawVerModeChart(id) {{
+    const c = document.getElementById(id); if(!c) return;
+    const ctx = c.getContext('2d');
+    const W = c.width = c.clientWidth * devicePixelRatio;
+    const H = c.height = c.clientHeight * devicePixelRatio;
+    ctx.scale(devicePixelRatio, devicePixelRatio);
+    const pad = 32;
+    const dotR = 8;
+    const n = verLabels.length;
+    if (n === 0) {{
+      ctx.fillStyle = '#666';
+      ctx.font = '15px Arial';
+      ctx.fillText('No verification mode history available.', pad, H/2);
+      return;
+    }}
+    // X positions
+    const w = c.clientWidth - pad*2;
+    function xv(i) {{ return pad + (i/(n-1||1))*w; }}
+    // Draw axis
+    ctx.strokeStyle = '#bbb'; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(pad, H/2); ctx.lineTo(c.clientWidth-pad, H/2); ctx.stroke();
+    // Draw dots
+    for(let i=0;i<n;i++) {{
+      const x = xv(i), y = H/2;
+      ctx.beginPath();
+      ctx.arc(x, y, dotR, 0, Math.PI*2);
+      ctx.fillStyle = verModes[i]==='full' ? '#2cbe4e' : '#dfb317';
+      ctx.fill();
+      ctx.strokeStyle = '#222'; ctx.lineWidth = 1; ctx.stroke();
+      // Tooltip/label
+      ctx.font = '12px Arial'; ctx.fillStyle = '#222';
+      ctx.textAlign = 'center';
+      ctx.fillText(verLabels[i].replace('T',' ').replace('Z',''), x, y-dotR-6);
+      ctx.font = '11px Arial'; ctx.fillStyle = verModes[i]==='full' ? '#2cbe4e' : '#dfb317';
+      ctx.fillText(verModes[i].charAt(0).toUpperCase()+verModes[i].slice(1), x, y+dotR+13);
+    }}
+  }}
   const labels = {json.dumps(labels)};
   const passed = {json.dumps(passed)};
   const failed = {json.dumps(failed)};
@@ -568,6 +640,7 @@ def _render_html(runs: List[Dict[str, Any]], metrics: Dict[str, Any], history: D
   drawTS('ts');
   drawPie('pie', {json.dumps(metrics.get('severity_counts', {}))});
   drawAlign('align', {json.dumps(scores)});
+  drawVerModeChart('verModeChart');
   // Governance Pulse data
   const ghLabels = {json.dumps(gh_labels)};
   const ghValues = {json.dumps(gh_values)};

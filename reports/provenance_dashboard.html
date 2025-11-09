@@ -1,0 +1,377 @@
+
+      <section id="verification_mode_timeline" style="margin-top:40px">
+        <h2>Verification Mode Timeline</h2>
+        <div style="max-width:700px;">
+          <canvas id="verModeChart" height="60" style="width:100%;max-width:700px;"></canvas>
+        </div>
+        <div style="margin-top:12px;">
+          <table style="width:auto;min-width:320px;font-size:14px;">
+            <tr><th>Total Full Verifications</th><td>0</td></tr>
+          <tr><th>Total Partial Verifications</th><td>0</td></tr>
+          <tr><th>Last Recorded Mode</th><td>N/A</td></tr>
+          <tr><th>Percentage of Full Runs</th><td>0%</td></tr>
+        </table>
+      </div>
+      <div style="margin-top:10px;font-size:13px;color:#666;">
+        No verification mode history available.
+      </div>
+    </section>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Provenance Insights Dashboard</title>
+<style>
+  body { font-family: Arial, sans-serif; margin: 24px; color: #222; }
+  h1 { margin-bottom: 8px; }
+  .kpis { display: flex; gap: 16px; flex-wrap: wrap; margin-bottom: 16px; }
+  .kpi { background: #f5f5f5; padding: 12px 16px; border-radius: 8px; min-width: 180px; }
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+  canvas { width: 100%; height: 300px; border: 1px solid #eee; background: #fff; }
+  table { border-collapse: collapse; width: 100%; }
+  th, td { border: 1px solid #ddd; padding: 8px; }
+  th { background: #fafafa; text-align: left; }
+  .ok { color: #0a7; }
+  .warn { color: #d33; }
+  .foot { margin-top: 16px; color: #666; font-size: 13px; }
+</style>
+</head>
+<body>
+  <h1>Provenance Insights Dashboard</h1>
+  <div class="kpis">
+    <div class="kpi"><strong>10-run Pass Rate</strong><br>0.0%</div>
+    <div class="kpi"><strong>Avg Drift Rate</strong><br>0.00%</div>
+    <div class="kpi"><strong>Remediation Frequency</strong><br>0.0%</div>
+    <div class="kpi"><strong>Approval Rate</strong><br>0.0% (0 reviews)</div>
+    <div class="kpi"><strong>Oversight Trust Index</strong><br>0.0%</div>
+  </div>
+  <div class="grid">
+    <div>
+      <h3>Time-series: Passed vs Failed</h3>
+      <canvas id="ts"></canvas>
+    </div>
+    <div>
+      <h3>Severity Breakdown</h3>
+      <canvas id="pie"></canvas>
+    </div>
+  </div>
+  <h3 style="margin-top:24px">Audit Runs</h3>
+  <h3>Reviewer Alignment</h3>
+  <div>
+    <canvas id="align"></canvas>
+  </div>
+  <table>
+    <thead><tr><th>Date</th><th>Status</th><th>Passed</th><th>Failed</th><th>Issue</th></tr></thead>
+    <tbody>
+      
+    </tbody>
+  </table>
+  <div class="foot">Last update: 2025-11-09 17:02:11 UTC</div>
+  <section id="governance_pulse" style="margin-top:40px">
+    <h2>Governance Pulse Over Time</h2>
+    <p style="max-width:640px;font-size:14px;color:#444">Composite view of Governance Health Score (GHS) and audit cadence adjustments enabling longitudinal oversight of technical, calibration, ethical trust and operational stability signals.</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;align-items:start;">
+      <div>
+        <h4>GHS Trend</h4>
+        <canvas id="ghsTrend" height="260"></canvas>
+      </div>
+      <div>
+        <h4>Audit Cadence</h4>
+        <canvas id="auditCadence" height="260"></canvas>
+      </div>
+    </div>
+    <div style="margin-top:16px;display:flex;align-items:center;gap:32px;flex-wrap:wrap;">
+      <div style="position:relative;width:140px;height:140px;">
+        <svg width="140" height="140" viewBox="0 0 140 140">
+          <circle cx="70" cy="70" r="62" fill="#fff" stroke="#eee" stroke-width="4" />
+          <circle id="pulseRing" cx="70" cy="70" r="62" fill="none" stroke="#0a7" stroke-width="6" stroke-linecap="round" stroke-dasharray="390" stroke-dashoffset="0">
+            <animate attributeName="stroke-dashoffset" values="0;780;0" dur="6s" repeatCount="indefinite" />
+            <animate attributeName="stroke" values="#2cbe4e;#dfb317;#d73a49;#2cbe4e" dur="9s" repeatCount="indefinite" />
+          </circle>
+          <text x="70" y="64" text-anchor="middle" font-size="12" font-family="Arial" fill="#444">GHS</text>
+          <text id="ghsVal" x="70" y="92" text-anchor="middle" font-size="28" font-family="Arial" font-weight="bold" fill="#222">0.0%</text>
+        </svg>
+      </div>
+      <div style="font-size:14px;line-height:1.5;">
+  <strong>Current GHS:</strong> 0.0%<br>
+        <strong>Current Audit Frequency:</strong> n/a<br>
+        <strong>Confidence Threshold:</strong> n/a<br>
+        <strong>Next Audit Scheduled:</strong> n/a<br>
+        <em>Updated Components:</em> n/a
+      </div>
+      <div style="font-size:12px;color:#666;">
+        <strong>Legend:</strong><br>
+        <span style="color:#2cbe4e">■</span> ≥ 80 Healthy &nbsp; <span style="color:#dfb317">■</span> 60–79 Attention &nbsp; <span style="color:#d73a49">■</span> &lt;60 Critical
+      </div>
+    </div>
+  </section>
+  <section id="meta_learning" style="margin-top:28px">
+    <h3>Meta-Learning Coefficients</h3>
+    <div style="display:grid;grid-template-columns:1fr 180px;gap:24px;align-items:start;">
+      <div>
+        <canvas id="coefTrend" height="220"></canvas>
+      </div>
+      <div style="text-align:center;">
+        <h4 style="margin:0 0 8px 0;font-size:14px;">Learning Stability</h4>
+        <svg width="160" height="100" viewBox="0 0 160 100">
+          <defs>
+            <linearGradient id="gaugeGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" style="stop-color:#d73a49;stop-opacity:1" />
+              <stop offset="40%" style="stop-color:#dfb317;stop-opacity:1" />
+              <stop offset="80%" style="stop-color:#2cbe4e;stop-opacity:1" />
+            </linearGradient>
+          </defs>
+          <path d="M 20 80 A 60 60 0 0 1 140 80" fill="none" stroke="url(#gaugeGrad)" stroke-width="12" stroke-linecap="round"/>
+          <path d="M 20 80 A 60 60 0 0 1 140 80" fill="none" stroke="#eee" stroke-width="14" stroke-linecap="round" opacity="0.3"/>
+          <line id="msiNeedle" x1="80" y1="80" x2="80" y2="30" stroke="#222" stroke-width="3" stroke-linecap="round" transform="rotate(-90.0 80 80)"/>
+          <circle cx="80" cy="80" r="6" fill="#222"/>
+          <text x="80" y="96" text-anchor="middle" font-size="18" font-family="Arial" font-weight="bold" fill="#222">0.0%</text>
+        </svg>
+        <div style="font-size:11px;color:#666;margin-top:4px;">
+          Variance: C 0.0000 | D 0.0000 | H 0.0000
+        </div>
+      </div>
+    </div>
+    <div style="font-size:13px;color:#444;margin-top:6px;">
+      Current weights — Confidence: <strong>0.000</strong>,
+      Drift: <strong>0.000</strong>,
+      Human Feedback: <strong>0.000</strong>
+    </div>
+  </section>
+  <section id="predictive_insights" style="margin-top:28px">
+    <h3>Predictive Adaptation Insights</h3>
+    <div style="display:grid;grid-template-columns:1fr 220px;gap:24px;align-items:center;">
+      <div>
+        <canvas id="influenceBars" height="200"></canvas>
+      </div>
+      <div style="text-align:center;">
+        <h4 style="margin:0 0 8px 0;font-size:14px;">Predicted Improvement</h4>
+        <svg width="180" height="110" viewBox="0 0 180 110">
+          <defs>
+            <linearGradient id="impGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" style="stop-color:#d73a49;stop-opacity:1" />
+              <stop offset="50%" style="stop-color:#dfb317;stop-opacity:1" />
+              <stop offset="100%" style="stop-color:#2cbe4e;stop-opacity:1" />
+            </linearGradient>
+          </defs>
+          <path d="M 20 90 A 70 70 0 0 1 160 90" fill="none" stroke="url(#impGrad)" stroke-width="12" stroke-linecap="round"/>
+          <path d="M 20 90 A 70 70 0 0 1 160 90" fill="none" stroke="#eee" stroke-width="14" stroke-linecap="round" opacity="0.3"/>
+          <line id="impNeedle" x1="90" y1="90" x2="90" y2="30" stroke="#222" stroke-width="3" stroke-linecap="round" />
+          <circle cx="90" cy="90" r="6" fill="#222"/>
+          <text id="impText" x="90" y="104" text-anchor="middle" font-size="18" font-family="Arial" font-weight="bold" fill="#222"></text>
+        </svg>
+        <div style="font-size:12px;color:#666;margin-top:4px;">Confidence: <span id="planConf">0%</span></div>
+      </div>
+    </div>
+    <div style="font-size:13px;color:#444;margin-top:6px;">
+      <div><strong>Predicted ΔGHS:</strong> <span id="predDelta">+0.0%</span></div>
+      <div><strong>Plan Coefficients:</strong> conf=<span id="pcConf">0.000</span>, drift=<span id="pcDrift">0.000</span>, human=<span id="pcHuman">0.000</span></div>
+      <div style="font-size:12px;color:#666;">Updated: 2025-11-09 17:02:11 UTC</div>
+    </div>
+  </section>
+<script>
+(function() {
+  // Verification Mode Timeline Chart
+  const verLabels = [];
+  const verModes = [];
+  function drawVerModeChart(id) {
+    const c = document.getElementById(id); if(!c) return;
+    const ctx = c.getContext('2d');
+    const W = c.width = c.clientWidth * devicePixelRatio;
+    const H = c.height = c.clientHeight * devicePixelRatio;
+    ctx.scale(devicePixelRatio, devicePixelRatio);
+    const pad = 32;
+    const dotR = 8;
+    const n = verLabels.length;
+    if (n === 0) {
+      ctx.fillStyle = '#666';
+      ctx.font = '15px Arial';
+      ctx.fillText('No verification mode history available.', pad, H/2);
+      return;
+    }
+    // X positions
+    const w = c.clientWidth - pad*2;
+    function xv(i) { return pad + (i/(n-1||1))*w; }
+    // Draw axis
+    ctx.strokeStyle = '#bbb'; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(pad, H/2); ctx.lineTo(c.clientWidth-pad, H/2); ctx.stroke();
+    // Draw dots
+    for(let i=0;i<n;i++) {
+      const x = xv(i), y = H/2;
+      ctx.beginPath();
+      ctx.arc(x, y, dotR, 0, Math.PI*2);
+      ctx.fillStyle = verModes[i]==='full' ? '#2cbe4e' : '#dfb317';
+      ctx.fill();
+      ctx.strokeStyle = '#222'; ctx.lineWidth = 1; ctx.stroke();
+      // Tooltip/label
+      ctx.font = '12px Arial'; ctx.fillStyle = '#222';
+      ctx.textAlign = 'center';
+      ctx.fillText(verLabels[i].replace('T',' ').replace('Z',''), x, y-dotR-6);
+      ctx.font = '11px Arial'; ctx.fillStyle = verModes[i]==='full' ? '#2cbe4e' : '#dfb317';
+      ctx.fillText(verModes[i].charAt(0).toUpperCase()+verModes[i].slice(1), x, y+dotR+13);
+    }
+  }
+  const labels = [];
+  const passed = [];
+  const failed = [];
+  function drawTS(id) {
+    const c = document.getElementById(id);
+    const ctx = c.getContext('2d');
+    const W = c.width = c.clientWidth * devicePixelRatio;
+    const H = c.height = c.clientHeight * devicePixelRatio;
+    ctx.scale(devicePixelRatio, devicePixelRatio);
+    const pad = 30;
+    const w = c.clientWidth - pad*2, h = c.clientHeight - pad*2;
+    const maxY = Math.max(1, ...passed, ...failed);
+    function yv(v) { return c.clientHeight - pad - (v/maxY)*h; }
+    function xv(i) { return pad + (i/(labels.length-1||1))*w; }
+    // axes
+    ctx.strokeStyle = '#999'; ctx.lineWidth = 1; ctx.beginPath();
+    ctx.moveTo(pad, pad); ctx.lineTo(pad, c.clientHeight - pad); ctx.lineTo(c.clientWidth - pad, c.clientHeight - pad); ctx.stroke();
+    // lines
+    function line(arr, color) {
+      ctx.strokeStyle = color; ctx.lineWidth = 2; ctx.beginPath();
+      for (let i=0;i<arr.length;i++) { const x=xv(i), y=yv(arr[i]); if(i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y); }
+      ctx.stroke();
+    }
+    line(passed, '#0a7');
+    line(failed, '#d33');
+  }
+  function drawPie(id, data) {
+    const c = document.getElementById(id);
+    const ctx = c.getContext('2d');
+    const W = c.width = c.clientWidth * devicePixelRatio;
+    const H = c.height = c.clientHeight * devicePixelRatio;
+    ctx.scale(devicePixelRatio, devicePixelRatio);
+    const cx = c.clientWidth/2, cy = c.clientHeight/2, r = Math.min(cx, cy) - 10;
+    const total = Object.values(data).reduce((a,b)=>a+b,0) || 1;
+    let start = -Math.PI/2;
+    const colors = ['#0a7','#d33','#f90','#09f'];
+    let i=0;
+    for (const [k,v] of Object.entries(data)) {
+      const ang = (v/total)*Math.PI*2;
+      ctx.beginPath(); ctx.moveTo(cx,cy); ctx.arc(cx,cy,r,start,start+ang); ctx.closePath();
+      ctx.fillStyle = colors[i++%colors.length]; ctx.fill();
+    start += ang; }
+    // legend
+    let ly = 10; i=0;
+    for (const [k,v] of Object.entries(data)) {
+      ctx.fillStyle = colors[i%colors.length]; ctx.fillRect(10, ly, 12, 12);
+      ctx.fillStyle = '#222'; ctx.fillText(k+': '+v, 28, ly+11);
+      ly += 18; i++;
+    }
+  }
+  function drawAlign(id, scores) {
+    const c = document.getElementById(id);
+    const ctx = c.getContext('2d');
+    const W = c.width = c.clientWidth * devicePixelRatio;
+    const H = c.height = c.clientHeight * devicePixelRatio;
+    ctx.scale(devicePixelRatio, devicePixelRatio);
+    const names = Object.keys(scores);
+    const vals = Object.values(scores).map(s=>Number((s.alignment||0)*100));
+    const pad = 10, barH = 18, gap = 8, x0 = 120, x1 = c.clientWidth - pad;
+    ctx.clearRect(0,0,c.clientWidth,c.clientHeight);
+    c.height = (barH+gap)*Math.max(1,names.length) * devicePixelRatio;
+    ctx.scale(devicePixelRatio, devicePixelRatio);
+    for (let i=0;i<names.length;i++) {
+      const y = pad + i*(barH+gap);
+      ctx.fillStyle = '#eee'; ctx.fillRect(x0, y, x1-x0, barH);
+      const v = vals[i];
+      const w = (x1-x0) * Math.max(0, Math.min(100, v))/100;
+      const hue = Math.round((v/100)*120); // 0=red,120=green
+  ctx.fillStyle = `hsl(${hue},70%,45%)`;
+      ctx.fillRect(x0, y, w, barH);
+      ctx.fillStyle = '#222'; ctx.fillText(names[i], pad, y+barH-4);
+      ctx.fillText(v.toFixed(0)+'%', x0 + w + 6, y+barH-4);
+    }
+  }
+  drawTS('ts');
+  drawPie('pie', {"PASS": 0, "ATTENTION REQUIRED": 0});
+  drawAlign('align', {});
+  drawVerModeChart('verModeChart');
+  // Governance Pulse data
+  const ghLabels = ["2025-11-09"];
+  const ghValues = [0.0];
+  const auditDays = [0];
+  // Coefficient trends
+  const coefLabels = [];
+  const coefConf = [];
+  const coefDrift = [];
+  const coefHuman = [];
+  function zoneColor(v) { return v>=80? '#2cbe4e' : (v>=60? '#dfb317':'#d73a49'); }
+  function drawGhs(id) {
+    const c = document.getElementById(id); if(!c) return; const ctx = c.getContext('2d');
+    const W = c.width = c.clientWidth * devicePixelRatio; const H = c.height = c.clientHeight * devicePixelRatio;
+    ctx.scale(devicePixelRatio, devicePixelRatio); const pad=30; const w=c.clientWidth-pad*2; const h=c.clientHeight-pad*2;
+    const maxY = 100; // % scale
+    function xv(i) { return pad + (i/(ghLabels.length-1||1))*w; }
+    function yv(v) { return c.clientHeight - pad - (v/maxY)*h; }
+    ctx.strokeStyle='#999'; ctx.beginPath(); ctx.moveTo(pad,pad); ctx.lineTo(pad,c.clientHeight-pad); ctx.lineTo(c.clientWidth-pad,c.clientHeight-pad); ctx.stroke();
+    // zones (background bands)
+    const zones=[80,60,0]; const colors=['#e9f9ee','#fff9e0','#fde9ea'];
+    let yPrev=c.clientHeight-pad; for(let zi=0;zi<zones.length;zi++) {
+      const z=zones[zi]; const y=yv(z); ctx.fillStyle=colors[zi]; ctx.fillRect(pad,y,w,yPrev-y); yPrev=y; }
+    // fade function (older points fade)
+    const N = ghValues.length || 1; const alphaAt=(i)=> 0.35 + 0.65*(i/(N-1||1));
+    // line segments with fading
+    for(let i=1;i<ghValues.length;i++){
+      const x0=xv(i-1), y0=yv(ghValues[i-1]); const x1=xv(i), y1=yv(ghValues[i]);
+      ctx.save(); ctx.globalAlpha = alphaAt(i); ctx.strokeStyle='#0366d6'; ctx.lineWidth=2; ctx.beginPath(); ctx.moveTo(x0,y0); ctx.lineTo(x1,y1); ctx.stroke(); ctx.restore();
+    }
+    // points with fading + zone color
+    for(let i=0;i<ghValues.length;i++){ const x=xv(i), y=yv(ghValues[i]); ctx.save(); ctx.globalAlpha = alphaAt(i); ctx.fillStyle=zoneColor(ghValues[i]); ctx.beginPath(); ctx.arc(x,y,4,0,Math.PI*2); ctx.fill(); ctx.restore(); }
+    // x labels (sparse)
+    ctx.fillStyle='#222'; ctx.font='11px Arial';
+    for(let i=0;i<ghLabels.length;i++){
+      const step = Math.ceil((ghLabels.length/6) || 1);
+      if((i % step) === 0 || i === ghLabels.length - 1){
+        ctx.fillText(ghLabels[i], xv(i)-15, c.clientHeight-10);
+      }
+    }
+  }
+  function drawAudit(id){ const c=document.getElementById(id); if(!c) return; const ctx=c.getContext('2d'); const W=c.width=c.clientWidth*devicePixelRatio; const H=c.height=c.clientHeight*devicePixelRatio; ctx.scale(devicePixelRatio,devicePixelRatio); const pad=30; const w=c.clientWidth-pad*2; const h=c.clientHeight-pad*2; const maxY=Math.max(1,...auditDays,14); function xv(i){ return pad + (i/(auditDays.length-1||1))*w; } function bh(v){ return (v/maxY)*h; } const N=auditDays.length||1; const alphaAt=(i)=> 0.35 + 0.65*(i/(N-1||1)); ctx.strokeStyle='#999'; ctx.beginPath(); ctx.moveTo(pad,pad); ctx.lineTo(pad,c.clientHeight-pad); ctx.lineTo(c.clientWidth-pad,c.clientHeight-pad); ctx.stroke(); for(let i=0;i<auditDays.length;i++){ const v=auditDays[i]; const x=xv(i)-6; const barH=bh(v); ctx.save(); ctx.globalAlpha = alphaAt(i); ctx.fillStyle='#888'; ctx.fillRect(x, c.clientHeight-pad-barH, 12, barH); ctx.restore(); } ctx.fillStyle='#222'; ctx.font='11px Arial'; for(let i=0;i<auditDays.length;i++){ if(i%Math.ceil(auditDays.length/6||1)==0 || i==auditDays.length-1){ ctx.fillText(ghLabels[i], xv(i)-15, c.clientHeight-10); } } }
+  function drawCoef(id){ const c=document.getElementById(id); if(!c) return; const ctx=c.getContext('2d'); const W=c.width=c.clientWidth*devicePixelRatio; const H=c.height=c.clientHeight*devicePixelRatio; ctx.scale(devicePixelRatio,devicePixelRatio); const pad=30; const w=c.clientWidth-pad*2; const h=c.clientHeight-pad*2; const maxY=1.0; function xv(i){ return pad + (i/(coefLabels.length-1||1))*w; } function yv(v){ return c.clientHeight - pad - (v/maxY)*h; } ctx.strokeStyle='#999'; ctx.beginPath(); ctx.moveTo(pad,pad); ctx.lineTo(pad,c.clientHeight-pad); ctx.lineTo(c.clientWidth-pad,c.clientHeight-pad); ctx.stroke(); const N=coefLabels.length||1; const alphaAt=(i)=>0.35+0.65*(i/(N-1||1)); function line(arr,color){ for(let i=1;i<arr.length;i++){ const x0=xv(i-1), y0=yv(arr[i-1]); const x1=xv(i), y1=yv(arr[i]); ctx.save(); ctx.globalAlpha=alphaAt(i); ctx.strokeStyle=color; ctx.lineWidth=2; ctx.beginPath(); ctx.moveTo(x0,y0); ctx.lineTo(x1,y1); ctx.stroke(); ctx.restore(); } for(let i=0;i<arr.length;i++){ const x=xv(i), y=yv(arr[i]); ctx.save(); ctx.globalAlpha=alphaAt(i); ctx.fillStyle=color; ctx.beginPath(); ctx.arc(x,y,3,0,Math.PI*2); ctx.fill(); ctx.restore(); } } line(coefConf,'#0366d6'); line(coefDrift,'#f39c12'); line(coefHuman,'#8e44ad'); ctx.fillStyle='#222'; ctx.font='11px Arial'; for(let i=0;i<coefLabels.length;i++){ const step=Math.ceil((coefLabels.length/6)||1); if((i%step)===0 || i===coefLabels.length-1){ ctx.fillText(coefLabels[i], xv(i)-15, c.clientHeight-10); } } }
+  drawGhs('ghsTrend');
+  drawAudit('auditCadence');
+  drawCoef('coefTrend');
+  // Predictive Influence Bars & Improvement Gauge
+  const inflLabels = ["Confidence", "Drift", "Human"];
+  const inflValues = [0.0, 0.0, 0.0];
+  function drawInfluenceBars(id) {
+    const c = document.getElementById(id); if(!c) return; const ctx = c.getContext('2d');
+    const W = c.width = c.clientWidth * devicePixelRatio; const H = c.height = c.clientHeight * devicePixelRatio; ctx.scale(devicePixelRatio, devicePixelRatio);
+    const pad = 30; const w = c.clientWidth - pad*2; const h = c.clientHeight - pad*2; const zeroY = pad + h/2;
+    // axes
+    ctx.strokeStyle = '#999'; ctx.beginPath(); ctx.moveTo(pad, zeroY); ctx.lineTo(c.clientWidth - pad, zeroY); ctx.stroke();
+    const maxAbs = Math.max(0.01, ...inflValues.map(v=>Math.abs(v)));
+    const barW = (w / Math.max(1, inflLabels.length)) * 0.6;
+    for (let i=0;i<inflLabels.length;i++) {
+      const x = pad + (i+0.5)*(w/inflLabels.length) - barW/2;
+      const v = inflValues[i];
+      const hpix = (Math.abs(v)/maxAbs) * (h/2);
+      ctx.fillStyle = v>=0 ? '#2cbe4e' : '#d73a49';
+      const y = v>=0 ? (zeroY - hpix) : zeroY;
+      ctx.fillRect(x, y, barW, hpix);
+      ctx.fillStyle = '#222'; ctx.font = '12px Arial'; ctx.textAlign='center';
+      ctx.fillText(inflLabels[i], x+barW/2, c.clientHeight - 8);
+    }
+  }
+  function drawImprovementGauge() {
+    const imp = 0.0;
+    const clamped = Math.max(-10, Math.min(10, imp)); // -10% .. +10%
+    const angle = -90 + ((clamped + 10) / 20) * 180; // map to [-90, +90]
+    const needle = document.getElementById('impNeedle');
+  const t = `rotate(${angle} 90 90)`;
+    if (needle) needle.setAttribute('transform', t);
+    const txt = document.getElementById('impText');
+  if (txt) txt.textContent = `${imp.toFixed(1)}%`;
+  }
+  drawInfluenceBars('influenceBars');
+  drawImprovementGauge();
+  // Pulse ring color adjustment
+  const ring=document.getElementById('pulseRing'); if(ring){ const v=0.0; ring.setAttribute('stroke', zoneColor(v)); }
+})();
+</script>
+</body>
+</html>
