@@ -23,6 +23,7 @@ ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
 REPORTS_DIR = os.path.join(ROOT, "reports")
 HISTORY_JSON = os.path.join(ROOT, "reports", "history", "versions.json")
 LEDGER_JSON = os.path.join(ROOT, "logs", "oversight_ledger.json")
+SCORES_JSON = os.path.join(ROOT, "logs", "reviewer_scores.json")
 
 MD_PATTERN = re.compile(r"^\s*-\s*(?P<key>[^:]+):\s*(?P<value>.*)$")
 TS_KEYS = {"Timestamp", "timestamp"}
@@ -97,6 +98,15 @@ def _load_ledger() -> List[Dict[str, Any]]:
     return []
   return []
 
+def _load_scores() -> Dict[str, Any]:
+  if not os.path.exists(SCORES_JSON):
+    return {}
+  try:
+    with open(SCORES_JSON, "r", encoding="utf-8") as f:
+      return json.load(f)
+  except Exception:
+    return {}
+
 
 def _collect_runs() -> List[Dict[str, Any]]:
     paths = []
@@ -160,13 +170,75 @@ def _render_html(runs: List[Dict[str, Any]], metrics: Dict[str, Any], history: D
     avg_drift = metrics.get("avg_drift", 0.0) * 100.0
     remediation_freq = metrics.get("remediation_freq", 0.0) * 100.0
 
-    # Reviewer metrics
+    # Reviewer metrics & trust index
     ledger = _load_ledger()
+    scores = _load_scores()
     approvals = sum(1 for e in ledger if str(e.get("verdict","")) == "approved")
     total_reviews = len(ledger)
     approval_rate = (approvals/total_reviews*100.0) if total_reviews else 0.0
+    mean_alignment = 0.0
+    if scores:
+        vals = [float(v.get("alignment",0.0)) for v in scores.values()]
+        mean_alignment = sum(vals)/len(vals) if vals else 0.0
+    disagreement_rate = 1.0 - (approval_rate/100.0) if total_reviews else 0.0
+    oversight_trust_index = max(0.0, min(1.0, mean_alignment * (1.0 - disagreement_rate))) * 100.0
     # naive turnaround: unavailable without timestamps per pending/open; display total count instead
     now = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC")
+
+    # Governance Pulse inputs
+    # Load current governance health & policy if present
+    gh_path = os.path.join(REPORTS_DIR, 'governance_health.json')
+    cur_ghs = 0.0
+    gh_components = {}
+    if os.path.exists(gh_path):
+        try:
+            with open(gh_path,'r',encoding='utf-8') as f:
+                _gh = json.load(f)
+            cur_ghs = float(_gh.get('GovernanceHealthScore') or 0.0)
+            gh_components = _gh.get('Components', {})
+        except Exception:
+            pass
+    policy_path = os.path.join(ROOT, 'configs', 'governance_policy.json')
+    next_audit_date = ''
+    confidence_threshold = ''
+    audit_freq = ''
+    if os.path.exists(policy_path):
+        try:
+            with open(policy_path,'r',encoding='utf-8') as f:
+                pol = json.load(f)
+            next_audit_date = pol.get('next_audit_date','')
+            confidence_threshold = pol.get('learning_coefficients',{}).get('confidence_weight', pol.get('confidence_threshold'))
+            audit_freq = pol.get('audit_frequency','')
+        except Exception:
+            pass
+    # Historical GHS from versions.json if annotated
+    gh_history = []  # list of (date, ghs, audit_days)
+    versions_path = os.path.join(REPORTS_DIR,'history','versions.json')
+    if os.path.exists(versions_path):
+        try:
+            with open(versions_path,'r',encoding='utf-8') as f:
+                vj = json.load(f)
+            entries = vj.get('history') or vj.get('versions') or vj.get('entries') or []
+            if isinstance(entries,list):
+                for e in entries[-30:]:
+                    dt = e.get('timestamp') or e.get('date') or ''
+                    ghs_val = e.get('ghs') or e.get('GovernanceHealthScore') or None
+                    aud = e.get('audit_frequency') or e.get('audit_freq') or ''
+                    if ghs_val is not None:
+                        days = 0
+                        if isinstance(aud,str) and aud.endswith('d'):
+                            try:
+                                days = int(aud[:-1])
+                            except Exception:
+                                days = 0
+                        gh_history.append((dt[:10], float(ghs_val), days))
+        except Exception:
+            pass
+    if not gh_history:
+        gh_history.append((datetime.utcnow().strftime('%Y-%m-%d'), cur_ghs, 0))
+    gh_labels = [g[0] for g in gh_history]
+    gh_values = [round(g[1],2) for g in gh_history]
+    gh_audit_days = [g[2] for g in gh_history]
 
     # Tiny charting: inline canvas drawing without external libs
     html = f"""
@@ -198,6 +270,7 @@ def _render_html(runs: List[Dict[str, Any]], metrics: Dict[str, Any], history: D
     <div class="kpi"><strong>Avg Drift Rate</strong><br>{avg_drift:.2f}%</div>
     <div class="kpi"><strong>Remediation Frequency</strong><br>{remediation_freq:.1f}%</div>
     <div class="kpi"><strong>Approval Rate</strong><br>{approval_rate:.1f}% ({total_reviews} reviews)</div>
+    <div class="kpi"><strong>Oversight Trust Index</strong><br>{oversight_trust_index:.1f}%</div>
   </div>
   <div class="grid">
     <div>
@@ -210,6 +283,10 @@ def _render_html(runs: List[Dict[str, Any]], metrics: Dict[str, Any], history: D
     </div>
   </div>
   <h3 style="margin-top:24px">Audit Runs</h3>
+  <h3>Reviewer Alignment</h3>
+  <div>
+    <canvas id="align"></canvas>
+  </div>
   <table>
     <thead><tr><th>Date</th><th>Status</th><th>Passed</th><th>Failed</th><th>Issue</th></tr></thead>
     <tbody>
@@ -217,6 +294,44 @@ def _render_html(runs: List[Dict[str, Any]], metrics: Dict[str, Any], history: D
     </tbody>
   </table>
   <div class="foot">Last update: {now}</div>
+  <section id="governance_pulse" style="margin-top:40px">
+    <h2>Governance Pulse Over Time</h2>
+    <p style="max-width:640px;font-size:14px;color:#444">Composite view of Governance Health Score (GHS) and audit cadence adjustments enabling longitudinal oversight of technical, calibration, ethical trust and operational stability signals.</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;align-items:start;">
+      <div>
+        <h4>GHS Trend</h4>
+        <canvas id="ghsTrend" height="260"></canvas>
+      </div>
+      <div>
+        <h4>Audit Cadence</h4>
+        <canvas id="auditCadence" height="260"></canvas>
+      </div>
+    </div>
+    <div style="margin-top:16px;display:flex;align-items:center;gap:32px;flex-wrap:wrap;">
+      <div style="position:relative;width:140px;height:140px;">
+        <svg width="140" height="140" viewBox="0 0 140 140">
+          <circle cx="70" cy="70" r="62" fill="#fff" stroke="#eee" stroke-width="4" />
+          <circle id="pulseRing" cx="70" cy="70" r="62" fill="none" stroke="#0a7" stroke-width="6" stroke-linecap="round" stroke-dasharray="390" stroke-dashoffset="0">
+            <animate attributeName="stroke-dashoffset" values="0;780;0" dur="6s" repeatCount="indefinite" />
+            <animate attributeName="stroke" values="#2cbe4e;#dfb317;#d73a49;#2cbe4e" dur="9s" repeatCount="indefinite" />
+          </circle>
+          <text x="70" y="64" text-anchor="middle" font-size="12" font-family="Arial" fill="#444">GHS</text>
+          <text id="ghsVal" x="70" y="92" text-anchor="middle" font-size="28" font-family="Arial" font-weight="bold" fill="#222">{cur_ghs:.1f}%</text>
+        </svg>
+      </div>
+      <div style="font-size:14px;line-height:1.5;">
+        <strong>Current GHS:</strong> {cur_ghs:.1f}%<br>
+        <strong>Current Audit Frequency:</strong> {audit_freq or 'n/a'}<br>
+        <strong>Confidence Threshold:</strong> {confidence_threshold if confidence_threshold!='' else 'n/a'}<br>
+        <strong>Next Audit Scheduled:</strong> {next_audit_date or 'n/a'}<br>
+        <em>Updated Components:</em> {', '.join(f"{k}:{v}" for k,v in gh_components.items()) if gh_components else 'n/a'}
+      </div>
+      <div style="font-size:12px;color:#666;">
+        <strong>Legend:</strong><br>
+        <span style="color:#2cbe4e">■</span> ≥ 80 Healthy &nbsp; <span style="color:#dfb317">■</span> 60–79 Attention &nbsp; <span style="color:#d73a49">■</span> &lt;60 Critical
+      </div>
+    </div>
+  </section>
 <script>
 (function() {{
   const labels = {json.dumps(labels)};
@@ -269,8 +384,68 @@ def _render_html(runs: List[Dict[str, Any]], metrics: Dict[str, Any], history: D
       ly += 18; i++;
     }}
   }}
+  function drawAlign(id, scores) {{
+    const c = document.getElementById(id);
+    const ctx = c.getContext('2d');
+    const W = c.width = c.clientWidth * devicePixelRatio;
+    const H = c.height = c.clientHeight * devicePixelRatio;
+    ctx.scale(devicePixelRatio, devicePixelRatio);
+    const names = Object.keys(scores);
+    const vals = Object.values(scores).map(s=>Number((s.alignment||0)*100));
+    const pad = 10, barH = 18, gap = 8, x0 = 120, x1 = c.clientWidth - pad;
+    ctx.clearRect(0,0,c.clientWidth,c.clientHeight);
+    c.height = (barH+gap)*Math.max(1,names.length) * devicePixelRatio;
+    ctx.scale(devicePixelRatio, devicePixelRatio);
+    for (let i=0;i<names.length;i++) {{
+      const y = pad + i*(barH+gap);
+      ctx.fillStyle = '#eee'; ctx.fillRect(x0, y, x1-x0, barH);
+      const v = vals[i];
+      const w = (x1-x0) * Math.max(0, Math.min(100, v))/100;
+      const hue = Math.round((v/100)*120); // 0=red,120=green
+  ctx.fillStyle = `hsl(${{hue}},70%,45%)`;
+      ctx.fillRect(x0, y, w, barH);
+      ctx.fillStyle = '#222'; ctx.fillText(names[i], pad, y+barH-4);
+      ctx.fillText(v.toFixed(0)+'%', x0 + w + 6, y+barH-4);
+    }}
+  }}
   drawTS('ts');
   drawPie('pie', {json.dumps(metrics.get('severity_counts', {}))});
+  drawAlign('align', {json.dumps(scores)});
+  // Governance Pulse data
+  const ghLabels = {json.dumps(gh_labels)};
+  const ghValues = {json.dumps(gh_values)};
+  const auditDays = {json.dumps(gh_audit_days)};
+  function zoneColor(v) {{ return v>=80? '#2cbe4e' : (v>=60? '#dfb317':'#d73a49'); }}
+  function drawGhs(id) {{
+    const c = document.getElementById(id); if(!c) return; const ctx = c.getContext('2d');
+    const W = c.width = c.clientWidth * devicePixelRatio; const H = c.height = c.clientHeight * devicePixelRatio;
+    ctx.scale(devicePixelRatio, devicePixelRatio); const pad=30; const w=c.clientWidth-pad*2; const h=c.clientHeight-pad*2;
+    const maxY = 100; // % scale
+    function xv(i) {{ return pad + (i/(ghLabels.length-1||1))*w; }}
+    function yv(v) {{ return c.clientHeight - pad - (v/maxY)*h; }}
+    ctx.strokeStyle='#999'; ctx.beginPath(); ctx.moveTo(pad,pad); ctx.lineTo(pad,c.clientHeight-pad); ctx.lineTo(c.clientWidth-pad,c.clientHeight-pad); ctx.stroke();
+    // zones (background bands)
+    const zones=[80,60,0]; const colors=['#e9f9ee','#fff9e0','#fde9ea'];
+    let yPrev=c.clientHeight-pad; for(let zi=0;zi<zones.length;zi++) {{
+      const z=zones[zi]; const y=yv(z); ctx.fillStyle=colors[zi]; ctx.fillRect(pad,y,w,yPrev-y); yPrev=y; }}
+    // line
+    ctx.lineWidth=2; ctx.beginPath(); for(let i=0;i<ghValues.length;i++){{ const x=xv(i), y=yv(ghValues[i]); if(i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y); }} ctx.strokeStyle='#0366d6'; ctx.stroke();
+    // points
+    for(let i=0;i<ghValues.length;i++){{ const x=xv(i), y=yv(ghValues[i]); ctx.fillStyle=zoneColor(ghValues[i]); ctx.beginPath(); ctx.arc(x,y,4,0,Math.PI*2); ctx.fill(); }}
+    // x labels (sparse)
+    ctx.fillStyle='#222'; ctx.font='11px Arial';
+    for(let i=0;i<ghLabels.length;i++){{
+      const step = Math.ceil((ghLabels.length/6) || 1);
+      if((i % step) === 0 || i === ghLabels.length - 1){{
+        ctx.fillText(ghLabels[i], xv(i)-15, c.clientHeight-10);
+      }}
+    }}
+  }}
+  function drawAudit(id){{ const c=document.getElementById(id); if(!c) return; const ctx=c.getContext('2d'); const W=c.width=c.clientWidth*devicePixelRatio; const H=c.height=c.clientHeight*devicePixelRatio; ctx.scale(devicePixelRatio,devicePixelRatio); const pad=30; const w=c.clientWidth-pad*2; const h=c.clientHeight-pad*2; const maxY=Math.max(1,...auditDays,14); function xv(i){{ return pad + (i/(auditDays.length-1||1))*w; }} function bh(v){{ return (v/maxY)*h; }} ctx.strokeStyle='#999'; ctx.beginPath(); ctx.moveTo(pad,pad); ctx.lineTo(pad,c.clientHeight-pad); ctx.lineTo(c.clientWidth-pad,c.clientHeight-pad); ctx.stroke(); for(let i=0;i<auditDays.length;i++){{ const v=auditDays[i]; const x=xv(i)-6; const barH=bh(v); ctx.fillStyle='#888'; ctx.fillRect(x, c.clientHeight-pad-barH, 12, barH); }} ctx.fillStyle='#222'; ctx.font='11px Arial'; for(let i=0;i<auditDays.length;i++){{ if(i%Math.ceil(auditDays.length/6||1)==0 || i==auditDays.length-1){{ ctx.fillText(ghLabels[i], xv(i)-15, c.clientHeight-10); }} }} }}
+  drawGhs('ghsTrend');
+  drawAudit('auditCadence');
+  // Pulse ring color adjustment
+  const ring=document.getElementById('pulseRing'); if(ring){{ const v={cur_ghs:.1f}; ring.setAttribute('stroke', zoneColor(v)); }}
 }})();
 </script>
 </body>
