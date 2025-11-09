@@ -1,0 +1,945 @@
+import os, json, re, csv, math
+from datetime import datetime
+from pathlib import Path
+
+ROOT = Path('.')
+DOCS = ROOT / 'docs'
+DOCS.mkdir(exist_ok=True)
+RESULTS = ROOT / 'results'
+
+
+def replace_block(text: str, begin: str, end: str, new_content: str) -> str:
+    pattern = re.compile(rf"{re.escape(begin)}.*?{re.escape(end)}", re.S)
+    block = f"{begin}\n{new_content.rstrip()}\n{end}"
+    if re.search(pattern, text):
+        return re.sub(pattern, block, text)
+    else:
+        # append with two newlines
+        return text.rstrip() + "\n\n" + block + "\n"
+
+
+def _norm(s: str) -> str:
+    return re.sub(r"[^a-z0-9]", "", s.lower())
+
+
+def read_csv_metric(path: Path, candidate_columns: list[str]):
+    if not path.exists():
+        return None
+    try:
+        with path.open('r', encoding='utf-8') as f:
+            reader = csv.DictReader(f)
+            if not reader.fieldnames:
+                return None
+            fields_norm = {_norm(x): x for x in reader.fieldnames}
+            col = None
+            for c in candidate_columns:
+                key = _norm(c)
+                if key in fields_norm:
+                    col = fields_norm[key]
+                    break
+            if not col:
+                # try contains-based match
+                for c in candidate_columns:
+                    key = _norm(c)
+                    for k in reader.fieldnames:
+                        if key in _norm(k):
+                            col = k
+                            break
+                    if col:
+                        break
+            if not col:
+                return None
+            vals = []
+            for row in reader:
+                try:
+                    v = float(str(row.get(col, '')).strip().replace('%', ''))
+                    vals.append(v)
+                except Exception:
+                    continue
+            if not vals:
+                return None
+            return sum(vals) / len(vals)
+    except Exception:
+        return None
+
+
+def read_epoch_metrics(path: Path, auc_cols=None, ece_cols=None, epoch_cols=None):
+    """Return list of (epoch, auc, ece) tuples if possible."""
+    if auc_cols is None:
+        auc_cols = ['auc', 'roc_auc', 'auroc', 'rocauc']
+    if ece_cols is None:
+        ece_cols = ['ece', 'expected_calibration_error']
+    if epoch_cols is None:
+        epoch_cols = ['epoch', 'step', 'iteration']
+    if not path.exists():
+        return []
+    try:
+        with path.open('r', encoding='utf-8') as f:
+            reader = csv.DictReader(f)
+            if not reader.fieldnames:
+                return []
+            # map normalized names
+            norm_map = {_norm(fn): fn for fn in reader.fieldnames}
+
+            def pick(cols):
+                for c in cols:
+                    nc = _norm(c)
+                    if nc in norm_map:
+                        return norm_map[nc]
+                # fuzzy contains
+                for c in cols:
+                    nc = _norm(c)
+                    for k in reader.fieldnames:
+                        if nc in _norm(k):
+                            return k
+                return None
+
+            epoch_col = pick(epoch_cols)
+            auc_col = pick(auc_cols)
+            ece_col = pick(ece_cols)
+            rows = []
+            for row in reader:
+                try:
+                    ep = int(float(row[epoch_col])) if epoch_col and row.get(epoch_col) not in (None, '') else None
+                except Exception:
+                    ep = None
+                try:
+                    auc_v = float(str(row[auc_col]).replace('%', '')) if auc_col and row.get(auc_col) not in (None, '') else None
+                except Exception:
+                    auc_v = None
+                try:
+                    ece_v = float(str(row[ece_col]).replace('%', '')) if ece_col and row.get(ece_col) not in (None, '') else None
+                except Exception:
+                    ece_v = None
+                if ep is not None and (auc_v is not None or ece_v is not None):
+                    rows.append((ep, auc_v, ece_v))
+            rows.sort(key=lambda t: t[0])
+            return rows
+    except Exception:
+        return []
+
+
+def rolling_stats(values: list[float], window: int):
+    vals = [v for v in values if v is not None]
+    if len(vals) == 0:
+        return None, None
+    tail = vals[-window:] if len(vals) >= window else vals
+    mean = sum(tail) / len(tail)
+    if len(tail) < 2:
+        return mean, None
+    var = sum((x - mean) ** 2 for x in tail) / (len(tail) - 1)
+    return mean, math.sqrt(var)
+
+
+def last_value(values: list[float]):
+    for v in reversed(values):
+        if v is not None:
+            return v
+    return None
+
+
+def generate_sparkline_svg(values: list[float], width: int = 150, height: int = 50, stroke: str = 'green') -> str | None:
+    pts = [v for v in values if v is not None]
+    if len(pts) < 2:
+        return None
+    vmin, vmax = min(pts), max(pts)
+    # avoid zero division; if flat line, center it
+    if vmax - vmin < 1e-12:
+        y = height / 2
+        path = f"M 0 {y} L {width} {y}"
+        return f"<svg viewBox=\"0 0 {width} {height}\" width=\"{width}\" height=\"{height}\" xmlns=\"http://www.w3.org/2000/svg\"><path d=\"{path}\" fill=\"none\" stroke=\"{stroke}\" stroke-width=\"2\"/></svg>"
+    n = len(values)
+    # compute points; skip None by carrying last known
+    coords = []
+    last_y = None
+    for i, v in enumerate(values):
+        x = (i / (n - 1)) * (width - 1)
+        if v is None:
+            if last_y is None:
+                continue
+            y = last_y
+        else:
+            y = height - ((v - vmin) / (vmax - vmin)) * (height - 1)
+            last_y = y
+        coords.append((x, y))
+    if len(coords) < 2:
+        return None
+    d = " ".join([("M" if idx == 0 else "L") + f" {x:.1f} {y:.1f}" for idx, (x, y) in enumerate(coords)])
+    return f"<svg viewBox=\"0 0 {width} {height}\" width=\"{width}\" height=\"{height}\" xmlns=\"http://www.w3.org/2000/svg\"><path d=\"{d}\" fill=\"none\" stroke=\"{stroke}\" stroke-width=\"2\"/></svg>"
+
+
+def find_in_obj(obj, candidate_keys: list[str]):
+    # Depth-first search for first numeric match by key name
+    def _search(o):
+        if isinstance(o, dict):
+            # direct key hit
+            for k, v in o.items():
+                nk = _norm(k)
+                if nk in {_norm(c) for c in candidate_keys} or any(_norm(c) in nk for c in candidate_keys):
+                    try:
+                        return float(str(v).replace('%', ''))
+                    except Exception:
+                        pass
+            # recurse
+            for v in o.values():
+                r = _search(v)
+                if r is not None:
+                    return r
+        elif isinstance(o, list):
+            for it in o:
+                r = _search(it)
+                if r is not None:
+                    return r
+        return None
+
+    return _search(obj)
+
+
+def fmt_num(x, decimals=3):
+    try:
+        return f"{float(x):.{decimals}f}"
+    except Exception:
+        return "N/A"
+
+
+def fmt_pct(x):
+    try:
+        x = float(x)
+        if x <= 1.0:
+            x = x * 100.0
+        return f"{x:.1f}%"
+    except Exception:
+        return "N/A"
+
+# --- Compliance Guidelines ---
+cg = DOCS / 'compliance_guidelines.md'
+base_cg = cg.read_text(encoding='utf-8') if cg.exists() else "# Compliance Guidelines\n"
+ci_block = [
+    f"- Last run: {datetime.utcnow().isoformat()}Z",
+    "- Tests: see Actions summary",
+    "- Lint: Ruff (F/E errors block, W/B/I warn)",
+]
+fs = RESULTS / 'fairness_summary.json'
+eval_lines = []
+if fs.exists():
+    try:
+        data = json.loads(fs.read_text(encoding='utf-8'))
+        eval_lines.append(f"- Fairness groups: {len(data.get('aggregates', []))}")
+        eval_lines.append(f"- ΔAUC (max): {data.get('delta_auc')}")
+        eval_lines.append(f"- ΔECE (max): {data.get('delta_ece')}")
+    except Exception:
+        eval_lines.append("- Fairness summary not parsable.")
+else:
+    eval_lines.append("- No fairness summary found.")
+
+base_cg = replace_block(base_cg, "<!-- CI_SUMMARY:BEGIN -->", "<!-- CI_SUMMARY:END -->", "\n".join(ci_block))
+base_cg = replace_block(base_cg, "<!-- EVAL_SUMMARY:BEGIN -->", "<!-- EVAL_SUMMARY:END -->", "\n".join(eval_lines))
+
+# Model performance indicators
+calib_csv = RESULTS / 'calibration_report.csv'
+bench_csv = RESULTS / 'benchmark_metrics.csv'
+drift_json = RESULTS / 'drift_report.json'
+
+auc = read_csv_metric(bench_csv, ['auc', 'roc_auc', 'auroc', 'rocauc'])
+ece = read_csv_metric(calib_csv, ['ece', 'expected_calibration_error'])
+drift_rate = None
+if drift_json.exists():
+    try:
+        j = json.loads(drift_json.read_text(encoding='utf-8'))
+        drift_rate = find_in_obj(j, ['drift_rate', 'driftrate', 'drift_rate_pct', 'drift_detected_rate', 'rate'])
+    except Exception:
+        drift_rate = None
+
+last_run = f"Last run: {datetime.utcnow().isoformat()}Z"
+mp_lines = [
+    last_run,
+    "",
+    "| Metric | Value |",
+    "|---|---|",
+    f"| AUC | {fmt_num(auc) if auc is not None else 'N/A'} |",
+    f"| ECE | {fmt_num(ece) if ece is not None else 'N/A'} |",
+    f"| Drift rate | {fmt_pct(drift_rate) if drift_rate is not None else 'N/A'} |",
+]
+base_cg = replace_block(base_cg, "<!-- MODEL_PERFORMANCE:BEGIN -->", "<!-- MODEL_PERFORMANCE:END -->", "\n".join(mp_lines))
+
+# Uncertainty + Fairness summary for compliance
+unc = read_csv_metric(calib_csv, [
+    'predictive_entropy_mean', 'mean_uncertainty', 'avg_uncertainty',
+    'uncertainty', 'entropy', 'predictive_entropy'
+])
+
+
+def read_fairness_deltas() -> tuple:
+    candidates = [RESULTS / 'fairness' / 'fairness_summary.json', RESULTS / 'fairness_summary.json']
+    for p in candidates:
+        if p.exists():
+            try:
+                d = json.loads(p.read_text(encoding='utf-8'))
+                da = d.get('delta_auc')
+                de = d.get('delta_ece')
+                da = float(str(da)) if da is not None else None
+                de = float(str(de)) if de is not None else None
+                return da, de
+            except Exception:
+                continue
+    return None, None
+
+
+delta_auc, delta_ece = read_fairness_deltas()
+unc_lines = [
+    "| Metric | Value |",
+    "|---|---|",
+    f"| Mean uncertainty | {fmt_num(unc, 2) if unc is not None else 'N/A'} |",
+    f"| ΔAUC | {fmt_num(delta_auc, 2) if delta_auc is not None else 'N/A'} |",
+    f"| ΔECE | {fmt_num(delta_ece, 2) if delta_ece is not None else 'N/A'} |",
+    f"| Last updated | {datetime.utcnow().isoformat()}Z |",
+]
+base_cg = replace_block(base_cg, "<!-- UNCERTAINTY_SUMMARY:BEGIN -->", "<!-- UNCERTAINTY_SUMMARY:END -->", "\n".join(unc_lines))
+
+# Temporal stability (rolling stats)
+epoch_rows = read_epoch_metrics(calib_csv)
+auc_series = [r[1] for r in epoch_rows if r[1] is not None]
+ece_series = [r[2] for r in epoch_rows if r[2] is not None]
+last_epoch = epoch_rows[-1][0] if epoch_rows else None
+auc_mean, auc_std = rolling_stats(auc_series, 5)
+ece_mean, ece_std = rolling_stats(ece_series, 5)
+ts_lines = [
+    "| Metric | Mean | Std Dev | Last Epoch |",
+    "|---|---|---|---|",
+    f"| AUC | {fmt_num(auc_mean, 3) if auc_mean is not None else 'N/A'} | {fmt_num(auc_std, 3) if auc_std is not None else 'N/A'} | {last_epoch if last_epoch is not None else 'N/A'} |",
+    f"| ECE | {fmt_num(ece_mean, 3) if ece_mean is not None else 'N/A'} | {fmt_num(ece_std, 3) if ece_std is not None else 'N/A'} | {last_epoch if last_epoch is not None else 'N/A'} |",
+    f"| Updated | {datetime.utcnow().isoformat()}Z |  |  |",
+]
+auc_svg = generate_sparkline_svg(auc_series, stroke="#10b981")  # green
+ece_svg = generate_sparkline_svg(ece_series, stroke="#f59e0b")  # orange
+auc_last = last_value(auc_series)
+ece_last = last_value(ece_series)
+ts_extra = []
+if auc_svg or ece_svg:
+    ts_extra.append("")
+    ts_extra.append("AUC trend:")
+    ts_extra.append(auc_svg if auc_svg else "No trend data available")
+    ts_extra.append("")
+    ts_extra.append("ECE trend:")
+    ts_extra.append(ece_svg if ece_svg else "No trend data available")
+else:
+    ts_extra.append("")
+    ts_extra.append("No trend data available")
+ts_extra.append("")
+ts_extra.append(
+    f"Averages — AUC mean: {fmt_num(auc_mean, 3) if auc_mean is not None else 'N/A'}, last: {fmt_num(auc_last, 3) if auc_last is not None else 'N/A'}; "
+    f"ECE mean: {fmt_num(ece_mean, 3) if ece_mean is not None else 'N/A'}, last: {fmt_num(ece_last, 3) if ece_last is not None else 'N/A'}"
+)
+ts_content = "\n".join(ts_lines + ts_extra)
+base_cg = replace_block(base_cg, "<!-- TEMPORAL_STABILITY:BEGIN -->", "<!-- TEMPORAL_STABILITY:END -->", ts_content)
+
+# --- Trend notes (compliance) ---
+
+def parse_existing_notes(text: str) -> list[str]:
+    # Extract existing TREND_NOTES block content lines (excluding markers)
+    m = re.search(r"<!-- TREND_NOTES:BEGIN -->(.*?)<!-- TREND_NOTES:END -->", text, re.S)
+    if not m:
+        return []
+    block = m.group(1).strip('\n')
+    lines = [ln for ln in block.splitlines() if ln.strip()]
+    return lines
+
+
+notes = parse_existing_notes(base_cg)
+auc_delta = None
+ece_delta = None
+if len(epoch_rows) >= 2:
+    prev_ep, prev_auc, prev_ece = epoch_rows[-2]
+    last_ep, last_auc, last_ece = epoch_rows[-1]
+    if last_auc is not None and prev_auc is not None:
+        auc_delta = last_auc - prev_auc
+    if last_ece is not None and prev_ece is not None:
+        ece_delta = last_ece - prev_ece
+
+new_notes = []
+ts_now = datetime.utcnow().isoformat() + 'Z'
+
+
+def fmt_delta(d, precision=3):
+    return f"{d:+.{precision}f}" if d is not None else 'N/A'
+
+
+if auc_delta is not None and abs(auc_delta) > 0.02:
+    direction = 'increased' if auc_delta > 0 else 'decreased'
+    new_notes.append(f"[{ts_now}] AUC {direction} by {abs(auc_delta):.3f} on epoch {epoch_rows[-1][0]} (possible dataset or model change).")
+elif auc_delta is not None:
+    new_notes.append(f"[{ts_now}] AUC stable (Δ {fmt_delta(auc_delta)}).")
+
+if ece_delta is not None and abs(ece_delta) > 0.01:
+    direction = 'improved' if ece_delta < 0 else 'worsened'
+    new_notes.append(f"[{ts_now}] ECE {direction} by {abs(ece_delta):.3f} on epoch {epoch_rows[-1][0]} (calibration shift).")
+elif ece_delta is not None:
+    new_notes.append(f"[{ts_now}] ECE stable (Δ {fmt_delta(ece_delta)}).")
+
+combined = (new_notes + notes)[:5]  # keep last 5 (newest first)
+trend_block = "\n".join(combined) if combined else f"[{ts_now}] No trend data available."
+base_cg = replace_block(base_cg, "<!-- TREND_NOTES:BEGIN -->", "<!-- TREND_NOTES:END -->", trend_block)
+
+# --- Incident classification & audit trail ---
+
+def classify_incident(notes_list: list[str]) -> tuple[str, str]:
+    """Return (type, severity)."""
+    if not notes_list:
+        return "Stable", "Low"
+    latest = notes_list[0].lower()
+    if "auc decreased" in latest or "ece worsened" in latest:
+        return "Performance Drop", "High"
+    if "auc increased" in latest:
+        return "Data Shift", "Medium"
+    if "ece improved" in latest:
+        return "Calibration Improvement", "Low"
+    return "Stable", "Low"
+
+
+incident_type, severity = classify_incident(new_notes)
+incident_epoch = epoch_rows[-1][0] if epoch_rows else 'N/A'
+
+
+def safe_float(x):
+    try:
+        return f"{float(x):.6f}" if x is not None else ''
+    except Exception:
+        return ''
+
+
+row_timestamp = ts_now
+delta_auc_str = safe_float(auc_delta)
+delta_ece_str = safe_float(ece_delta)
+
+# Write/append to logs/audit_trail.csv with dedup (timestamp+epoch)
+LOG_DIR = Path('logs')
+LOG_DIR.mkdir(exist_ok=True)
+audit_csv = LOG_DIR / 'audit_trail.csv'
+existing_keys = set()
+rows_existing = []
+if audit_csv.exists():
+    try:
+        import csv as _csv
+        with audit_csv.open('r', encoding='utf-8') as f:
+            r = _csv.DictReader(f)
+            for line in r:
+                k = (line.get('timestamp'), line.get('epoch'))
+                existing_keys.add(k)
+                rows_existing.append(line)
+    except Exception:
+        pass
+new_key = (row_timestamp, str(incident_epoch))
+if new_key not in existing_keys:
+    rows_existing.append({
+        'timestamp': row_timestamp,
+        'epoch': incident_epoch,
+        'type': incident_type,
+        'delta_auc': delta_auc_str,
+        'delta_ece': delta_ece_str,
+        'severity': severity,
+    })
+    try:
+        import csv as _csv
+        with audit_csv.open('w', encoding='utf-8', newline='') as f:
+            w = _csv.DictWriter(f, fieldnames=['timestamp', 'epoch', 'type', 'delta_auc', 'delta_ece', 'severity'])
+            w.writeheader()
+            for rline in rows_existing:
+                w.writerow(rline)
+    except Exception:
+        pass
+
+
+# Build AUDIT_TRAIL block (last 5 incidents, newest first)
+
+def format_audit_table(all_rows: list[dict]) -> str:
+    if not all_rows:
+        return "No incidents recorded."
+    # sort descending by timestamp
+    try:
+        sorted_rows = sorted(all_rows, key=lambda d: d.get('timestamp', ''), reverse=True)[:5]
+    except Exception:
+        sorted_rows = all_rows[-5:]
+    lines = ["| Timestamp | Epoch | Type | ΔAUC | ΔECE | Severity |", "|---|---|---|---|---|---|"]
+    for r in sorted_rows:
+        lines.append(f"| {r.get('timestamp', '')} | {r.get('epoch', '')} | {r.get('type', '')} | {r.get('delta_auc', '')} | {r.get('delta_ece', '')} | {r.get('severity', '')} |")
+    lines.append(f"Updated: {ts_now}")
+    return "\n".join(lines)
+
+
+audit_block = format_audit_table(rows_existing)
+
+
+def build_severity_chart(rows: list[dict]) -> str:
+    if not rows:
+        return "No incidents to visualize."
+    # Count severities
+    sev_colors = {"Low": "#10b981", "Medium": "#f59e0b", "High": "#ef4444"}
+    counts = {"Low": 0, "Medium": 0, "High": 0}
+    for r in rows:
+        s = r.get('severity')
+        if s in counts:
+            counts[s] += 1
+    total = sum(counts.values())
+    if total == 0:
+        return "No incidents to visualize."
+    width, height = 180, 60
+    max_count = max(counts.values()) or 1
+    bar_width = 40
+    gap = 10
+    # positions: Low, Medium, High horizontally
+    order = ["Low", "Medium", "High"]
+    svg_parts = [f"<svg viewBox='0 0 {width} {height}' width='{width}' height='{height}' xmlns='http://www.w3.org/2000/svg'>"]
+    x_start = 10
+    for idx, sev in enumerate(order):
+        c = counts[sev]
+        h = int((c / max_count) * (height - 20))
+        x = x_start + idx * (bar_width + gap)
+        y = height - h - 10
+        svg_parts.append(f"<rect x='{x}' y='{y}' width='{bar_width}' height='{h}' fill='{sev_colors[sev]}' rx='3' />")
+        # label count above bar
+        svg_parts.append(f"<text x='{x + bar_width/2}' y='{y - 2}' font-size='10' text-anchor='middle' fill='#333'>{c}</text>")
+        # severity label below
+        svg_parts.append(f"<text x='{x + bar_width/2}' y='{height - 2}' font-size='9' text-anchor='middle' fill='#333'>{sev}</text>")
+    svg_parts.append("</svg>")
+    svg = "".join(svg_parts)
+    totals_line = f"Totals — High: {counts['High']}, Medium: {counts['Medium']}, Low: {counts['Low']} (Total: {total})"
+    return svg + "\n" + totals_line
+
+
+severity_svg = build_severity_chart(rows_existing)
+audit_block_full = audit_block + "\n\n" + severity_svg + f"\nLast update: {ts_now}"
+base_cg = replace_block(base_cg, "<!-- AUDIT_TRAIL:BEGIN -->", "<!-- AUDIT_TRAIL:END -->", audit_block_full)
+cg.write_text(base_cg, encoding='utf-8')
+
+# --- README.md ---
+rd = ROOT / 'README.md'
+readme = rd.read_text(encoding='utf-8') if rd.exists() else "# BioSignal-AI\n"
+badge_md = (
+    "[![Tests](https://github.com/${{ github.repository }}/actions/workflows/tests.yml/badge.svg)](https://github.com/${{ github.repository }}/actions/workflows/tests.yml) "
+    "[![Nightly Report](https://github.com/${{ github.repository }}/actions/workflows/publish_eval_report.yml/badge.svg)](https://github.com/${{ github.repository }}/actions/workflows/publish_eval_report.yml) "
+    "[![Docs Sync](https://github.com/${{ github.repository }}/actions/workflows/update_docs.yml/badge.svg)](https://github.com/${{ github.repository }}/actions/workflows/update_docs.yml)"
+)
+readme = replace_block(readme, "<!-- CI_BADGES:BEGIN -->", "<!-- CI_BADGES:END -->", badge_md)
+nightly = RESULTS / 'report_summary.html'
+nightly_line = (
+    f"Latest nightly report generated at: {datetime.utcnow().isoformat()}Z (see results/report_summary.html)"
+    if nightly.exists() else "Latest nightly report not found.")
+readme = replace_block(readme, "<!-- NIGHTLY_STATUS:BEGIN -->", "<!-- NIGHTLY_STATUS:END -->", nightly_line)
+
+# Metrics summary for README
+ms_lines = mp_lines  # reuse same structure
+readme = replace_block(readme, "<!-- METRICS_SUMMARY:BEGIN -->", "<!-- METRICS_SUMMARY:END -->", "\n".join(ms_lines))
+
+# Fairness summary for README
+fair_lines = [
+    "| Metric | Value |",
+    "|---|---|",
+    f"| Mean uncertainty | {fmt_num(unc, 2) if unc is not None else 'N/A'} |",
+    f"| ΔAUC | {fmt_num(delta_auc, 2) if delta_auc is not None else 'N/A'} |",
+    f"| ΔECE | {fmt_num(delta_ece, 2) if delta_ece is not None else 'N/A'} |",
+    f"| Last updated | {datetime.utcnow().isoformat()}Z |",
+]
+readme = replace_block(readme, "<!-- FAIRNESS_SUMMARY:BEGIN -->", "<!-- FAIRNESS_SUMMARY:END -->", "\n".join(fair_lines))
+
+# Performance trend (README)
+pt_lines = [
+    "| Metric | Mean | Std Dev | Last Epoch |",
+    "|---|---|---|---|",
+    f"| AUC | {fmt_num(auc_mean, 3) if auc_mean is not None else 'N/A'} | {fmt_num(auc_std, 3) if auc_std is not None else 'N/A'} | {last_epoch if last_epoch is not None else 'N/A'} |",
+    f"| ECE | {fmt_num(ece_mean, 3) if ece_mean is not None else 'N/A'} | {fmt_num(ece_std, 3) if ece_std is not None else 'N/A'} | {last_epoch if last_epoch is not None else 'N/A'} |",
+    f"| Updated | {datetime.utcnow().isoformat()}Z |  |  |",
+]
+pt_extra = []
+if auc_svg or ece_svg:
+    pt_extra.append("")
+    pt_extra.append("AUC trend:")
+    pt_extra.append(auc_svg if auc_svg else "No trend data available")
+    pt_extra.append("")
+    pt_extra.append("ECE trend:")
+    pt_extra.append(ece_svg if ece_svg else "No trend data available")
+else:
+    pt_extra.append("")
+    pt_extra.append("No trend data available")
+pt_extra.append("")
+pt_extra.append(
+    f"Averages — AUC mean: {fmt_num(auc_mean, 3) if auc_mean is not None else 'N/A'}, last: {fmt_num(auc_last, 3) if auc_last is not None else 'N/A'}; "
+    f"ECE mean: {fmt_num(ece_mean, 3) if ece_mean is not None else 'N/A'}, last: {fmt_num(ece_last, 3) if ece_last is not None else 'N/A'}"
+)
+pt_content = "\n".join(pt_lines + pt_extra)
+readme = replace_block(readme, "<!-- PERFORMANCE_TREND:BEGIN -->", "<!-- PERFORMANCE_TREND:END -->", pt_content)
+
+# --- Trend notes (README) ---
+readme_notes = []
+m = re.search(r"<!-- TREND_NOTES:BEGIN -->(.*?)<!-- TREND_NOTES:END -->", readme, re.S)
+if m:
+    existing_block = m.group(1).strip('\n')
+    readme_notes = [ln for ln in existing_block.splitlines() if ln.strip()]
+readme_new = []
+ts_now = datetime.utcnow().isoformat() + 'Z'
+if auc_delta is not None and abs(auc_delta) > 0.02:
+    direction = 'increased' if auc_delta > 0 else 'decreased'
+    readme_new.append(f"[{ts_now}] AUC {direction} by {abs(auc_delta):.3f} (epoch {epoch_rows[-1][0]}).")
+elif auc_delta is not None:
+    readme_new.append(f"[{ts_now}] AUC stable (Δ {fmt_delta(auc_delta)}).")
+
+if ece_delta is not None and abs(ece_delta) > 0.01:
+    direction = 'improved' if ece_delta < 0 else 'worsened'
+    readme_new.append(f"[{ts_now}] ECE {direction} by {abs(ece_delta):.3f} (epoch {epoch_rows[-1][0]}).")
+elif ece_delta is not None:
+    readme_new.append(f"[{ts_now}] ECE stable (Δ {fmt_delta(ece_delta)}).")
+
+readme_combined = (readme_new + readme_notes)[:5]
+trend_block_readme = "\n".join(readme_combined) if readme_combined else f"[{ts_now}] No trend data available."
+readme = replace_block(readme, "<!-- TREND_NOTES:BEGIN -->", "<!-- TREND_NOTES:END -->", trend_block_readme)
+rd.write_text(readme, encoding='utf-8')
+
+# --- literature_summary.md ---
+lit = DOCS / 'literature_summary.md'
+lit_text = lit.read_text(encoding='utf-8') if lit.exists() else "Literature Summary\n"
+validation_line = f"Last validation date: {datetime.utcnow().strftime('%Y-%m-%d %H:%M UTC')}"
+lit_text = replace_block(lit_text, "<!-- VALIDATION_DATE:BEGIN -->", "<!-- VALIDATION_DATE:END -->", validation_line)
+lit.write_text(lit_text, encoding='utf-8')
+
+print('Docs updated via block replacement.')
+
+# --- Manuscript Draft Generation ---
+# Build docs/manuscript_draft.md from README, compliance, literature, metrics.json, versions.json
+import hashlib
+
+DOCS_OUT = DOCS / 'manuscript_draft.md'
+
+# Load sources
+readme_md = rd.read_text(encoding='utf-8') if rd.exists() else ""
+comp_path_candidates = [DOCS / 'compliance_guidelines.md', Path('notebooks') / 'docs' / 'compliance_guidelines.md']
+comp_md = ""
+for p in comp_path_candidates:
+    if p.exists():
+        comp_md = p.read_text(encoding='utf-8')
+        break
+lit_path = DOCS / 'literature_summary.md'
+lit_md = lit_path.read_text(encoding='utf-8') if lit_path.exists() else ""
+metrics_path = RESULTS / 'metrics.json'
+metrics = None
+if metrics_path.exists():
+    try:
+        metrics = json.loads(metrics_path.read_text(encoding='utf-8'))
+    except Exception:
+        metrics = None
+versions_path = Path('reports') / 'history' / 'versions.json'
+versions = []
+if versions_path.exists():
+    try:
+        versions = json.loads(versions_path.read_text(encoding='utf-8'))
+    except Exception:
+        versions = []
+
+# Compose sections
+
+def md_escape(s: str) -> str:
+    return s if s is not None else ''
+
+ts_now = datetime.utcnow().isoformat() + 'Z'
+title = 'BioSignal-X: Autonomous Clinical AI Governance Report — Manuscript Draft'
+
+# Abstract (auto)
+if metrics:
+    abstract = (
+        f"We present an autonomous clinical AI governance pipeline with current performance AUC={metrics.get('auc','N/A')}, "
+        f"ECE={metrics.get('ece','N/A')}, drift rate={metrics.get('drift_rate','N/A')}, and incident counts "
+        f"(H/M/L={metrics.get('incident_counts',{}).get('high','N/A')}/"
+        f"{metrics.get('incident_counts',{}).get('medium','N/A')}/"
+        f"{metrics.get('incident_counts',{}).get('low','N/A')}). "
+        f"Automated monitoring, fairness auditing, and publication workflows enable reproducible reporting."
+    )
+else:
+    abstract = (
+        "We present an autonomous clinical AI governance pipeline with automated monitoring, fairness auditing, and "
+        "versioned publication. Structured metrics export supports reproducible compliance reporting."
+    )
+
+# Introduction from README
+intro = readme_md.strip()
+
+# Related Work from literature_summary.md
+related = lit_md.strip()
+
+# Methods from compliance + training pipeline placeholder
+methods = (comp_md.strip() + "\n\nTraining pipeline: supervised learning with calibration (temperature scaling), uncertainty estimation (MC Dropout), "
+           "site-aware validation, and MLflow tracking.") if comp_md else (
+           "Training pipeline: supervised learning with calibration (temperature scaling), uncertainty estimation (MC Dropout), \n"
+           "site-aware validation, and MLflow tracking.")
+
+# Results from metrics.json + figures + trends
+
+def img_md(path: Path, title: str):
+    return f"![{title}]({path.as_posix()})" if path.exists() else f"{title}: (figure not available)"
+
+
+plots = RESULTS / 'plots'
+figs_md = [
+    img_md(plots / 'roc.png', 'ROC Curve'),
+    img_md(plots / 'pr.png', 'PR Curve'),
+    img_md(plots / 'calibration.png', 'Calibration Plot'),
+    img_md(plots / 'uncertainty.png', 'Uncertainty Distribution'),
+]
+metrics_table = ""
+if metrics:
+    ic = metrics.get('incident_counts', {})
+    metrics_table = (
+        "| Metric | Value |\n|---|---|\n"
+        f"| AUC | {metrics.get('auc','N/A')} |\n"
+        f"| ECE | {metrics.get('ece','N/A')} |\n"
+        f"| Drift rate | {metrics.get('drift_rate','N/A')} |\n"
+        f"| Incidents (H/M/L) | {ic.get('high','N/A')}/{ic.get('medium','N/A')}/{ic.get('low','N/A')} |\n"
+    )
+else:
+    metrics_table = "Metrics not available (results/metrics.json missing)."
+
+# Discussion: audit trail summary + stability
+
+audit_path = Path('logs') / 'audit_trail.csv'
+audit_summary = ""
+if audit_path.exists():
+    # count severities
+    hi = me = lo = 0
+    try:
+        import csv as _csv
+        with audit_path.open('r', encoding='utf-8') as f:
+            r = _csv.DictReader(f)
+            for row in r:
+                s = (row.get('severity') or '').strip()
+                if s == 'High':
+                    hi += 1
+                elif s == 'Medium':
+                    me += 1
+                elif s == 'Low':
+                    lo += 1
+    except Exception:
+        pass
+    audit_summary = f"Observed incidents — High: {hi}, Medium: {me}, Low: {lo}."
+else:
+    audit_summary = "No audit trail available."
+
+# Conclusion: deltas from versions.json
+conclusion = ""
+if versions and len(versions) >= 2:
+    cur = versions[-1]
+    prev = versions[-2]
+
+    def d(a, b):
+        try:
+            return float(a) - float(b)
+        except Exception:
+            return None
+
+    d_auc = d(cur.get('auc'), prev.get('auc'))
+    d_ece = d(cur.get('ece'), prev.get('ece'))
+    d_drift = d(cur.get('drift'), prev.get('drift'))
+    d_hi = d(cur.get('incidents_high'), prev.get('incidents_high'))
+    d_me = d(cur.get('incidents_medium'), prev.get('incidents_medium'))
+    d_lo = d(cur.get('incidents_low'), prev.get('incidents_low'))
+
+    def fmt(x):
+        return f"{x:+.3f}" if isinstance(x, (int, float)) else 'N/A'
+
+    conclusion = (
+        f"Compared to the previous version, performance changed as follows: ΔAUC {fmt(d_auc)}, ΔECE {fmt(d_ece)}, "
+        f"ΔDrift {fmt(d_drift)}, incidents Δ(H/M/L) {fmt(d_hi)}/{fmt(d_me)}/{fmt(d_lo)}."
+    )
+else:
+    conclusion = "This initial version establishes the governance baseline; subsequent versions will report deltas."
+
+pdf_link = "reports/BioSignalX_Report.pdf"
+
+# Abstract with trend direction
+trend_phrase = ""
+if metrics and versions and len(versions) >= 2:
+    cur = versions[-1]
+    prev = versions[-2]
+
+    def safe_f(v):
+        try:
+            return float(v)
+        except Exception:
+            return None
+
+    auc_now = safe_f(metrics.get('auc'))
+    ece_now = safe_f(metrics.get('ece'))
+    drift_now = safe_f(metrics.get('drift_rate'))
+    auc_prev = safe_f(prev.get('auc'))
+    ece_prev = safe_f(prev.get('ece'))
+    drift_prev = safe_f(prev.get('drift'))
+    auc_delta = (auc_now - auc_prev) if (auc_now is not None and auc_prev is not None) else None
+    ece_delta = (ece_now - ece_prev) if (ece_now is not None and ece_prev is not None) else None
+    drift_delta = (drift_now - drift_prev) if (drift_now is not None and drift_prev is not None) else None
+    # heuristic thresholds
+    imp_score = 0
+    if auc_delta is not None:
+        imp_score += 1 if auc_delta > 0.002 else (-1 if auc_delta < -0.002 else 0)
+    if ece_delta is not None:
+        imp_score += 1 if ece_delta < -0.001 else (-1 if ece_delta > 0.001 else 0)
+    if drift_delta is not None:
+        imp_score += 1 if drift_delta < -0.005 else (-1 if drift_delta > 0.005 else 0)
+    if imp_score > 0:
+        trend_phrase = "improvement"
+    elif imp_score < 0:
+        trend_phrase = "decline"
+    else:
+        trend_phrase = "stability"
+elif metrics:
+    trend_phrase = "stability"
+
+abstract_line = ""
+if metrics:
+    abstract_line = (
+        f"BioSignal-X achieved an AUC of {metrics.get('auc','N/A')}, ECE of {metrics.get('ece','N/A')}, and drift rate of "
+        f"{metrics.get('drift_rate','N/A')} across the latest evaluation run, indicating {trend_phrase} compared to prior cycle."
+    )
+
+manuscript = f"""
+# {title}
+
+Generated: {ts_now}
+
+Link to export PDF: [{pdf_link}]({pdf_link})
+
+1. Abstract
+
+{abstract}
+
+{abstract_line}
+
+2. Introduction
+
+{intro}
+
+3. Related Work
+
+{related}
+
+4. Methods
+
+{methods}
+
+5. Results
+
+{metrics_table}
+
+{'\n'.join(figs_md)}
+
+5.1 Fairness & Temporal Stability
+
+"""
+
+# Fairness and temporal stability table
+fairness_p = RESULTS / 'fairness' / 'fairness_summary.json'
+delta_auc = delta_ece = None
+if fairness_p.exists():
+    try:
+        fd = json.loads(fairness_p.read_text(encoding='utf-8'))
+        delta_auc = fd.get('delta_auc')
+        delta_ece = fd.get('delta_ece')
+    except Exception:
+        pass
+epoch_rows_ms = read_epoch_metrics(RESULTS / 'calibration_report.csv') if 'read_epoch_metrics' in globals() else []
+auc_series_ms = [r[1] for r in epoch_rows_ms if len(r) >= 2 and r[1] is not None]
+ece_series_ms = [r[2] for r in epoch_rows_ms if len(r) >= 3 and r[2] is not None]
+auc_mean_ms = auc_std_ms = ece_mean_ms = ece_std_ms = None
+if auc_series_ms:
+    m, s = rolling_stats(auc_series_ms, 5) if 'rolling_stats' in globals() else (None, None)
+    auc_mean_ms, auc_std_ms = m, s
+if ece_series_ms:
+    m, s = rolling_stats(ece_series_ms, 5) if 'rolling_stats' in globals() else (None, None)
+    ece_mean_ms, ece_std_ms = m, s
+
+
+def f3(x):
+    try:
+        return f"{float(x):.3f}"
+    except Exception:
+        return 'N/A'
+
+
+fts_table = (
+    "| Metric | Value |\n|---|---|\n" +
+    f"| ΔAUC (fairness) | {f3(delta_auc)} |\n" +
+    f"| ΔECE (fairness) | {f3(delta_ece)} |\n" +
+    f"| AUC mean±std (last 5) | {f3(auc_mean_ms)} ± {f3(auc_std_ms)} |\n" +
+    f"| ECE mean±std (last 5) | {f3(ece_mean_ms)} ± {f3(ece_std_ms)} |\n"
+)
+
+manuscript += fts_table + "\n\n"
+
+manuscript += f"""
+6. Discussion
+
+{audit_summary}
+
+7. Conclusion
+
+{conclusion}
+
+References
+
+"""
+
+# References extraction from literature summary
+refs = []
+
+
+def extract_refs(text: str):
+    out = []
+    for line in (text or '').splitlines():
+        l = line.strip()
+        if not l:
+            continue
+        has_url = ('http://' in l or 'https://' in l)
+        has_doi = ('doi:' in l.lower() or '10.' in l)
+        if has_url or has_doi:
+            # naive parse: find year
+            import re as _re
+            year = None
+            m = _re.search(r"(19|20)\d{2}", l)
+            if m:
+                year = m.group(0)
+            # authors/title split: take text before year as authors, after as title
+            authors = 'Unknown et al.'
+            title = l
+            if year:
+                parts = l.split(year, 1)
+                left = parts[0].strip().strip('-–:., ')
+                right = parts[1].strip()
+                if left:
+                    authors = left
+                # title until URL/DOI
+                stop_idx = len(right)
+                for token in ['http://', 'https://', 'doi:', 'DOI:']:
+                    idx = right.find(token)
+                    if idx != -1:
+                        stop_idx = min(stop_idx, idx)
+                title = right[:stop_idx].strip(' -–:.,') or 'Untitled'
+            # URL/DOI end
+            url = ''
+            for token in ['http://', 'https://']:
+                if token in l:
+                    url = l[l.find(token):].split()[0]
+                    break
+            if not url and '10.' in l:
+                # DOI present
+                start = l.lower().find('doi')
+                url = l[start:].split()[0] if start != -1 else 'DOI: ' + l[l.find('10.'):].split()[0]
+            out.append(f"{authors} ({year or 'n.d.'}). {title}. {url}".strip())
+    return out
+
+
+refs = extract_refs(related)
+if not refs:
+    refs_md = "[1] References to be added."
+else:
+    refs_md = "\n".join([f"- {r}" for r in refs])
+
+manuscript += refs_md + "\n"
+
+DOCS_OUT.parent.mkdir(parents=True, exist_ok=True)
+DOCS_OUT.write_text(manuscript, encoding='utf-8')
+print('Manuscript draft written to', DOCS_OUT)
