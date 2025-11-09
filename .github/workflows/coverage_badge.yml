@@ -1,6 +1,14 @@
 name: Coverage Badge Update
 
 on:
+  workflow_dispatch:
+    inputs:
+      run_id:
+        description: "Optional run ID of the Continuous Tests workflow to source artifacts from"
+        required: false
+      run_updated_at:
+        description: "Optional updated_at timestamp for provenance"
+        required: false
   workflow_run:
     workflows: ["Continuous Tests"]
     types:
@@ -8,7 +16,7 @@ on:
 
 jobs:
   update-badge:
-    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -16,16 +24,38 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Determine source run
+        id: source
+        env:
+          IN_RUN_ID: ${{ github.event.inputs.run_id }}
+          IN_UPDATED_AT: ${{ github.event.inputs.run_updated_at }}
+        run: |
+          if [ -n "$IN_RUN_ID" ]; then
+            echo "Using provided run_id: $IN_RUN_ID"
+            echo "run_id=$IN_RUN_ID" >> $GITHUB_OUTPUT
+            echo "updated_at=${IN_UPDATED_AT:-$(date -u +%Y-%m-%dT%H:%M:%SZ)}" >> $GITHUB_OUTPUT
+          elif [ "${{ github.event_name }}" = "workflow_run" ]; then
+            echo "run_id=${{ github.event.workflow_run.id }}" >> $GITHUB_OUTPUT
+            echo "updated_at=${{ github.event.workflow_run.updated_at }}" >> $GITHUB_OUTPUT
+          else
+            echo "Discovering latest successful 'Continuous Tests' run"
+            # Requires gh CLI available on runner image
+            RID=$(gh run list --workflow "Continuous Tests" --json databaseId,conclusion,headBranch,updatedAt --limit 20 --jq 'map(select(.conclusion=="success")) | .[0].databaseId')
+            RUP=$(gh run view "$RID" --json updatedAt --jq '.updatedAt')
+            echo "run_id=$RID" >> $GITHUB_OUTPUT
+            echo "updated_at=$RUP" >> $GITHUB_OUTPUT
+          fi
+
       - name: Download coverage artifact (from triggering run)
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          gh run download ${{ github.event.workflow_run.id }} -n coverage -D coverage_artifacts || echo "Coverage artifact not found"
+          gh run download ${{ steps.source.outputs.run_id }} -n coverage -D coverage_artifacts || echo "Coverage artifact not found"
 
       - name: Generate coverage badge
         id: badge
         run: |
-          python scripts/workflow_utils/generate_coverage_badge.py coverage_artifacts/coverage.xml badges/coverage.svg "${{ github.event.workflow_run.id }}" "${{ github.event.workflow_run.updated_at }}"
+          python scripts/workflow_utils/generate_coverage_badge.py coverage_artifacts/coverage.xml badges/coverage.svg "${{ steps.source.outputs.run_id }}" "${{ steps.source.outputs.updated_at }}"
 
       - name: Update README with run link
         run: |
