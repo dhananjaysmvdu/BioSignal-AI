@@ -25,10 +25,16 @@ jobs:
       - name: Generate coverage badge
         id: badge
         run: |
-          python scripts/workflow_utils/generate_coverage_badge.py coverage_artifacts/coverage.xml badges/coverage.svg
+          python scripts/workflow_utils/generate_coverage_badge.py coverage_artifacts/coverage.xml badges/coverage.svg "${{ github.event.workflow_run.id }}" "${{ github.event.workflow_run.updated_at }}"
 
-      - name: Commit badge
+      - name: Update README with run link
+        run: |
+          python scripts/workflow_utils/update_readme_badge_link.py "${{ github.repository }}" "${{ github.event.workflow_run.id }}"
+
+      - name: Commit badge and README
         uses: stefanzweifel/git-auto-commit-action@v5
         with:
-          commit_message: "ci: update coverage badge"
-          file_pattern: badges/coverage.svg
+          commit_message: "ci: embed provenance and test-run link in coverage badge"
+          file_pattern: |
+            badges/coverage.svg
+            README.md

@@ -2,11 +2,16 @@ import sys
 import xml.etree.ElementTree as ET
 from pathlib import Path
 
-def generate(cov_xml: Path, out_svg: Path) -> None:
+def generate(cov_xml: Path, out_svg: Path, run_id: str | None = None, updated_at: str | None = None) -> None:
     if not cov_xml.exists():
         out_svg.parent.mkdir(parents=True, exist_ok=True)
         out_svg.write_text(
-            "<svg xmlns='http://www.w3.org/2000/svg' width='120' height='20'><rect width='120' height='20' fill='#555'/><text x='10' y='14' fill='#fff' font-size='12'>coverage: n/a</text></svg>",
+            """<!-- Generated from run {} at {} -->
+<svg xmlns='http://www.w3.org/2000/svg' width='120' height='20'>
+<title>Test coverage from Continuous Tests workflow</title>
+<rect width='120' height='20' fill='#555'/>
+<text x='10' y='14' fill='#fff' font-size='12'>coverage: n/a</text>
+</svg>""".format(run_id or 'n/a', updated_at or 'n/a'),
             encoding='utf-8'
         )
         return
@@ -26,7 +31,9 @@ def generate(cov_xml: Path, out_svg: Path) -> None:
         color = '#dfb317'
     elif pct >= 40:
         color = '#fe7d37'
-    svg = f"""<svg xmlns='http://www.w3.org/2000/svg' width='150' height='20'>
+    svg = f"""<!-- Generated from run {run_id or 'n/a'} at {updated_at or 'n/a'} -->
+<svg xmlns='http://www.w3.org/2000/svg' width='150' height='20'>
+<title>Test coverage from Continuous Tests workflow</title>
 <linearGradient id='b' x2='0' y2='100%'><stop offset='0' stop-color='#bbb' stop-opacity='.1'/><stop offset='1' stop-opacity='.1'/></linearGradient>
 <mask id='a'><rect width='150' height='20' rx='3' fill='#fff'/></mask>
 <g mask='url(#a)'><rect width='80' height='20' fill='#555'/><rect x='80' width='70' height='20' fill='{color}'/><rect width='150' height='20' fill='url(#b)'/></g>
@@ -41,9 +48,11 @@ def generate(cov_xml: Path, out_svg: Path) -> None:
 
 def main(argv: list[str]) -> None:
     if len(argv) < 3:
-        print("Usage: generate_coverage_badge.py <coverage.xml> <out.svg>")
+        print("Usage: generate_coverage_badge.py <coverage.xml> <out.svg> [run_id] [updated_at]")
         return
-    generate(Path(argv[1]), Path(argv[2]))
+    run_id = argv[3] if len(argv) > 3 else None
+    updated_at = argv[4] if len(argv) > 4 else None
+    generate(Path(argv[1]), Path(argv[2]), run_id, updated_at)
 
 if __name__ == '__main__':
     main(sys.argv)
