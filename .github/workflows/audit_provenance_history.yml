@@ -817,8 +817,51 @@ jobs:
             echo "🧩 Weighted adaptation optimization applied — coefficients updated from historical success memory." >> $GITHUB_STEP_SUMMARY
           fi
 
-  predictive-adaptation-planner:
+  causal-influence-analyzer:
     needs: [weighted-adaptation-optimizer]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+          cache-dependency-path: requirements.lock
+      - name: Compute causal influence
+        id: causal
+        run: |
+          python scripts/workflow_utils/causal_influence_analyzer.py > causal_out.json
+          USABLE=$(jq -r '.usable_samples' causal_out.json || echo 0)
+          CONF=$(jq -r '.confidence' causal_out.json || echo 0)
+          NOTE=$(jq -r '.note' causal_out.json || echo '')
+          echo "usable_samples=${USABLE}" >> $GITHUB_OUTPUT
+          echo "confidence=${CONF}" >> $GITHUB_OUTPUT
+          if [ "$USABLE" -ge 5 ]; then
+            echo "🔍 Causal influence analysis completed — identified key stabilizing parameters." >> $GITHUB_STEP_SUMMARY
+          else
+            echo "🔍 Causal influence analysis neutral — insufficient data (${USABLE} samples)." >> $GITHUB_STEP_SUMMARY
+          fi
+      - name: Commit causal influence artifacts
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add reports/causal_influence.json reports/audit_summary.md
+          if git diff --cached --quiet; then
+            echo "No causal influence changes to commit."
+          else
+            git commit -m "ci: compute causal influence of coefficient changes on governance performance"
+            git push
+          fi
+      - name: Append causal summary
+        run: |
+          echo "Confidence: ${{ steps.causal.outputs.confidence }}% (usable samples: ${{ steps.causal.outputs.usable_samples }})" >> $GITHUB_STEP_SUMMARY
+
+  predictive-adaptation-planner:
+    needs: [causal-influence-analyzer]
     runs-on: ubuntu-latest
     permissions:
       contents: write
