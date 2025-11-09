@@ -244,14 +244,19 @@ jobs:
           echo "🧮 New drift threshold: $DRIFT_THRESH" >> $GITHUB_STEP_SUMMARY
           echo "🕒 Next scheduled audit: $NEXT_AUDIT" >> $GITHUB_STEP_SUMMARY
 
+      - name: Explain policy decision
+        run: |
+          python scripts/workflow_utils/explain_policy_adjustment.py > rationale_output.txt
+          echo "📜 Generated compliance explanation for latest policy decision" >> $GITHUB_STEP_SUMMARY
+
       - name: Commit executive audit summary
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add reports/audit_summary.md reports/provenance_dashboard.html reports/provenance_forecast.json configs/governance_policy.json
+          git add reports/audit_summary.md reports/provenance_dashboard.html reports/provenance_forecast.json configs/governance_policy.json reports/compliance_rationale.md logs/decision_trace.json
           if git diff --cached --quiet; then
             echo "No changes to commit."
           else
-            git commit -m "ci: adaptive governance policy tuning based on provenance risk."
+            git commit -m "ci: add explainable compliance rationale for adaptive governance."
             git push
           fi
