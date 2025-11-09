@@ -217,15 +217,28 @@ jobs:
       - name: Generate provenance insights dashboard
         run: |
           python scripts/workflow_utils/generate_provenance_dashboard.py
+      - name: Forecast provenance risk
+        id: forecast
+        run: |
+          python scripts/workflow_utils/forecast_provenance_risk.py > forecast_output.json
+          DRIFT=$(jq -r '.predicted_drift_probability_pct' forecast_output.json || echo 0)
+          REM=$(jq -r '.expected_remediations' forecast_output.json || echo 0)
+          CONF=$(jq -r '.confidence_pct' forecast_output.json || echo 0)
+          echo "drift=$DRIFT" >> $GITHUB_OUTPUT
+          echo "rem=$REM" >> $GITHUB_OUTPUT
+          echo "conf=$CONF" >> $GITHUB_OUTPUT
+          echo "\n🔮 Next-week drift probability: ${DRIFT}%" >> $GITHUB_STEP_SUMMARY
+          echo "🧩 Confidence: ${CONF}%" >> $GITHUB_STEP_SUMMARY
+          echo "⚙️ Expected remediations: ${REM}" >> $GITHUB_STEP_SUMMARY
 
       - name: Commit executive audit summary
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add reports/audit_summary.md reports/provenance_dashboard.html
+          git add reports/audit_summary.md reports/provenance_dashboard.html reports/provenance_forecast.json
           if git diff --cached --quiet; then
             echo "No changes to commit."
           else
-            git commit -m "ci: update provenance dashboard and weekly audit summary."
+            git commit -m "ci: add predictive provenance risk forecasting to audit pipeline."
             git push
           fi
