@@ -284,6 +284,14 @@ jobs:
         run: |
           python scripts/workflow_utils/human_oversight_gateway.py
           echo "🧠 Human review initiated for high-risk policy change." >> $GITHUB_STEP_SUMMARY
+      - name: Generate standardized review template
+        id: template
+        env:
+          REVIEWER: ${{ github.triggering_actor }}
+        run: |
+          python scripts/workflow_utils/generate_review_template.py > /dev/null
+          DID=$(jq -r '.decision_id' "$GITHUB_STEP_SUMMARY" 2>/dev/null || echo "")
+          echo "📝 Generated standardized review form." >> $GITHUB_STEP_SUMMARY
 
       - name: Update audit summary with pending review
         env:
@@ -310,7 +318,7 @@ jobs:
           if git diff --cached --quiet; then
             echo "No changes to commit."
           else
-            git commit -m "ci: integrate human-in-the-loop oversight gateway for adaptive governance"
+            git commit -m "ci: add standardized human review template generator for oversight consistency"
             git push
           fi
 
