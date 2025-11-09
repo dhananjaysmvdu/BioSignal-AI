@@ -291,6 +291,48 @@ def _render_html(runs: List[Dict[str, Any]], metrics: Dict[str, Any], history: D
         except Exception:
             pass
 
+    # Predictive Adaptation Insights data
+    adapt_plan_path = os.path.join(REPORTS_DIR, 'adaptation_plan.json')
+    causal_path = os.path.join(REPORTS_DIR, 'causal_influence.json')
+    predicted_improvement = 0.0
+    plan_conf_level = 0
+    proposed_coeffs = {
+        'confidence_weight': coef_conf[-1] if coef_conf else 0.0,
+        'drift_weight': coef_drift[-1] if coef_drift else 0.0,
+        'human_feedback_weight': coef_human[-1] if coef_human else 0.0,
+    }
+    predictive_ts = ''
+    if os.path.exists(adapt_plan_path):
+        try:
+            with open(adapt_plan_path, 'r', encoding='utf-8') as f:
+                ap = json.load(f)
+            predicted_improvement = float(ap.get('predicted_improvement_percent', 0.0))
+            plan_conf_level = int(ap.get('confidence_level', 0) or 0)
+            p = ap.get('proposed_coefficients') or {}
+            for k in ('confidence_weight','drift_weight','human_feedback_weight'):
+                if k in p:
+                    try:
+                        proposed_coeffs[k] = float(p[k])
+                    except Exception:
+                        pass
+            predictive_ts = ap.get('timestamp', '')
+        except Exception:
+            pass
+    influence_labels = ['Confidence','Drift','Human']
+    influence_values = [0.0, 0.0, 0.0]
+    if os.path.exists(causal_path):
+        try:
+            with open(causal_path, 'r', encoding='utf-8') as f:
+                ci = json.load(f)
+            inf = ci.get('normalized_influence') or {}
+            influence_values = [
+                float(inf.get('confidence_weight', 0.0)),
+                float(inf.get('drift_weight', 0.0)),
+                float(inf.get('human_feedback_weight', 0.0)),
+            ]
+        except Exception:
+            pass
+
     # Tiny charting: inline canvas drawing without external libs
     html = f"""
 <!DOCTYPE html>
@@ -414,6 +456,37 @@ def _render_html(runs: List[Dict[str, Any]], metrics: Dict[str, Any], history: D
       Current weights — Confidence: <strong>{(coef_conf[-1] if coef_conf else 0):.3f}</strong>,
       Drift: <strong>{(coef_drift[-1] if coef_drift else 0):.3f}</strong>,
       Human Feedback: <strong>{(coef_human[-1] if coef_human else 0):.3f}</strong>
+    </div>
+  </section>
+  <section id="predictive_insights" style="margin-top:28px">
+    <h3>Predictive Adaptation Insights</h3>
+    <div style="display:grid;grid-template-columns:1fr 220px;gap:24px;align-items:center;">
+      <div>
+        <canvas id="influenceBars" height="200"></canvas>
+      </div>
+      <div style="text-align:center;">
+        <h4 style="margin:0 0 8px 0;font-size:14px;">Predicted Improvement</h4>
+        <svg width="180" height="110" viewBox="0 0 180 110">
+          <defs>
+            <linearGradient id="impGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" style="stop-color:#d73a49;stop-opacity:1" />
+              <stop offset="50%" style="stop-color:#dfb317;stop-opacity:1" />
+              <stop offset="100%" style="stop-color:#2cbe4e;stop-opacity:1" />
+            </linearGradient>
+          </defs>
+          <path d="M 20 90 A 70 70 0 0 1 160 90" fill="none" stroke="url(#impGrad)" stroke-width="12" stroke-linecap="round"/>
+          <path d="M 20 90 A 70 70 0 0 1 160 90" fill="none" stroke="#eee" stroke-width="14" stroke-linecap="round" opacity="0.3"/>
+          <line id="impNeedle" x1="90" y1="90" x2="90" y2="30" stroke="#222" stroke-width="3" stroke-linecap="round" />
+          <circle cx="90" cy="90" r="6" fill="#222"/>
+          <text id="impText" x="90" y="104" text-anchor="middle" font-size="18" font-family="Arial" font-weight="bold" fill="#222"></text>
+        </svg>
+        <div style="font-size:12px;color:#666;margin-top:4px;">Confidence: <span id="planConf">{plan_conf_level}%</span></div>
+      </div>
+    </div>
+    <div style="font-size:13px;color:#444;margin-top:6px;">
+      <div><strong>Predicted ΔGHS:</strong> <span id="predDelta">{predicted_improvement:+.1f}%</span></div>
+      <div><strong>Plan Coefficients:</strong> conf=<span id="pcConf">{proposed_coeffs['confidence_weight']:.3f}</span>, drift=<span id="pcDrift">{proposed_coeffs['drift_weight']:.3f}</span>, human=<span id="pcHuman">{proposed_coeffs['human_feedback_weight']:.3f}</span></div>
+      <div style="font-size:12px;color:#666;">Updated: {predictive_ts or now}</div>
     </div>
   </section>
 <script>
@@ -540,6 +613,40 @@ def _render_html(runs: List[Dict[str, Any]], metrics: Dict[str, Any], history: D
   drawGhs('ghsTrend');
   drawAudit('auditCadence');
   drawCoef('coefTrend');
+  // Predictive Influence Bars & Improvement Gauge
+  const inflLabels = {json.dumps(influence_labels)};
+  const inflValues = {json.dumps(influence_values)};
+  function drawInfluenceBars(id) {{
+    const c = document.getElementById(id); if(!c) return; const ctx = c.getContext('2d');
+    const W = c.width = c.clientWidth * devicePixelRatio; const H = c.height = c.clientHeight * devicePixelRatio; ctx.scale(devicePixelRatio, devicePixelRatio);
+    const pad = 30; const w = c.clientWidth - pad*2; const h = c.clientHeight - pad*2; const zeroY = pad + h/2;
+    // axes
+    ctx.strokeStyle = '#999'; ctx.beginPath(); ctx.moveTo(pad, zeroY); ctx.lineTo(c.clientWidth - pad, zeroY); ctx.stroke();
+    const maxAbs = Math.max(0.01, ...inflValues.map(v=>Math.abs(v)));
+    const barW = (w / Math.max(1, inflLabels.length)) * 0.6;
+    for (let i=0;i<inflLabels.length;i++) {{
+      const x = pad + (i+0.5)*(w/inflLabels.length) - barW/2;
+      const v = inflValues[i];
+      const hpix = (Math.abs(v)/maxAbs) * (h/2);
+      ctx.fillStyle = v>=0 ? '#2cbe4e' : '#d73a49';
+      const y = v>=0 ? (zeroY - hpix) : zeroY;
+      ctx.fillRect(x, y, barW, hpix);
+      ctx.fillStyle = '#222'; ctx.font = '12px Arial'; ctx.textAlign='center';
+      ctx.fillText(inflLabels[i], x+barW/2, c.clientHeight - 8);
+    }}
+  }}
+  function drawImprovementGauge() {{
+    const imp = {predicted_improvement};
+    const clamped = Math.max(-10, Math.min(10, imp)); // -10% .. +10%
+    const angle = -90 + ((clamped + 10) / 20) * 180; // map to [-90, +90]
+    const needle = document.getElementById('impNeedle');
+  const t = `rotate(${{angle}} 90 90)`;
+    if (needle) needle.setAttribute('transform', t);
+    const txt = document.getElementById('impText');
+  if (txt) txt.textContent = `${{imp.toFixed(1)}}%`;
+  }}
+  drawInfluenceBars('influenceBars');
+  drawImprovementGauge();
   // Pulse ring color adjustment
   const ring=document.getElementById('pulseRing'); if(ring){{ const v={cur_ghs:.1f}; ring.setAttribute('stroke', zoneColor(v)); }}
 }})();
