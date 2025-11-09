@@ -198,6 +198,8 @@ def _render_html(runs: List[Dict[str, Any]], metrics: Dict[str, Any], history: D
             gh_components = _gh.get('Components', {})
         except Exception:
             pass
+    # normalized value for embed
+    cur_ghs_val = float(cur_ghs) if isinstance(cur_ghs, (int,float)) else 0.0
     policy_path = os.path.join(ROOT, 'configs', 'governance_policy.json')
     next_audit_date = ''
     confidence_threshold = ''
@@ -213,15 +215,21 @@ def _render_html(runs: List[Dict[str, Any]], metrics: Dict[str, Any], history: D
             pass
     # Historical GHS from versions.json if annotated
     gh_history = []  # list of (date, ghs, audit_days)
+    coef_history = []  # list of (date, conf_w, drift_w, human_w)
     versions_path = os.path.join(REPORTS_DIR,'history','versions.json')
     if os.path.exists(versions_path):
         try:
             with open(versions_path,'r',encoding='utf-8') as f:
                 vj = json.load(f)
-            entries = vj.get('history') or vj.get('versions') or vj.get('entries') or []
+            if isinstance(vj, list):
+                entries = vj
+            else:
+                entries = vj.get('history') or vj.get('versions') or vj.get('entries') or []
             if isinstance(entries,list):
-                for e in entries[-30:]:
-                    dt = e.get('timestamp') or e.get('date') or ''
+                # keep last 30 and ensure order oldest->newest for plotting
+                entries = entries[-30:]
+                for e in entries:
+                    dt = (e.get('timestamp') or e.get('date') or '')
                     ghs_val = e.get('ghs') or e.get('GovernanceHealthScore') or None
                     aud = e.get('audit_frequency') or e.get('audit_freq') or ''
                     if ghs_val is not None:
@@ -231,14 +239,57 @@ def _render_html(runs: List[Dict[str, Any]], metrics: Dict[str, Any], history: D
                                 days = int(aud[:-1])
                             except Exception:
                                 days = 0
-                        gh_history.append((dt[:10], float(ghs_val), days))
+                        date_str = str(dt)[:10]
+                        gh_history.append((date_str, float(ghs_val), days))
+                        # pull coefficients if present
+                        cw = e.get('confidence_weight')
+                        dw = e.get('drift_weight')
+                        hw = e.get('human_feedback_weight')
+                        if cw is not None or dw is not None or hw is not None:
+                            try:
+                                coef_history.append((date_str, float(cw or 0.0), float(dw or 0.0), float(hw or 0.0)))
+                            except Exception:
+                                pass
         except Exception:
             pass
     if not gh_history:
-        gh_history.append((datetime.utcnow().strftime('%Y-%m-%d'), cur_ghs, 0))
+        gh_history.append((datetime.utcnow().strftime('%Y-%m-%d'), cur_ghs_val, 0))
     gh_labels = [g[0] for g in gh_history]
     gh_values = [round(g[1],2) for g in gh_history]
     gh_audit_days = [g[2] for g in gh_history]
+    # Align coef history to labels; if missing, try to infer from policy
+    if not coef_history:
+        # Fallback single point from current policy values if available
+        try:
+            coef_history = [(gh_labels[-1] if gh_labels else datetime.utcnow().strftime('%Y-%m-%d'),
+                             float(confidence_threshold) if isinstance(confidence_threshold,(int,float,str)) else 0.0,
+                             0.0,
+                             0.0)]
+        except Exception:
+            coef_history = []
+    coef_labels = [c[0] for c in coef_history]
+    coef_conf = [round(float(c[1]),4) for c in coef_history]
+    coef_drift = [round(float(c[2]),4) for c in coef_history]
+    coef_human = [round(float(c[3]),4) for c in coef_history]
+
+    # Meta-stability gauge data
+    meta_stability_path = os.path.join(REPORTS_DIR, 'meta_stability.json')
+    meta_stability_index = 0.0
+    var_conf_msi = 0.0
+    var_drift_msi = 0.0
+    var_human_msi = 0.0
+    meta_ts = ''
+    if os.path.exists(meta_stability_path):
+        try:
+            with open(meta_stability_path, 'r', encoding='utf-8') as f:
+                msi_data = json.load(f)
+            meta_stability_index = float(msi_data.get('meta_stability_index', 0.0))
+            var_conf_msi = float(msi_data.get('variance_conf', 0.0))
+            var_drift_msi = float(msi_data.get('variance_drift', 0.0))
+            var_human_msi = float(msi_data.get('variance_human', 0.0))
+            meta_ts = msi_data.get('timestamp', '')
+        except Exception:
+            pass
 
     # Tiny charting: inline canvas drawing without external libs
     html = f"""
@@ -316,11 +367,11 @@ def _render_html(runs: List[Dict[str, Any]], metrics: Dict[str, Any], history: D
             <animate attributeName="stroke" values="#2cbe4e;#dfb317;#d73a49;#2cbe4e" dur="9s" repeatCount="indefinite" />
           </circle>
           <text x="70" y="64" text-anchor="middle" font-size="12" font-family="Arial" fill="#444">GHS</text>
-          <text id="ghsVal" x="70" y="92" text-anchor="middle" font-size="28" font-family="Arial" font-weight="bold" fill="#222">{cur_ghs:.1f}%</text>
+          <text id="ghsVal" x="70" y="92" text-anchor="middle" font-size="28" font-family="Arial" font-weight="bold" fill="#222">{cur_ghs_val:.1f}%</text>
         </svg>
       </div>
       <div style="font-size:14px;line-height:1.5;">
-        <strong>Current GHS:</strong> {cur_ghs:.1f}%<br>
+  <strong>Current GHS:</strong> {cur_ghs_val:.1f}%<br>
         <strong>Current Audit Frequency:</strong> {audit_freq or 'n/a'}<br>
         <strong>Confidence Threshold:</strong> {confidence_threshold if confidence_threshold!='' else 'n/a'}<br>
         <strong>Next Audit Scheduled:</strong> {next_audit_date or 'n/a'}<br>
@@ -330,6 +381,39 @@ def _render_html(runs: List[Dict[str, Any]], metrics: Dict[str, Any], history: D
         <strong>Legend:</strong><br>
         <span style="color:#2cbe4e">■</span> ≥ 80 Healthy &nbsp; <span style="color:#dfb317">■</span> 60–79 Attention &nbsp; <span style="color:#d73a49">■</span> &lt;60 Critical
       </div>
+    </div>
+  </section>
+  <section id="meta_learning" style="margin-top:28px">
+    <h3>Meta-Learning Coefficients</h3>
+    <div style="display:grid;grid-template-columns:1fr 180px;gap:24px;align-items:start;">
+      <div>
+        <canvas id="coefTrend" height="220"></canvas>
+      </div>
+      <div style="text-align:center;">
+        <h4 style="margin:0 0 8px 0;font-size:14px;">Learning Stability</h4>
+        <svg width="160" height="100" viewBox="0 0 160 100">
+          <defs>
+            <linearGradient id="gaugeGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" style="stop-color:#d73a49;stop-opacity:1" />
+              <stop offset="40%" style="stop-color:#dfb317;stop-opacity:1" />
+              <stop offset="80%" style="stop-color:#2cbe4e;stop-opacity:1" />
+            </linearGradient>
+          </defs>
+          <path d="M 20 80 A 60 60 0 0 1 140 80" fill="none" stroke="url(#gaugeGrad)" stroke-width="12" stroke-linecap="round"/>
+          <path d="M 20 80 A 60 60 0 0 1 140 80" fill="none" stroke="#eee" stroke-width="14" stroke-linecap="round" opacity="0.3"/>
+          <line id="msiNeedle" x1="80" y1="80" x2="80" y2="30" stroke="#222" stroke-width="3" stroke-linecap="round" transform="rotate({-90 + (meta_stability_index * 1.8)} 80 80)"/>
+          <circle cx="80" cy="80" r="6" fill="#222"/>
+          <text x="80" y="96" text-anchor="middle" font-size="18" font-family="Arial" font-weight="bold" fill="#222">{meta_stability_index:.1f}%</text>
+        </svg>
+        <div style="font-size:11px;color:#666;margin-top:4px;">
+          Variance: C {var_conf_msi:.4f} | D {var_drift_msi:.4f} | H {var_human_msi:.4f}
+        </div>
+      </div>
+    </div>
+    <div style="font-size:13px;color:#444;margin-top:6px;">
+      Current weights — Confidence: <strong>{(coef_conf[-1] if coef_conf else 0):.3f}</strong>,
+      Drift: <strong>{(coef_drift[-1] if coef_drift else 0):.3f}</strong>,
+      Human Feedback: <strong>{(coef_human[-1] if coef_human else 0):.3f}</strong>
     </div>
   </section>
 <script>
@@ -415,6 +499,11 @@ def _render_html(runs: List[Dict[str, Any]], metrics: Dict[str, Any], history: D
   const ghLabels = {json.dumps(gh_labels)};
   const ghValues = {json.dumps(gh_values)};
   const auditDays = {json.dumps(gh_audit_days)};
+  // Coefficient trends
+  const coefLabels = {json.dumps(coef_labels)};
+  const coefConf = {json.dumps(coef_conf)};
+  const coefDrift = {json.dumps(coef_drift)};
+  const coefHuman = {json.dumps(coef_human)};
   function zoneColor(v) {{ return v>=80? '#2cbe4e' : (v>=60? '#dfb317':'#d73a49'); }}
   function drawGhs(id) {{
     const c = document.getElementById(id); if(!c) return; const ctx = c.getContext('2d');
@@ -428,10 +517,15 @@ def _render_html(runs: List[Dict[str, Any]], metrics: Dict[str, Any], history: D
     const zones=[80,60,0]; const colors=['#e9f9ee','#fff9e0','#fde9ea'];
     let yPrev=c.clientHeight-pad; for(let zi=0;zi<zones.length;zi++) {{
       const z=zones[zi]; const y=yv(z); ctx.fillStyle=colors[zi]; ctx.fillRect(pad,y,w,yPrev-y); yPrev=y; }}
-    // line
-    ctx.lineWidth=2; ctx.beginPath(); for(let i=0;i<ghValues.length;i++){{ const x=xv(i), y=yv(ghValues[i]); if(i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y); }} ctx.strokeStyle='#0366d6'; ctx.stroke();
-    // points
-    for(let i=0;i<ghValues.length;i++){{ const x=xv(i), y=yv(ghValues[i]); ctx.fillStyle=zoneColor(ghValues[i]); ctx.beginPath(); ctx.arc(x,y,4,0,Math.PI*2); ctx.fill(); }}
+    // fade function (older points fade)
+    const N = ghValues.length || 1; const alphaAt=(i)=> 0.35 + 0.65*(i/(N-1||1));
+    // line segments with fading
+    for(let i=1;i<ghValues.length;i++){{
+      const x0=xv(i-1), y0=yv(ghValues[i-1]); const x1=xv(i), y1=yv(ghValues[i]);
+      ctx.save(); ctx.globalAlpha = alphaAt(i); ctx.strokeStyle='#0366d6'; ctx.lineWidth=2; ctx.beginPath(); ctx.moveTo(x0,y0); ctx.lineTo(x1,y1); ctx.stroke(); ctx.restore();
+    }}
+    // points with fading + zone color
+    for(let i=0;i<ghValues.length;i++){{ const x=xv(i), y=yv(ghValues[i]); ctx.save(); ctx.globalAlpha = alphaAt(i); ctx.fillStyle=zoneColor(ghValues[i]); ctx.beginPath(); ctx.arc(x,y,4,0,Math.PI*2); ctx.fill(); ctx.restore(); }}
     // x labels (sparse)
     ctx.fillStyle='#222'; ctx.font='11px Arial';
     for(let i=0;i<ghLabels.length;i++){{
@@ -441,9 +535,11 @@ def _render_html(runs: List[Dict[str, Any]], metrics: Dict[str, Any], history: D
       }}
     }}
   }}
-  function drawAudit(id){{ const c=document.getElementById(id); if(!c) return; const ctx=c.getContext('2d'); const W=c.width=c.clientWidth*devicePixelRatio; const H=c.height=c.clientHeight*devicePixelRatio; ctx.scale(devicePixelRatio,devicePixelRatio); const pad=30; const w=c.clientWidth-pad*2; const h=c.clientHeight-pad*2; const maxY=Math.max(1,...auditDays,14); function xv(i){{ return pad + (i/(auditDays.length-1||1))*w; }} function bh(v){{ return (v/maxY)*h; }} ctx.strokeStyle='#999'; ctx.beginPath(); ctx.moveTo(pad,pad); ctx.lineTo(pad,c.clientHeight-pad); ctx.lineTo(c.clientWidth-pad,c.clientHeight-pad); ctx.stroke(); for(let i=0;i<auditDays.length;i++){{ const v=auditDays[i]; const x=xv(i)-6; const barH=bh(v); ctx.fillStyle='#888'; ctx.fillRect(x, c.clientHeight-pad-barH, 12, barH); }} ctx.fillStyle='#222'; ctx.font='11px Arial'; for(let i=0;i<auditDays.length;i++){{ if(i%Math.ceil(auditDays.length/6||1)==0 || i==auditDays.length-1){{ ctx.fillText(ghLabels[i], xv(i)-15, c.clientHeight-10); }} }} }}
+  function drawAudit(id){{ const c=document.getElementById(id); if(!c) return; const ctx=c.getContext('2d'); const W=c.width=c.clientWidth*devicePixelRatio; const H=c.height=c.clientHeight*devicePixelRatio; ctx.scale(devicePixelRatio,devicePixelRatio); const pad=30; const w=c.clientWidth-pad*2; const h=c.clientHeight-pad*2; const maxY=Math.max(1,...auditDays,14); function xv(i){{ return pad + (i/(auditDays.length-1||1))*w; }} function bh(v){{ return (v/maxY)*h; }} const N=auditDays.length||1; const alphaAt=(i)=> 0.35 + 0.65*(i/(N-1||1)); ctx.strokeStyle='#999'; ctx.beginPath(); ctx.moveTo(pad,pad); ctx.lineTo(pad,c.clientHeight-pad); ctx.lineTo(c.clientWidth-pad,c.clientHeight-pad); ctx.stroke(); for(let i=0;i<auditDays.length;i++){{ const v=auditDays[i]; const x=xv(i)-6; const barH=bh(v); ctx.save(); ctx.globalAlpha = alphaAt(i); ctx.fillStyle='#888'; ctx.fillRect(x, c.clientHeight-pad-barH, 12, barH); ctx.restore(); }} ctx.fillStyle='#222'; ctx.font='11px Arial'; for(let i=0;i<auditDays.length;i++){{ if(i%Math.ceil(auditDays.length/6||1)==0 || i==auditDays.length-1){{ ctx.fillText(ghLabels[i], xv(i)-15, c.clientHeight-10); }} }} }}
+  function drawCoef(id){{ const c=document.getElementById(id); if(!c) return; const ctx=c.getContext('2d'); const W=c.width=c.clientWidth*devicePixelRatio; const H=c.height=c.clientHeight*devicePixelRatio; ctx.scale(devicePixelRatio,devicePixelRatio); const pad=30; const w=c.clientWidth-pad*2; const h=c.clientHeight-pad*2; const maxY=1.0; function xv(i){{ return pad + (i/(coefLabels.length-1||1))*w; }} function yv(v){{ return c.clientHeight - pad - (v/maxY)*h; }} ctx.strokeStyle='#999'; ctx.beginPath(); ctx.moveTo(pad,pad); ctx.lineTo(pad,c.clientHeight-pad); ctx.lineTo(c.clientWidth-pad,c.clientHeight-pad); ctx.stroke(); const N=coefLabels.length||1; const alphaAt=(i)=>0.35+0.65*(i/(N-1||1)); function line(arr,color){{ for(let i=1;i<arr.length;i++){{ const x0=xv(i-1), y0=yv(arr[i-1]); const x1=xv(i), y1=yv(arr[i]); ctx.save(); ctx.globalAlpha=alphaAt(i); ctx.strokeStyle=color; ctx.lineWidth=2; ctx.beginPath(); ctx.moveTo(x0,y0); ctx.lineTo(x1,y1); ctx.stroke(); ctx.restore(); }} for(let i=0;i<arr.length;i++){{ const x=xv(i), y=yv(arr[i]); ctx.save(); ctx.globalAlpha=alphaAt(i); ctx.fillStyle=color; ctx.beginPath(); ctx.arc(x,y,3,0,Math.PI*2); ctx.fill(); ctx.restore(); }} }} line(coefConf,'#0366d6'); line(coefDrift,'#f39c12'); line(coefHuman,'#8e44ad'); ctx.fillStyle='#222'; ctx.font='11px Arial'; for(let i=0;i<coefLabels.length;i++){{ const step=Math.ceil((coefLabels.length/6)||1); if((i%step)===0 || i===coefLabels.length-1){{ ctx.fillText(coefLabels[i], xv(i)-15, c.clientHeight-10); }} }} }}
   drawGhs('ghsTrend');
   drawAudit('auditCadence');
+  drawCoef('coefTrend');
   // Pulse ring color adjustment
   const ring=document.getElementById('pulseRing'); if(ring){{ const v={cur_ghs:.1f}; ring.setAttribute('stroke', zoneColor(v)); }}
 }})();

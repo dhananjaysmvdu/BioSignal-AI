@@ -603,3 +603,90 @@ jobs:
       - name: Append dashboard update note
         run: |
           echo "📈 Governance Pulse dashboard updated — GHS trend and cadence timeline refreshed." >> $GITHUB_STEP_SUMMARY
+
+  record-governance-history:
+    needs: [update-governance-cycle]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+          cache-dependency-path: requirements.lock
+      - name: Record governance history snapshot
+        run: |
+          python scripts/workflow_utils/record_governance_history.py > gov_hist.json
+          COUNT=$(jq -r '.written' gov_hist.json || echo 0)
+          echo "🧭 Recorded governance history snapshot — timeline extended (entries=${COUNT})." >> $GITHUB_STEP_SUMMARY
+      - name: Commit governance history
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add reports/history/versions.json
+          if git diff --cached --quiet; then
+            echo "No governance history changes to commit."
+          else
+            git commit -m "ci: record governance history snapshot for Governance Pulse timeline"
+            git push
+          fi
+      - name: Regenerate dashboard with coefficient trends
+        run: |
+          python scripts/workflow_utils/generate_provenance_dashboard.py
+      - name: Commit updated dashboard (meta-learning trends)
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add reports/provenance_dashboard.html
+          if git diff --cached --quiet; then
+            echo "No dashboard coefficient trend changes to commit."
+          else
+            git commit -m "ci: extend governance history and pulse dashboard with meta-learning coefficient trends"
+            git push
+          fi
+      - name: Append coefficient trends summary
+        run: |
+          echo "🧪 Meta-learning coefficient trends plotted on Governance Pulse dashboard." >> $GITHUB_STEP_SUMMARY
+
+  compute-meta-stability:
+    needs: [record-governance-history]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+          cache-dependency-path: requirements.lock
+      - name: Compute meta-stability index
+        id: msi
+        run: |
+          python scripts/workflow_utils/compute_meta_stability.py > msi_out.json
+          MSI=$(jq -r '.meta_stability_index' msi_out.json || echo 0)
+          echo "msi=${MSI}" >> $GITHUB_OUTPUT
+          echo "🧠 Meta-Stability Index computed: ${MSI}%" >> $GITHUB_STEP_SUMMARY
+      - name: Regenerate dashboard with stability gauge
+        run: |
+          python scripts/workflow_utils/generate_provenance_dashboard.py
+      - name: Commit meta-stability artifacts
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add reports/meta_stability.json reports/audit_summary.md reports/provenance_dashboard.html
+          if git diff --cached --quiet; then
+            echo "No meta-stability changes to commit."
+          else
+            git commit -m "ci: add meta-stability index and learning stability gauge to governance dashboard"
+            git push
+          fi
+      - name: Append stability gauge summary
+        run: |
+          echo "📊 Meta-Stability Index computed — learning stability gauge updated." >> $GITHUB_STEP_SUMMARY
