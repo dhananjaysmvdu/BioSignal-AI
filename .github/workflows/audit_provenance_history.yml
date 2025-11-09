@@ -728,3 +728,44 @@ jobs:
       - name: Append adaptive rate summary
         run: |
           echo "⚖️ Adaptive meta-learning rate adjusted from MSI feedback." >> $GITHUB_STEP_SUMMARY
+
+  evaluate-adaptation-outcomes:
+    needs: [adaptive-learning-rate]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+          cache-dependency-path: requirements.lock
+      - name: Evaluate adaptation outcomes
+        id: evaluate
+        run: |
+          python scripts/workflow_utils/evaluate_adaptation_outcomes.py > eval_out.json
+          OUTCOME=$(jq -r '.outcome' eval_out.json || echo 'neutral')
+          GHS_DELTA=$(jq -r '.ghs_delta' eval_out.json || echo 0)
+          MSI_DELTA=$(jq -r '.msi_delta' eval_out.json || echo 0)
+          echo "outcome=${OUTCOME}" >> $GITHUB_OUTPUT
+          echo "ghs_delta=${GHS_DELTA}" >> $GITHUB_OUTPUT
+          echo "msi_delta=${MSI_DELTA}" >> $GITHUB_OUTPUT
+          echo "📊 Evaluated last adaptation — outcome classified as ${OUTCOME^} (GHS Δ${GHS_DELTA}, MSI Δ${MSI_DELTA})." >> $GITHUB_STEP_SUMMARY
+      - name: Commit adaptation outcome evaluation
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add logs/adaptation_outcomes.json reports/audit_summary.md
+          if git diff --cached --quiet; then
+            echo "No adaptation outcome changes to commit."
+          else
+            git commit -m "ci: record and evaluate adaptation outcomes for governance self-assessment"
+            git push
+          fi
+      - name: Append evaluation summary
+        run: |
+          OUTCOME="${{ steps.evaluate.outputs.outcome }}"
+          echo "📊 Evaluated last adaptation — outcome classified as ${OUTCOME^}." >> $GITHUB_STEP_SUMMARY
