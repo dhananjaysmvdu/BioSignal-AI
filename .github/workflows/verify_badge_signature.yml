@@ -69,6 +69,15 @@ jobs:
           KEY_ID=$(echo "$SIG_OUT" | sed -n -E 's/.*using [A-Z0-9]+ key ([0-9A-Fa-f]+)/\1/p; s/.*key ID ([0-9A-Fa-f]+)/\1/p' | head -n1)
           # Primary key fingerprint line
           FPR=$(echo "$SIG_OUT" | sed -n -E 's/^gpg: Primary key fingerprint: (.*)/\1/p' | head -n1 | sed -E 's/^\s+|\s+$//g')
+          # Extract signer email from Good signature line if present
+          EMAIL=$(echo "$SIG_OUT" | sed -n -E "s/.*Good signature from .*<([^>]+)>.*/\1/p" | head -n1)
+          # Short fingerprint (long key ID) = last 16 hex chars of fingerprint (strip spaces first)
+          CLEAN_FPR=$(echo "$FPR" | tr -d ' ')
+          if [ -n "$CLEAN_FPR" ]; then
+            SHORTFPR=${CLEAN_FPR: -16}
+          else
+            SHORTFPR=""
+          fi
           # Commit hash and timestamp (UTC)
           COMMIT=$(git rev-parse HEAD)
           TS=$(date -u -d @"$(git log -1 --format=%ct)" '+%Y-%m-%d %H:%M:%S')
@@ -88,11 +97,15 @@ jobs:
 
           echo "### 🧩 Coverage Badge Provenance Summary" >> $GITHUB_STEP_SUMMARY
           echo "- **Signer:** Coverage Badge CI" >> $GITHUB_STEP_SUMMARY
+          echo "- **Signer Email:** ${EMAIL:-unknown}" >> $GITHUB_STEP_SUMMARY
           echo "- **Key ID:** ${KEY_ID:-unknown}" >> $GITHUB_STEP_SUMMARY
           echo "- **Fingerprint:** ${FPR:-unknown}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Key (short):** ${SHORTFPR:-unknown}" >> $GITHUB_STEP_SUMMARY
           echo "- **Commit:** ${COMMIT}" >> $GITHUB_STEP_SUMMARY
           echo "- **Timestamp:** ${TS} UTC" >> $GITHUB_STEP_SUMMARY
           echo "- **Coverage:** ${COV_PCT}" >> $GITHUB_STEP_SUMMARY
           echo "- **Integrity:** Verified ✅" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "[View Commit](https://github.com/${GITHUB_REPOSITORY}/commit/${COMMIT})" >> $GITHUB_STEP_SUMMARY
+          # Log full fingerprint for forensics
+          echo "Full GPG fingerprint: ${FPR:-unknown}"
