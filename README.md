@@ -10,6 +10,10 @@ author: "Mrityunjay Dhananjay"
 
 [![Hugging Face Spaces](https://img.shields.io/badge/%F0%9F%A4%97%20View%20on%20Hugging%20Face%20Spaces-blue)](https://huggingface.co/spaces/LogDMax/BioSignal-X) [![CI](https://img.shields.io/badge/CI-pending-lightgrey.svg)](#) [![License](https://img.shields.io/badge/license-Apache--2.0-lightgrey.svg)](#)
 
+<!-- COVERAGE_BADGE:BEGIN -->
+![Coverage](badges/coverage.svg)
+<!-- COVERAGE_BADGE:END -->
+
 *Multimodal dermatology research toolkit for pairing dermoscopy imagery with contextual patient data.*
 
 ## Research Abstract
