@@ -690,3 +690,41 @@ jobs:
       - name: Append stability gauge summary
         run: |
           echo "📊 Meta-Stability Index computed — learning stability gauge updated." >> $GITHUB_STEP_SUMMARY
+
+  adaptive-learning-rate:
+    needs: [compute-meta-stability]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+          cache-dependency-path: requirements.lock
+      - name: Apply adaptive learning rate control
+        id: adapt
+        run: |
+          python scripts/workflow_utils/adaptive_learning_rate_controller.py > alrc_out.json
+          RATE=$(jq -r '.learning_rate_factor' alrc_out.json || echo 1.0)
+          MSI=$(jq -r '.msi' alrc_out.json || echo 0)
+          echo "rate_factor=${RATE}" >> $GITHUB_OUTPUT
+          echo "msi=${MSI}" >> $GITHUB_OUTPUT
+          echo "⚖️ Adaptive meta-learning rate adjusted: MSI=${MSI}% → ×${RATE}" >> $GITHUB_STEP_SUMMARY
+      - name: Commit adaptive learning rate updates
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add configs/governance_policy.json reports/audit_summary.md
+          if git diff --cached --quiet; then
+            echo "No adaptive learning rate changes to commit."
+          else
+            git commit -m "ci: apply adaptive meta-learning rate control based on meta-stability feedback"
+            git push
+          fi
+      - name: Append adaptive rate summary
+        run: |
+          echo "⚖️ Adaptive meta-learning rate adjusted from MSI feedback." >> $GITHUB_STEP_SUMMARY
