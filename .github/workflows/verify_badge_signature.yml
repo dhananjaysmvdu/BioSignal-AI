@@ -1,0 +1,65 @@
+name: Verify Coverage Badge Signature
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  verify-badge:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Ensure GPG available
+        run: |
+          sudo apt-get update -y
+          sudo apt-get install -y gnupg
+          gpg --version
+
+      - name: Import public key
+        run: |
+          if [ -f .github/public_keys/badge_signing.pub ]; then
+            gpg --import .github/public_keys/badge_signing.pub
+          else
+            echo 'Public key not found; failing.'
+            exit 1
+          fi
+
+      - name: Verify latest commit signature
+        id: sig
+        run: |
+          OUT=$(git log -1 --show-signature 2>&1 || true)
+          echo "$OUT"
+          echo "signature_output<<EOF" >> $GITHUB_OUTPUT
+          echo "$OUT" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+          echo "$OUT" | grep -q "Good signature from" || (echo 'Signature NOT valid'; exit 1)
+          echo "$OUT" | grep -q "Coverage Badge CI" || (echo 'Signer identity mismatch'; exit 1)
+
+      - name: Verify badge file integrity
+        run: |
+          if [ ! -f badges/coverage.sig ] || [ ! -f badges/coverage.svg ]; then
+            echo 'Badge or signature file missing.'
+            exit 1
+          fi
+          cd badges
+          sha256sum -c coverage.sig || (echo 'coverage.svg hash mismatch vs signature file'; exit 1)
+          cd ..
+
+      - name: Verify versions.json chain
+        run: |
+          if [ ! -f reports/history/versions.json ]; then
+            echo 'versions.json missing'; exit 1; fi
+          SIG_HASH=$(sha256sum badges/coverage.sig | awk '{print $1}')
+          FILE_HASH=$(python scripts/workflow_utils/extract_coverage_hash.py)
+          echo "Computed signature file SHA256: $SIG_HASH"
+          echo "Recorded coverage_badge_hash: $FILE_HASH"
+          if [ "$SIG_HASH" != "$FILE_HASH" ]; then
+            echo 'coverage_badge_hash mismatch'; exit 1; fi
+
+      - name: Success report
+        run: |
+          echo "✅ Badge provenance and commit signature verified."
