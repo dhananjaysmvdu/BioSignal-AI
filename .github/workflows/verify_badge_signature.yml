@@ -63,3 +63,15 @@ jobs:
       - name: Success report
         run: |
           echo "✅ Badge provenance and commit signature verified."
+          # Extract contextual provenance info
+          SIG_OUT=$(git log -1 --show-signature)
+          SIGNER=$(echo "$SIG_OUT" | grep -m1 -oE 'Good signature from \\K.*')
+          COMMIT=$(git rev-parse HEAD)
+          TS=$(git log -1 --format=%cI)
+          echo "### 🧩 Coverage Badge Provenance Summary" >> $GITHUB_STEP_SUMMARY
+          echo "- **Signer:** ${SIGNER:-Coverage Badge CI}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Commit:** ${COMMIT}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Timestamp:** ${TS} UTC" >> $GITHUB_STEP_SUMMARY
+          echo "- **Integrity:** Verified ✅" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "[View commit](https://github.com/${{ github.repository }}/commit/${COMMIT})" >> $GITHUB_STEP_SUMMARY
