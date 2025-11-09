@@ -22,6 +22,7 @@ from typing import List, Dict, Any
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
 REPORTS_DIR = os.path.join(ROOT, "reports")
 HISTORY_JSON = os.path.join(ROOT, "reports", "history", "versions.json")
+LEDGER_JSON = os.path.join(ROOT, "logs", "oversight_ledger.json")
 
 MD_PATTERN = re.compile(r"^\s*-\s*(?P<key>[^:]+):\s*(?P<value>.*)$")
 TS_KEYS = {"Timestamp", "timestamp"}
@@ -83,6 +84,18 @@ def _load_history_versions() -> Dict[str, Any]:
             return json.load(f)
     except Exception:
         return {}
+
+def _load_ledger() -> List[Dict[str, Any]]:
+  if not os.path.exists(LEDGER_JSON):
+    return []
+  try:
+    with open(LEDGER_JSON, "r", encoding="utf-8") as f:
+      data = json.load(f)
+      if isinstance(data, list):
+        return data
+  except Exception:
+    return []
+  return []
 
 
 def _collect_runs() -> List[Dict[str, Any]]:
@@ -147,6 +160,12 @@ def _render_html(runs: List[Dict[str, Any]], metrics: Dict[str, Any], history: D
     avg_drift = metrics.get("avg_drift", 0.0) * 100.0
     remediation_freq = metrics.get("remediation_freq", 0.0) * 100.0
 
+    # Reviewer metrics
+    ledger = _load_ledger()
+    approvals = sum(1 for e in ledger if str(e.get("verdict","")) == "approved")
+    total_reviews = len(ledger)
+    approval_rate = (approvals/total_reviews*100.0) if total_reviews else 0.0
+    # naive turnaround: unavailable without timestamps per pending/open; display total count instead
     now = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC")
 
     # Tiny charting: inline canvas drawing without external libs
@@ -178,6 +197,7 @@ def _render_html(runs: List[Dict[str, Any]], metrics: Dict[str, Any], history: D
     <div class="kpi"><strong>10-run Pass Rate</strong><br>{pass_rate:.1f}%</div>
     <div class="kpi"><strong>Avg Drift Rate</strong><br>{avg_drift:.2f}%</div>
     <div class="kpi"><strong>Remediation Frequency</strong><br>{remediation_freq:.1f}%</div>
+    <div class="kpi"><strong>Approval Rate</strong><br>{approval_rate:.1f}% ({total_reviews} reviews)</div>
   </div>
   <div class="grid">
     <div>

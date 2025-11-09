@@ -313,3 +313,30 @@ jobs:
             git commit -m "ci: integrate human-in-the-loop oversight gateway for adaptive governance"
             git push
           fi
+
+  record-human-review:
+    needs: [human-oversight]
+    if: ${{ always() }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Record human review outcomes
+        id: record
+        run: |
+          python scripts/workflow_utils/record_human_review.py
+      - name: Commit governance ledger updates
+        run: |
+          if [ -f logs/oversight_ledger.json ]; then
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add logs/oversight_ledger.json reports/audit_summary.md reports/reviews/completed/* || true
+            if git diff --cached --quiet; then
+              echo "No ledger updates to commit."
+            else
+              git commit -m "ci: record human oversight outcomes and update governance ledger"
+              git push
+            fi
+          fi
