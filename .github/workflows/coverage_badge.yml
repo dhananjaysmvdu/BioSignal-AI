@@ -37,4 +37,12 @@ jobs:
           commit_message: "ci: embed provenance and test-run link in coverage badge"
           file_pattern: |
             badges/coverage.svg
+            badges/coverage.sig
             README.md
+
+      - name: Verify badge integrity
+        run: |
+          cd badges
+          # Verify using sha256sum compatible check
+          echo "Verifying coverage.svg against coverage.sig"
+          sha256sum -c coverage.sig || (echo "ERROR: coverage badge integrity verification failed" && exit 1)
