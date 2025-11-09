@@ -60,6 +60,44 @@ jobs:
           PYSCRIPT
           fi
 
+      - name: Record verification mode in provenance ledger
+        run: |
+          mode="partial"
+          if [ -f .github/public_keys/badge_signing.pub ]; then
+            mode="full"
+          fi
+          ts=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+          mkdir -p reports/history
+          export mode ts
+          python3 <<'PYSCRIPT'
+          import json, pathlib, os
+          mode = os.environ.get("mode", "unknown")
+          ts = os.environ.get("ts", "")
+          p = pathlib.Path("reports/history/versions.json")
+          if not p.exists():
+              p.write_text(json.dumps([{"timestamp": ts, "signature_verification_mode": mode}], indent=2))
+          else:
+              data = json.loads(p.read_text() or "[]")
+              if not isinstance(data, list):
+                  data = [data]
+              if data:
+                  data[-1]["signature_verification_mode"] = mode
+                  data[-1]["verification_timestamp"] = ts
+              else:
+                  data.append({"timestamp": ts, "signature_verification_mode": mode})
+              p.write_text(json.dumps(data, indent=2))
+          PYSCRIPT
+          echo "🧾 Signature verification mode recorded in provenance ledger: $mode" >> $GITHUB_STEP_SUMMARY
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add reports/history/versions.json
+          if git diff --cached --quiet; then
+            echo "No provenance ledger changes to commit."
+          else
+            git commit -m "ci: record signature verification mode in provenance ledger"
+            git push
+          fi
+
       - name: Verify latest commit signature
         id: sig
         run: |
