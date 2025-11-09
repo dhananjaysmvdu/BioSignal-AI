@@ -10,6 +10,10 @@ jobs:
     permissions:
       contents: write
       issues: write
+    outputs:
+      conf: ${{ steps.forecast.outputs.conf }}
+      drift: ${{ steps.forecast.outputs.drift }}
+      audit_depth: ${{ steps.policy.outputs.audit_depth }}
     steps:
       - name: Checkout (full history)
         uses: actions/checkout@v4
@@ -258,5 +262,54 @@ jobs:
             echo "No changes to commit."
           else
             git commit -m "ci: add explainable compliance rationale for adaptive governance."
+            git push
+          fi
+
+  human-oversight:
+    needs: [audit-history]
+    if: ${{ needs.audit-history.outputs.conf != '' && (fromJSON(needs.audit-history.outputs.conf) < 80 || fromJSON(needs.audit-history.outputs.drift) >= 30 || needs.audit-history.outputs.audit_depth == 'moderate' || needs.audit-history.outputs.audit_depth == 'full') }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      issues: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Run human oversight gateway
+        id: gateway
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+        run: |
+          python scripts/workflow_utils/human_oversight_gateway.py
+          echo "🧠 Human review initiated for high-risk policy change." >> $GITHUB_STEP_SUMMARY
+
+      - name: Update audit summary with pending review
+        env:
+          CONF: ${{ needs.audit-history.outputs.conf }}
+          DEPTH: ${{ needs.audit-history.outputs.audit_depth }}
+        run: |
+          mkdir -p reports
+          DID=$(date -u +"%Y%m%dT%H%M%SZ")
+          RISK=$([ "$DEPTH" = "full" ] && echo "high" || ([ "$DEPTH" = "moderate" ] && echo "medium" || echo "low"))
+          ASSIGNEE="unassigned"
+          {
+            echo ""
+            echo "## Pending Review:"
+            echo "Decision ID | Risk | Confidence | Assigned Reviewer"
+            echo "---|---|---:|---"
+            echo "$DID | $RISK | ${CONF}% | $ASSIGNEE"
+          } >> reports/audit_summary.md
+
+      - name: Commit review request and audit summary
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add reports/review_request.md reports/reviews/pending/* reports/audit_summary.md logs/decision_trace.json
+          if git diff --cached --quiet; then
+            echo "No changes to commit."
+          else
+            git commit -m "ci: integrate human-in-the-loop oversight gateway for adaptive governance"
             git push
           fi
