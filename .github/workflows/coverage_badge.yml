@@ -30,19 +30,16 @@ jobs:
       - name: Update README with run link
         run: |
           python scripts/workflow_utils/update_readme_badge_link.py "${{ github.repository }}" "${{ github.event.workflow_run.id }}"
-
-      - name: Commit badge and README
-        uses: stefanzweifel/git-auto-commit-action@v5
-        with:
-          commit_message: "ci: embed provenance and test-run link in coverage badge"
-          file_pattern: |
-            badges/coverage.svg
-            badges/coverage.sig
-            README.md
-
       - name: Verify badge integrity
         run: |
           cd badges
-          # Verify using sha256sum compatible check
           echo "Verifying coverage.svg against coverage.sig"
           sha256sum -c coverage.sig || (echo "ERROR: coverage badge integrity verification failed" && exit 1)
+          cd ..
+      - name: Append coverage hash to versions.json
+        run: |
+          python scripts/workflow_utils/update_versions_coverage_hash.py
+
+      - name: Signed commit badge + provenance
+        run: |
+          bash scripts/workflow_utils/sign_badge_commit.sh
