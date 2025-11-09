@@ -372,3 +372,72 @@ jobs:
             git commit -m "ci: integrate human feedback into adaptive governance learning loop"
             git push
           fi
+
+  score-reviewers:
+    needs: [learn-meta]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    outputs:
+      trust_index: ${{ steps.trust.outputs.trust_index }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+          cache-dependency-path: requirements.lock
+
+      - name: Run reviewer reliability scoring
+        run: |
+          python scripts/workflow_utils/score_reviewer_reliability.py
+
+      - name: Regenerate provenance dashboard
+        run: |
+          python scripts/workflow_utils/generate_provenance_dashboard.py
+
+      - name: Compute and publish trust index (optional)
+        id: trust
+        shell: bash
+        run: |
+          python - <<'PY'
+          import json, os
+          def load_json(p, default=None):
+              try:
+                  with open(p,'r',encoding='utf-8') as f:
+                      return json.load(f)
+              except Exception:
+                  return default
+          scores = load_json('logs/reviewer_scores.json', {}) or {}
+          ledger = load_json('logs/oversight_ledger.json', []) or []
+          alignments = [float(v.get('alignment',0.0)) for v in (scores.values() if isinstance(scores, dict) else [])]
+          mean_alignment = (sum(alignments)/len(alignments)) if alignments else 0.0
+          approvals = sum(1 for e in ledger if str(e.get('verdict','')).lower()=='approved')
+          total = len(ledger)
+          disagreement_rate = 1.0 - (approvals/total) if total else 0.0
+          trust_index = max(0.0, min(1.0, mean_alignment * (1.0 - disagreement_rate)))
+          # Export as percentage with 2 decimals
+          with open(os.environ['GITHUB_OUTPUT'],'a', encoding='utf-8') as g:
+              g.write(f"trust_index={trust_index*100:.2f}\n")
+          with open(os.environ['GITHUB_STEP_SUMMARY'],'a', encoding='utf-8') as s:
+              s.write(f"\n🔐 Oversight Trust Index: {trust_index*100:.2f}%\n")
+          PY
+
+      - name: Commit reviewer metrics and dashboard
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add logs/reviewer_scores.json reports/provenance_dashboard.html reports/audit_summary.md
+          if git diff --cached --quiet; then
+            echo "No reviewer metrics or dashboard changes to commit."
+          else
+            git commit -m "ci: integrate reviewer reliability scoring and regenerate provenance dashboard"
+            git push
+          fi
+
+      - name: Append run summary
+        run: |
+          echo "📊 Reviewer reliability metrics updated — Oversight Trust Index recalculated." >> $GITHUB_STEP_SUMMARY
