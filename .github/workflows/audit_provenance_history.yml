@@ -230,15 +230,28 @@ jobs:
           echo "\n🔮 Next-week drift probability: ${DRIFT}%" >> $GITHUB_STEP_SUMMARY
           echo "🧩 Confidence: ${CONF}%" >> $GITHUB_STEP_SUMMARY
           echo "⚙️ Expected remediations: ${REM}" >> $GITHUB_STEP_SUMMARY
+      - name: Adaptive governance tuning
+        id: policy
+        run: |
+          python scripts/workflow_utils/prescriptive_controller.py > policy_output.json
+          AUDIT_DEPTH=$(jq -r '.policy.audit_depth' policy_output.json || echo unknown)
+          DRIFT_THRESH=$(jq -r '.policy.drift_threshold' policy_output.json || echo 0)
+          NEXT_AUDIT=$(jq -r '.policy.next_audit_date' policy_output.json || echo unknown)
+          echo "audit_depth=$AUDIT_DEPTH" >> $GITHUB_OUTPUT
+          echo "drift_threshold=$DRIFT_THRESH" >> $GITHUB_OUTPUT
+          echo "next_audit=$NEXT_AUDIT" >> $GITHUB_OUTPUT
+          echo "⚖️ Audit depth set to: $AUDIT_DEPTH" >> $GITHUB_STEP_SUMMARY
+          echo "🧮 New drift threshold: $DRIFT_THRESH" >> $GITHUB_STEP_SUMMARY
+          echo "🕒 Next scheduled audit: $NEXT_AUDIT" >> $GITHUB_STEP_SUMMARY
 
       - name: Commit executive audit summary
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add reports/audit_summary.md reports/provenance_dashboard.html reports/provenance_forecast.json
+          git add reports/audit_summary.md reports/provenance_dashboard.html reports/provenance_forecast.json configs/governance_policy.json
           if git diff --cached --quiet; then
             echo "No changes to commit."
           else
-            git commit -m "ci: add predictive provenance risk forecasting to audit pipeline."
+            git commit -m "ci: adaptive governance policy tuning based on provenance risk."
             git push
           fi
