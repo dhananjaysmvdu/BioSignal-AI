@@ -769,3 +769,50 @@ jobs:
         run: |
           OUTCOME="${{ steps.evaluate.outputs.outcome }}"
           echo "📊 Evaluated last adaptation — outcome classified as ${OUTCOME^}." >> $GITHUB_STEP_SUMMARY
+
+  weighted-adaptation-optimizer:
+    needs: [evaluate-adaptation-outcomes]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+          cache-dependency-path: requirements.lock
+      - name: Apply weighted optimization
+        id: optimize
+        run: |
+          python scripts/workflow_utils/weighted_adaptation_optimizer.py > wao_out.json
+          STATUS=$(jq -r '.status' wao_out.json || echo 'unknown')
+          SUCCESS_RATE=$(jq -r '.success_rate' wao_out.json || echo 0)
+          IMPROVED=$(jq -r '.improved_count' wao_out.json || echo 0)
+          echo "status=${STATUS}" >> $GITHUB_OUTPUT
+          echo "success_rate=${SUCCESS_RATE}" >> $GITHUB_OUTPUT
+          if [ "$STATUS" = "applied" ]; then
+            echo "🧩 Weighted optimization applied — success rate ${SUCCESS_RATE}% (${IMPROVED} improved outcomes)." >> $GITHUB_STEP_SUMMARY
+          else
+            REASON=$(jq -r '.reason' wao_out.json || echo 'unknown')
+            echo "⏭️ Weighted optimization skipped — ${REASON}." >> $GITHUB_STEP_SUMMARY
+          fi
+      - name: Commit weighted optimization updates
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add configs/governance_policy.json reports/audit_summary.md
+          if git diff --cached --quiet; then
+            echo "No weighted optimization changes to commit."
+          else
+            git commit -m "ci: apply outcome-weighted optimization to governance coefficients"
+            git push
+          fi
+      - name: Append optimization summary
+        run: |
+          STATUS="${{ steps.optimize.outputs.status }}"
+          if [ "$STATUS" = "applied" ]; then
+            echo "🧩 Weighted adaptation optimization applied — coefficients updated from historical success memory." >> $GITHUB_STEP_SUMMARY
+          fi
