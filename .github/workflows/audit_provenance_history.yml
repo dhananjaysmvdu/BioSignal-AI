@@ -940,3 +940,45 @@ jobs:
       - name: Append calibration summary
         run: |
           echo "Forecast mean absolute error: ${{ steps.calibrate.outputs.mean_err }}% (Reliability: ${{ steps.calibrate.outputs.reliability }})." >> $GITHUB_STEP_SUMMARY
+
+  calibrate-forecast-accuracy:
+    needs: [calibrate-prediction-accuracy]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+          cache-dependency-path: requirements.lock
+      - name: Calibrate forecast reliability
+        id: forecast
+        run: |
+          python scripts/workflow_utils/calibrate_forecast_accuracy.py > forecast_out.json
+          STATUS=$(jq -r '.status' forecast_out.json || echo 'unknown')
+          ERR=$(jq -r '.error' forecast_out.json || echo 0)
+          ACC=$(jq -r '.accuracy' forecast_out.json || echo 0)
+          REL=$(jq -r '.reliability' forecast_out.json || echo 0)
+          echo "status=${STATUS}" >> $GITHUB_OUTPUT
+          echo "error=${ERR}" >> $GITHUB_OUTPUT
+          echo "accuracy=${ACC}" >> $GITHUB_OUTPUT
+          echo "reliability=${REL}" >> $GITHUB_OUTPUT
+          echo "🎯 Forecast calibration complete — prediction accuracy evaluated." >> $GITHUB_STEP_SUMMARY
+      - name: Commit forecast calibration
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add logs/forecast_accuracy.json reports/audit_summary.md
+          if git diff --cached --quiet; then
+            echo "No forecast calibration changes to commit."
+          else
+            git commit -m "ci: calibrate predictive adaptation accuracy and update forecast reliability"
+            git push
+          fi
+      - name: Append forecast summary
+        run: |
+          echo "Forecast reliability: ${{ steps.forecast.outputs.reliability }} (Accuracy: ${{ steps.forecast.outputs.accuracy }}%, Error: ${{ steps.forecast.outputs.error }}%)." >> $GITHUB_STEP_SUMMARY
