@@ -49,25 +49,8 @@ jobs:
         run: |
           echo "## Pytest Summary" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          if [ -f pytest.xml ]; then
-            python - <<'PY' > summary.txt
-import os
-import xml.etree.ElementTree as ET
-path = 'pytest.xml'
-tests = failures = errors = skipped = 0
-if os.path.exists(path):
-    root = ET.parse(path).getroot()
-    ts = root.find('testsuite') or root
-    tests = int(ts.attrib.get('tests', 0))
-    failures = int(ts.attrib.get('failures', 0))
-    errors = int(ts.attrib.get('errors', 0))
-    skipped = int(ts.attrib.get('skipped', 0))
-print(f"Tests: {tests}, Failures: {failures}, Errors: {errors}, Skipped: {skipped}")
-PY
-            cat summary.txt >> $GITHUB_STEP_SUMMARY
-          else
-            echo "No junit report found." >> $GITHUB_STEP_SUMMARY
-          fi
+          python scripts/workflow_utils/junit_summary.py > summary.txt || echo "No junit report found." > summary.txt
+          cat summary.txt >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "Duration: ${{ steps.test.outputs.duration }}s" >> $GITHUB_STEP_SUMMARY
           echo "Exit code: ${{ steps.test.outputs.exit_code }}" >> $GITHUB_STEP_SUMMARY
