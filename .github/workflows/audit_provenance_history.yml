@@ -550,3 +550,39 @@ jobs:
             git commit -m "ci: compute and publish composite Governance Health Score and badge"
             git push
           fi
+
+  update-governance-cycle:
+    needs: [compute-governance-health]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+          cache-dependency-path: requirements.lock
+      - name: Adapt governance cycle from GHS
+        id: cycle
+        run: |
+          python scripts/workflow_utils/update_governance_cycle.py > cycle_output.json
+          GHS=$(jq -r '.ghs' cycle_output.json || echo 0)
+          FREQ=$(jq -r '.audit_frequency' cycle_output.json || echo unknown)
+          echo "ghs=${GHS}" >> $GITHUB_OUTPUT
+          echo "audit_frequency=${FREQ}" >> $GITHUB_OUTPUT
+          echo "🔁 Governance cycle updated based on GHS = ${GHS}%" >> $GITHUB_STEP_SUMMARY
+          echo "🕒 Next audit in ${FREQ}" >> $GITHUB_STEP_SUMMARY
+      - name: Commit governance cycle changes
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add configs/governance_policy.json logs/decision_trace.json reports/audit_summary.md
+          if git diff --cached --quiet; then
+            echo "No governance cycle changes to commit."
+          else
+            git commit -m "ci: adapt governance meta-learning and audit schedule from Governance Health Score"
+            git push
+          fi
