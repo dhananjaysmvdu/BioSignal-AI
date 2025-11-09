@@ -65,13 +65,34 @@ jobs:
           echo "✅ Badge provenance and commit signature verified."
           # Extract contextual provenance info
           SIG_OUT=$(git log -1 --show-signature)
-          SIGNER=$(echo "$SIG_OUT" | grep -m1 -oE 'Good signature from \\K.*')
+          # Key ID can appear as either "using RSA key <KEY>" or "key ID <KEY>"
+          KEY_ID=$(echo "$SIG_OUT" | sed -n -E 's/.*using [A-Z0-9]+ key ([0-9A-Fa-f]+)/\1/p; s/.*key ID ([0-9A-Fa-f]+)/\1/p' | head -n1)
+          # Primary key fingerprint line
+          FPR=$(echo "$SIG_OUT" | sed -n -E 's/^gpg: Primary key fingerprint: (.*)/\1/p' | head -n1 | sed -E 's/^\s+|\s+$//g')
+          # Commit hash and timestamp (UTC)
           COMMIT=$(git rev-parse HEAD)
-          TS=$(git log -1 --format=%cI)
+          TS=$(date -u -d @"$(git log -1 --format=%ct)" '+%Y-%m-%d %H:%M:%S')
+
+          # Coverage: parse latest coverage.xml if present
+          COV_FILE=$(find . -maxdepth 5 -type f -name 'coverage.xml' | head -n1 || true)
+          if [ -n "$COV_FILE" ]; then
+            VAL=$(grep -m1 -o 'line-rate="[^"]*"' "$COV_FILE" | sed -E 's/.*line-rate="([^"]+)".*/\1/' || true)
+            if [ -n "$VAL" ]; then
+              COV_PCT=$(python3 -c "v='$VAL'; print(f'{float(v)*100:.1f}%')")
+            else
+              COV_PCT="N/A"
+            fi
+          else
+            COV_PCT="N/A"
+          fi
+
           echo "### 🧩 Coverage Badge Provenance Summary" >> $GITHUB_STEP_SUMMARY
-          echo "- **Signer:** ${SIGNER:-Coverage Badge CI}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Signer:** Coverage Badge CI" >> $GITHUB_STEP_SUMMARY
+          echo "- **Key ID:** ${KEY_ID:-unknown}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Fingerprint:** ${FPR:-unknown}" >> $GITHUB_STEP_SUMMARY
           echo "- **Commit:** ${COMMIT}" >> $GITHUB_STEP_SUMMARY
           echo "- **Timestamp:** ${TS} UTC" >> $GITHUB_STEP_SUMMARY
+          echo "- **Coverage:** ${COV_PCT}" >> $GITHUB_STEP_SUMMARY
           echo "- **Integrity:** Verified ✅" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "[View commit](https://github.com/${{ github.repository }}/commit/${COMMIT})" >> $GITHUB_STEP_SUMMARY
+          echo "[View Commit](https://github.com/${GITHUB_REPOSITORY}/commit/${COMMIT})" >> $GITHUB_STEP_SUMMARY
