@@ -982,3 +982,45 @@ jobs:
       - name: Append forecast summary
         run: |
           echo "Forecast reliability: ${{ steps.forecast.outputs.reliability }} (Accuracy: ${{ steps.forecast.outputs.accuracy }}%, Error: ${{ steps.forecast.outputs.error }}%)." >> $GITHUB_STEP_SUMMARY
+
+  forecast-reliability-controller:
+    needs: [calibrate-forecast-accuracy]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+          cache-dependency-path: requirements.lock
+      - name: Apply forecast reliability feedback
+        id: reliability
+        run: |
+          python scripts/workflow_utils/forecast_reliability_controller.py > reliability_out.json
+          AVG_REL=$(jq -r '.avg_reliability' reliability_out.json || echo 1)
+          REL_WEIGHT=$(jq -r '.reliability_weight' reliability_out.json || echo 1)
+          LRF=$(jq -r '.learning_rate_factor' reliability_out.json || echo 1)
+          CONF=$(jq -r '.confidence_threshold' reliability_out.json || echo 0)
+          echo "avg_reliability=${AVG_REL}" >> $GITHUB_OUTPUT
+          echo "reliability_weight=${REL_WEIGHT}" >> $GITHUB_OUTPUT
+          echo "learning_rate_factor=${LRF}" >> $GITHUB_OUTPUT
+          echo "confidence_threshold=${CONF}" >> $GITHUB_OUTPUT
+          echo "🧭 Forecast reliability feedback applied — adaptation aggressiveness recalibrated." >> $GITHUB_STEP_SUMMARY
+      - name: Commit reliability feedback changes
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add configs/governance_policy.json reports/audit_summary.md
+          if git diff --cached --quiet; then
+            echo "No reliability feedback changes to commit."
+          else
+            git commit -m "ci: adjust learning and confidence thresholds using forecast reliability feedback"
+            git push
+          fi
+      - name: Append reliability summary
+        run: |
+          echo "Reliability weight: ${{ steps.reliability.outputs.reliability_weight }} (Avg: ${{ steps.reliability.outputs.avg_reliability }}). LRF: ${{ steps.reliability.outputs.learning_rate_factor }}; ConfThresh: ${{ steps.reliability.outputs.confidence_threshold }}." >> $GITHUB_STEP_SUMMARY
