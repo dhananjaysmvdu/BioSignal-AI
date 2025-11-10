@@ -1,0 +1,27 @@
+{
+  "timestamp": "2025-11-10T21:08:09.680192",
+  "trend": "neutral",
+  "trend_score": 0.0,
+  "stability_factor": 0.5,
+  "predicted_equilibrium_cycles": 999,
+  "confidence": 0.35,
+  "notes": "Based on coherence + meta-stability trends. System in neutral state, no clear trend.",
+  "snapshots": {
+    "coherence_index": 100.0,
+    "msi": 0.0,
+    "ghs": 0.0
+  },
+  "slopes": {
+    "coherence_slope": 0.0,
+    "msi_slope": 0.0
+  },
+  "history": [
+    {
+      "timestamp": "2025-11-10T21:08:09.680269",
+      "coherence_snapshot": 100.0,
+      "msi_snapshot": 0.0,
+      "trend": "neutral",
+      "trend_score": 0.0
+    }
+  ]
+}

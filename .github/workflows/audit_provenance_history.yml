@@ -802,8 +802,47 @@ jobs:
         run: |
           echo "🧩 Governance coherence evaluated (index ${{ steps.coherence.outputs.coherence_index }}% — ${{ steps.coherence.outputs.status }})." >> $GITHUB_STEP_SUMMARY
 
-  adaptive-learning-rate:
+  governance-equilibrium-predictor:
     needs: [governance-coherence-analyzer]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+          cache-dependency-path: requirements.lock
+      - name: Forecast governance equilibrium
+        id: equilibrium
+        run: |
+          python scripts/workflow_utils/governance_equilibrium_predictor.py > equilibrium_out.json
+          TREND=$(jq -r '.trend' equilibrium_out.json || echo 'neutral')
+          CYCLES=$(jq -r '.predicted_equilibrium_cycles' equilibrium_out.json || echo 999)
+          CONFIDENCE=$(jq -r '.confidence' equilibrium_out.json || echo 0.5)
+          echo "trend=${TREND}" >> $GITHUB_OUTPUT
+          echo "cycles=${CYCLES}" >> $GITHUB_OUTPUT
+          echo "confidence=${CONFIDENCE}" >> $GITHUB_OUTPUT
+      - name: Commit equilibrium forecast
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add reports/governance_equilibrium.json reports/audit_summary.md
+          if git diff --cached --quiet; then
+            echo "No equilibrium forecast changes to commit."
+          else
+            git commit -m "ci: forecast governance equilibrium state"
+            git push
+          fi
+      - name: Append equilibrium summary
+        run: |
+          echo "🔮 Governance equilibrium forecast generated — trend: ${{ steps.equilibrium.outputs.trend }} (~${{ steps.equilibrium.outputs.cycles }} cycles, confidence ${{ steps.equilibrium.outputs.confidence }})." >> $GITHUB_STEP_SUMMARY
+
+  adaptive-learning-rate:
+    needs: [governance-equilibrium-predictor]
     runs-on: ubuntu-latest
     permissions:
       contents: write
