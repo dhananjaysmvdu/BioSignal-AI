@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang='en'>
+<head>
+<meta charset='utf-8'/>
+<title>Regime Stability Gauge</title>
+<style>
+    body { font-family: Arial, sans-serif; margin: 20px; }
+    h1 { font-size: 20px; margin-bottom: 8px; }
+    .status { font-size: 16px; margin-top: 8px; }
+    canvas { max-width: 320px; }
+</style>
+</head>
+<body>
+<h1>Regime Stability Gauge</h1>
+<canvas id='gauge' width='320' height='320'></canvas>
+<div class='status'>RSI: <strong>100.00%</strong> → — Stable Regime</div>
+<script>
+const rsi = 100.00;
+const canvas = document.getElementById('gauge');
+const ctx = canvas.getContext('2d');
+const cx = canvas.width/2; const cy = canvas.height/2; const radius = 130;
+ctx.clearRect(0,0,canvas.width,canvas.height);
+ctx.lineWidth = 26;
+function arc(fromPct,toPct,color){
+    const start = Math.PI * (1 + fromPct);
+    const end = Math.PI * (1 + toPct);
+    ctx.strokeStyle = color;
+    ctx.beginPath();
+    ctx.arc(cx, cy, radius, start, end, false);
+    ctx.stroke();
+}
+// Zones
+arc(0,0.50,'#e53935'); // red
+arc(0.50,0.80,'#fdd835'); // yellow
+arc(0.80,1.0,'#43a047'); // green
+// Needle
+const needlePct = Math.min(1, Math.max(0, rsi/100));
+const ang = Math.PI * (1 + needlePct);
+ctx.strokeStyle='#000';
+ctx.lineWidth=4;
+ctx.beginPath();
+ctx.moveTo(cx, cy);
+ctx.lineTo(cx + radius * Math.cos(ang), cy + radius * Math.sin(ang));
+ctx.stroke();
+// Center
+ctx.fillStyle='#000'; ctx.beginPath(); ctx.arc(cx, cy, 8, 0, 2*Math.PI); ctx.fill();
+ctx.font='16px Arial'; ctx.textAlign='center'; ctx.fillText(rsi.toFixed(1)+'%', cx, cy+60);
+</script>
+</body>
+</html>

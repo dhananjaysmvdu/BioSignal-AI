@@ -111,3 +111,8 @@ Latest transition: Unknown Archetype → Unknown Archetype (confidence 0%, dwell
 <!-- REGIME_STABILITY:BEGIN -->
 Regime Stability: 100.0% — Regime stable (entropy 0.0, dwell σ² 0.0, recurrence 0.0).
 <!-- REGIME_STABILITY:END -->
+
+
+<!-- REGIME_ALERT:BEGIN -->
+✅ Regime Stable: RSI 100% — No alert triggered.
+<!-- REGIME_ALERT:END -->
