@@ -59,9 +59,34 @@ def build_dashboard_html(
     rei_history: List[Dict[str, Any]],
     rsi_history: List[Dict[str, Any]],
     ghs_history: List[Dict[str, Any]],
-    current_evaluation: Dict[str, Any]
+    current_evaluation: Dict[str, Any],
+    meta_performance: Dict[str, Any] = None
 ) -> str:
     """Build the complete HTML dashboard."""
+    
+    # Extract meta-performance data
+    mpi = 0.0
+    mpi_status = "Unknown"
+    mpi_delta_r2 = 0.0
+    mpi_drift = 0.0
+    mpi_emoji = "⚪"
+    mpi_color = "#gray"
+    
+    if meta_performance:
+        mpi = meta_performance.get("mpi", 0.0)
+        mpi_status = meta_performance.get("classification", "Unknown")
+        mpi_delta_r2 = meta_performance.get("delta_r2", 0.0)
+        mpi_drift = meta_performance.get("error_drift", 0.0)
+        
+        if mpi >= 80:
+            mpi_emoji = "🟢"
+            mpi_color = "#2cbe4e"
+        elif mpi >= 60:
+            mpi_emoji = "🟡"
+            mpi_color = "#dfb317"
+        else:
+            mpi_emoji = "🔴"
+            mpi_color = "#d73a49"
     
     # Prepare data for JavaScript
     rei_labels = []
@@ -137,6 +162,23 @@ def build_dashboard_html(
     current_ghs = current_evaluation.get("current_ghs", 0.0)
     current_emoji = get_classification_emoji(current_class)
     
+    # Build meta-performance status section
+    meta_section = ""
+    if meta_performance:
+        meta_section = f"""
+    <section id="meta_performance" style="background: {mpi_color}22; padding: 16px; border-radius: 8px; border-left: 4px solid {mpi_color}; margin-bottom: 24px;">
+      <h3 style="margin-top: 0;">🧠 Reflex Meta-Performance</h3>
+      <div style="display: flex; align-items: center; gap: 16px;">
+        <canvas id="metaGauge" width="200" height="120"></canvas>
+        <div>
+          <p style="font-size: 18px; margin: 4px 0;"><strong>Status:</strong> <span id="metaStatus">{mpi_emoji} {mpi_status}</span></p>
+          <p style="margin: 4px 0;"><strong>MPI:</strong> {mpi:.1f}%</p>
+          <p style="margin: 4px 0; font-size: 12px; color: #666;">ΔR²: {mpi_delta_r2:+.3f} | Drift: {mpi_drift:+.3f}</p>
+        </div>
+      </div>
+    </section>
+    """
+    
     html = f"""<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -160,6 +202,8 @@ def build_dashboard_html(
   <div class="status">
     <strong>Current Status:</strong> REI {current_rei:+.2f} {current_emoji} {current_class} | RSI {current_rsi:.1f}% | GHS {current_ghs:.1f}%
   </div>
+  
+  {meta_section}
   
   <div class="grid">
     <div>
@@ -344,11 +388,63 @@ def build_dashboard_html(
       ctx.fillText('RSI', pad + 16, pad - 10);
       
       ctx.fillStyle = '#f39c12'; ctx.fillRect(pad + 60, pad - 20, 12, 12);
-      ctx.fillText('GHS', pad + 76, pad - 10);
+      ctx.fillText('GHS', c.clientWidth - pad + 25, pad + 12);
+    }}
+    
+    function drawMetaGauge(id, mpi, color) {{
+      const c = document.getElementById(id);
+      if (!c) return;
+      const ctx = c.getContext('2d');
+      const w = c.width;
+      const h = c.height;
+      const cx = w / 2;
+      const cy = h - 10;
+      const radius = Math.min(w, h * 2) / 2 - 20;
+      
+      // Background arc (gray)
+      ctx.lineWidth = 12;
+      ctx.strokeStyle = '#e0e0e0';
+      ctx.beginPath();
+      ctx.arc(cx, cy, radius, Math.PI, 0, false);
+      ctx.stroke();
+      
+      // MPI arc (colored based on status)
+      const mpiAngle = Math.PI + (mpi / 100) * Math.PI;
+      ctx.strokeStyle = color;
+      ctx.beginPath();
+      ctx.arc(cx, cy, radius, Math.PI, mpiAngle, false);
+      ctx.stroke();
+      
+      // Needle
+      const needleAngle = Math.PI + (mpi / 100) * Math.PI;
+      const needleLen = radius - 10;
+      ctx.strokeStyle = '#333';
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.moveTo(cx, cy);
+      ctx.lineTo(cx + needleLen * Math.cos(needleAngle), cy + needleLen * Math.sin(needleAngle));
+      ctx.stroke();
+      
+      // Center dot
+      ctx.fillStyle = '#333';
+      ctx.beginPath();
+      ctx.arc(cx, cy, 5, 0, 2 * Math.PI);
+      ctx.fill();
+      
+      // Labels
+      ctx.fillStyle = '#666';
+      ctx.font = '12px Arial';
+      ctx.textAlign = 'left';
+      ctx.fillText('0%', cx - radius - 5, cy + 5);
+      ctx.textAlign = 'right';
+      ctx.fillText('100%', cx + radius + 5, cy + 5);
     }}
     
     drawREI('reiChart');
     drawRSIGHS('rsiGhsChart');
+    if (document.getElementById('metaGauge')) {{
+      drawMetaGauge('metaGauge', {mpi:.1f}, '{mpi_color}');
+    }}
   }})();
   </script>
 </body>
@@ -362,7 +458,8 @@ def update_audit_summary(
     last_rei: float,
     classification: str,
     current_rsi: float,
-    current_ghs: float
+    current_ghs: float,
+    meta_performance: Dict[str, Any] = None
 ) -> None:
     """Update audit summary with reflex feedback block (idempotent)."""
     try:
@@ -372,10 +469,24 @@ def update_audit_summary(
         content = "# Audit Summary\n\n"
     
     emoji = get_classification_emoji(classification)
+    
+    # Include MPI status if available
+    mpi_info = ""
+    if meta_performance:
+        mpi_val = meta_performance.get("mpi", 0.0)
+        mpi_status = meta_performance.get("classification", "Unknown")
+        if mpi_val >= 80:
+            mpi_emoji = "🟢"
+        elif mpi_val >= 60:
+            mpi_emoji = "🟡"
+        else:
+            mpi_emoji = "🔴"
+        mpi_info = f" | MPI {mpi_val:.1f}% {mpi_emoji} {mpi_status}"
+    
     block = (
         f"{AUDIT_MARKER_BEGIN}\n"
         f"Reflex Feedback: last REI {last_rei:+.2f} {emoji} {classification}, "
-        f"RSI→{current_rsi:.1f}%, GHS→{current_ghs:.1f}%.\n"
+        f"RSI→{current_rsi:.1f}%, GHS→{current_ghs:.1f}%{mpi_info}.\n"
         f"{AUDIT_MARKER_END}"
     )
     
@@ -433,11 +544,19 @@ def main(argv: list[str] | None = None) -> int:
         default="reports/audit_summary.md",
         help="Path to audit summary markdown"
     )
+    parser.add_argument(
+        "--meta-performance",
+        default="reports/reflex_meta_performance.json",
+        help="Path to reflex meta-performance report"
+    )
     
     args = parser.parse_args(argv)
     
     # Load current evaluation
     current_eval = load_json(args.reflex, {})
+    
+    # Load meta-performance
+    meta_perf = load_json(args.meta_performance, {})
     
     # Load RSI history
     rsi_hist_data = load_json(args.history, {})
@@ -486,7 +605,7 @@ def main(argv: list[str] | None = None) -> int:
         })
     
     # Build dashboard
-    html = build_dashboard_html(rei_history, rsi_series, ghs_series, current_eval)
+    html = build_dashboard_html(rei_history, rsi_series, ghs_series, current_eval, meta_perf)
     
     # Write dashboard
     os.makedirs(os.path.dirname(args.output), exist_ok=True)
@@ -503,7 +622,8 @@ def main(argv: list[str] | None = None) -> int:
         last_rei,
         classification,
         current_rsi,
-        current_ghs
+        current_ghs,
+        meta_perf
     )
     
     # Output summary
