@@ -1,0 +1,28 @@
+{
+  "timestamp": "2025-11-10T21:37:08.708802",
+  "entries_count": 1,
+  "latest_archetype": "Unknown Archetype",
+  "latest_confidence": 0,
+  "transition_counts": {
+    "Unknown Archetype": {
+      "Unknown Archetype": 0
+    }
+  },
+  "transition_probabilities_pct": {
+    "Unknown Archetype": {
+      "Unknown Archetype": 0.0
+    }
+  },
+  "most_frequent_transitions": [],
+  "dwell_time_avg_cycles": {
+    "Unknown Archetype": 1.0
+  },
+  "last_transition": {
+    "from": "Unknown Archetype",
+    "to": "Unknown Archetype",
+    "confidence": 0,
+    "dwell_cycles": 1,
+    "timestamp": "2025-11-10T21:37:08.708802",
+    "event": false
+  }
+}

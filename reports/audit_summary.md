@@ -96,3 +96,8 @@ This file tracks audit history and governance adjustments.
 <!-- GOVERNANCE_ARCHETYPE:BEGIN -->
 Archetype detected: Unknown Archetype (confidence 0%).
 <!-- GOVERNANCE_ARCHETYPE:END -->
+
+
+<!-- ARCHETYPE_TRANSITIONS:BEGIN -->
+Latest transition: Unknown Archetype → Unknown Archetype (confidence 0%, dwell 1 cycles).
+<!-- ARCHETYPE_TRANSITIONS:END -->
