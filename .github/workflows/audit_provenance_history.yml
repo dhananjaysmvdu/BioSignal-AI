@@ -958,8 +958,45 @@ jobs:
         run: |
           echo "🪞 Governance meta-reflection generated — mode: ${{ steps.reflect.outputs.mode }}, trend: ${{ steps.reflect.outputs.trend }}, coherence: ${{ steps.reflect.outputs.coherence }}%." >> $GITHUB_STEP_SUMMARY
 
-  adaptive-learning-rate:
+  governance-archetype-classifier:
     needs: [governance-meta-reflection]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+          cache-dependency-path: requirements.lock
+      - name: Classify governance archetype
+        id: arche
+        run: |
+          python scripts/workflow_utils/governance_archetype_classifier.py > archetype_out.json
+          NAME=$(jq -r '.archetype' archetype_out.json || echo 'Unknown Archetype')
+          CONF=$(jq -r '.confidence' archetype_out.json || echo 0)
+          echo "name=${NAME}" >> $GITHUB_OUTPUT
+          echo "confidence=${CONF}" >> $GITHUB_OUTPUT
+      - name: Commit archetype classification
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add reports/governance_archetype.json reports/audit_summary.md
+          if git diff --cached --quiet; then
+            echo "No archetype classification changes to commit."
+          else
+            git commit -m "ci: classify current governance archetype and record semantic state"
+            git push
+          fi
+      - name: Append archetype summary
+        run: |
+          echo "🏷️ Governance archetype classified — ${{ steps.arche.outputs.name }} (confidence ${{ steps.arche.outputs.confidence }}%)." >> $GITHUB_STEP_SUMMARY
+
+  adaptive-learning-rate:
+    needs: [governance-archetype-classifier]
     runs-on: ubuntu-latest
     permissions:
       contents: write

@@ -91,3 +91,8 @@ This file tracks audit history and governance adjustments.
 - Updated: 2025-11-10T21:27:47.298189
 - Full report: [governance_meta_reflection.md](governance_meta_reflection.md)
 <!-- GOVERNANCE_REFLECTION:END -->
+
+
+<!-- GOVERNANCE_ARCHETYPE:BEGIN -->
+Archetype detected: Unknown Archetype (confidence 0%).
+<!-- GOVERNANCE_ARCHETYPE:END -->

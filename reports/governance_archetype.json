@@ -1,0 +1,30 @@
+{
+  "timestamp": "2025-11-10T21:32:06.520018",
+  "archetype": "Unknown Archetype",
+  "confidence": 0,
+  "probabilities": {
+    "Trust Expansion Phase": 33.3,
+    "Drift Correction Phase": 33.3,
+    "Equilibrium Plateau": 33.3,
+    "Feedback Shock": 0.0,
+    "Meta-Stability Decline": 0.0
+  },
+  "supporting_evidence": [],
+  "signals": {
+    "trust_weight_factor": 0.5,
+    "human_feedback_weight": 0.0,
+    "audit_frequency_days": 7.0,
+    "stabilization_mode": "monitor",
+    "coherence_index": 100.0,
+    "coherence_status": "Stable",
+    "ghs_trend": "insufficient_data",
+    "msi_trend": "insufficient_data",
+    "avg_health": 0.0,
+    "avg_stability": 0.0,
+    "var_stability": 0.0,
+    "current_ghs": 0.0,
+    "current_msi": 0.0,
+    "overall_trend": "stable",
+    "cycles_analyzed": 1
+  }
+}
