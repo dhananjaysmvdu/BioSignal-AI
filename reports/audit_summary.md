@@ -116,3 +116,7 @@ Regime Stability: 100.0% — Regime stable (entropy 0.0, dwell σ² 0.0, recurre
 <!-- REGIME_ALERT:BEGIN -->
 ✅ Regime Stable: RSI 100% — No alert triggered.
 <!-- REGIME_ALERT:END -->
+
+<!-- REGIME_POLICY:BEGIN -->
+🧭 Regime policy applied — mode: Normal Operation, learning_rate_factor: 1.2, audit_freq: 7d.
+<!-- REGIME_POLICY:END -->

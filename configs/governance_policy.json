@@ -3,14 +3,21 @@
   "trust_correlation_last_update": "2025-11-10T21:01:22.874621",
   "trust_correlation_avg": 0.0,
   "trust_correlation_confidence": 0.0,
-  "learning_rate_factor": 1.0,
+  "learning_rate_factor": 1.2,
   "audit_frequency": "7d",
-  "stabilization_mode": "monitor",
+  "stabilization_mode": "adaptive",
   "last_stabilization": "2025-11-10T21:12:09.694077",
   "stabilization_context": {
     "trend": "neutral",
     "confidence": 0.35,
     "trend_score": 0.0,
     "predicted_cycles": 999
+  },
+  "audit_frequency_days": 7,
+  "policy_action": {
+    "mode": "Normal Operation",
+    "rsi": 100.0,
+    "trend": "stable",
+    "timestamp": "2025-11-10T22:36:22.242107+00:00"
   }
 }
