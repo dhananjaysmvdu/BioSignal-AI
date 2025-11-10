@@ -1073,8 +1073,44 @@ jobs:
         run: |
           echo "🧭 Archetype dynamics dashboard updated — transition matrix and dwell timeline refreshed (transitions: ${{ steps.dynamics.outputs.transitions }}, dominant: ${{ steps.dynamics.outputs.dominant_path }} p=${{ steps.dynamics.outputs.p }})." >> $GITHUB_STEP_SUMMARY
 
-  adaptive-learning-rate:
+  governance-regime-stability-analyzer:
     needs: [generate-archetype-dynamics-dashboard]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+          cache-dependency-path: requirements.lock
+      - name: Analyze regime stability
+        id: regime
+        run: |
+          python scripts/workflow_utils/governance_regime_stability_analyzer.py > regime_out.json
+          STAB=$(jq -r '.stability_index' regime_out.json || echo 0)
+          STATUS=$(jq -r '.status' regime_out.json || echo 'unknown')
+          echo "stability=${STAB}" >> $GITHUB_OUTPUT
+          echo "status=${STATUS}" >> $GITHUB_OUTPUT
+      - name: Commit regime stability artifacts
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add reports/regime_stability.json reports/audit_summary.md
+          if git diff --cached --quiet; then
+            echo "No regime stability changes to commit."
+          else
+            git commit -m "ci: analyze governance regime stability and volatility"
+            git push
+          fi
+      - name: Append regime stability summary
+        run: |
+          echo "🌐 Regime stability evaluated — status ${{ steps.regime.outputs.status }} (index ${{ steps.regime.outputs.stability }}%)." >> $GITHUB_STEP_SUMMARY
+  adaptive-learning-rate:
+    needs: [governance-regime-stability-analyzer]
     runs-on: ubuntu-latest
     permissions:
       contents: write
