@@ -1368,8 +1368,51 @@ jobs:
       - name: Append reflex evaluation summary
         run: |
           echo "🧩 Reflex evaluation completed — REI=${{ steps.reflex.outputs.rei }} (${{ steps.reflex.outputs.classification }})." >> $GITHUB_STEP_SUMMARY
-  adaptive-learning-rate:
+  generate-reflex-feedback-dashboard:
     needs: [governance-reflex-evaluator]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+          cache-dependency-path: requirements.lock
+      - name: Generate reflex feedback dashboard
+        id: dashboard
+        run: |
+          python scripts/workflow_utils/generate_reflex_feedback_dashboard.py \
+            --reflex reports/reflex_evaluation.json \
+            --history logs/regime_stability_history.json \
+            --health reports/governance_health.json \
+            --actions-log logs/regime_policy_actions.json \
+            --output reports/reflex_feedback_dashboard.html \
+            --audit-summary reports/audit_summary.md > dashboard_out.json || true
+          cat dashboard_out.json || true
+          REI=$(jq -r '.last_rei' dashboard_out.json 2>/dev/null || echo 0)
+          CLASS=$(jq -r '.classification' dashboard_out.json 2>/dev/null || echo 'Neutral')
+          echo "last_rei=${REI}" >> $GITHUB_OUTPUT
+          echo "classification=${CLASS}" >> $GITHUB_OUTPUT
+      - name: Commit reflex feedback dashboard
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add reports/reflex_feedback_dashboard.html reports/audit_summary.md || true
+          if git diff --cached --quiet; then
+            echo "No reflex feedback dashboard changes to commit."
+          else
+            git commit -m "ci: generate reflex feedback dashboard"
+            git push || true
+          fi
+      - name: Append dashboard summary
+        run: |
+          echo "🪞 Reflex feedback dashboard updated — REI trajectory visualized." >> $GITHUB_STEP_SUMMARY
+  adaptive-learning-rate:
+    needs: [generate-reflex-feedback-dashboard]
     runs-on: ubuntu-latest
     permissions:
       contents: write

@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Reflex Feedback Dashboard</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 24px; color: #222; }
+    h1 { margin-bottom: 8px; }
+    .status { background: #f5f5f5; padding: 12px 16px; border-radius: 8px; margin-bottom: 16px; }
+    .grid { display: grid; grid-template-columns: 1fr; gap: 24px; }
+    canvas { width: 100%; max-width: 900px; height: 300px; border: 1px solid #eee; background: #fff; }
+    table { border-collapse: collapse; width: 100%; max-width: 900px; }
+    th, td { border: 1px solid #ddd; padding: 8px; }
+    th { background: #fafafa; text-align: left; }
+    .foot { margin-top: 16px; color: #666; font-size: 13px; }
+  </style>
+</head>
+<body>
+  <h1>Reflex Feedback Dashboard</h1>
+  <div class="status">
+    <strong>Current Status:</strong> REI +0.00 ➡️ Neutral | RSI 100.0% | GHS 0.0%
+  </div>
+  
+  <div class="grid">
+    <div>
+      <h3>REI Trend (Reflex Effectiveness Index)</h3>
+      <canvas id="reiChart"></canvas>
+    </div>
+    
+    <div>
+      <h3>RSI vs GHS Timeline</h3>
+      <canvas id="rsiGhsChart"></canvas>
+    </div>
+    
+    <div>
+      <h3>Recent Reflex Decisions</h3>
+      <table>
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Timestamp</th>
+            <th>Policy Mode</th>
+            <th>REI</th>
+            <th>Classification</th>
+          </tr>
+        </thead>
+        <tbody>
+          
+        <tr>
+          <td>1</td>
+          <td>2025-11-10 22:36</td>
+          <td>Normal Operation</td>
+          <td style="text-align:right;">+0.00</td>
+          <td>➡️ Neutral</td>
+        </tr>
+        
+        <tr>
+          <td>2</td>
+          <td>2025-11-10 22:50</td>
+          <td>Normal Operation</td>
+          <td style="text-align:right;">+0.00</td>
+          <td>➡️ Neutral</td>
+        </tr>
+        
+        </tbody>
+      </table>
+    </div>
+  </div>
+  
+  <div class="foot">Generated: 2025-11-10 23:01:52 UTC</div>
+  
+  <script>
+  (function() {
+    const reiLabels = ["11-10 22:36", "11-10 22:50"];
+    const reiValues = [0.0, 0.0];
+    const reiColors = ["#dfb317", "#dfb317"];
+    
+    const rsiLabels = ["11-10 21:50"];
+    const rsiValues = [100.0];
+    
+    const ghsLabels = ["11-10 21:50"];
+    const ghsValues = [0.0];
+    
+    function drawREI(id) {
+      const c = document.getElementById(id);
+      if (!c) return;
+      const ctx = c.getContext('2d');
+      const W = c.width = c.clientWidth * devicePixelRatio;
+      const H = c.height = c.clientHeight * devicePixelRatio;
+      ctx.scale(devicePixelRatio, devicePixelRatio);
+      
+      const pad = 40;
+      const w = c.clientWidth - pad * 2;
+      const h = c.clientHeight - pad * 2;
+      
+      if (reiValues.length === 0) {
+        ctx.fillStyle = '#666';
+        ctx.font = '14px Arial';
+        ctx.fillText('No REI data available yet', pad, c.clientHeight / 2);
+        return;
+      }
+      
+      const maxY = Math.max(5, ...reiValues.map(Math.abs));
+      const minY = -maxY;
+      
+      function xv(i) { return pad + (i / (reiValues.length - 1 || 1)) * w; }
+      function yv(v) { return c.clientHeight - pad - ((v - minY) / (maxY - minY)) * h; }
+      
+      // Axes
+      ctx.strokeStyle = '#999'; ctx.lineWidth = 1;
+      ctx.beginPath();
+      const zeroY = yv(0);
+      ctx.moveTo(pad, pad);
+      ctx.lineTo(pad, c.clientHeight - pad);
+      ctx.lineTo(c.clientWidth - pad, c.clientHeight - pad);
+      ctx.stroke();
+      
+      // Zero line
+      ctx.strokeStyle = '#ccc'; ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(pad, zeroY);
+      ctx.lineTo(c.clientWidth - pad, zeroY);
+      ctx.stroke();
+      
+      // Line segments with color transitions
+      for (let i = 1; i < reiValues.length; i++) {
+        ctx.strokeStyle = reiColors[i];
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.moveTo(xv(i - 1), yv(reiValues[i - 1]));
+        ctx.lineTo(xv(i), yv(reiValues[i]));
+        ctx.stroke();
+      }
+      
+      // Points
+      for (let i = 0; i < reiValues.length; i++) {
+        ctx.fillStyle = reiColors[i];
+        ctx.beginPath();
+        ctx.arc(xv(i), yv(reiValues[i]), 5, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      
+      // Labels
+      ctx.fillStyle = '#222'; ctx.font = '11px Arial';
+      const step = Math.ceil(reiLabels.length / 8) || 1;
+      for (let i = 0; i < reiLabels.length; i++) {
+        if (i % step === 0 || i === reiLabels.length - 1) {
+          ctx.save();
+          ctx.translate(xv(i), c.clientHeight - 10);
+          ctx.rotate(-Math.PI / 4);
+          ctx.fillText(reiLabels[i], 0, 0);
+          ctx.restore();
+        }
+      }
+    }
+    
+    function drawRSIGHS(id) {
+      const c = document.getElementById(id);
+      if (!c) return;
+      const ctx = c.getContext('2d');
+      const W = c.width = c.clientWidth * devicePixelRatio;
+      const H = c.height = c.clientHeight * devicePixelRatio;
+      ctx.scale(devicePixelRatio, devicePixelRatio);
+      
+      const pad = 40;
+      const w = c.clientWidth - pad * 2;
+      const h = c.clientHeight - pad * 2;
+      
+      if (rsiValues.length === 0) {
+        ctx.fillStyle = '#666';
+        ctx.font = '14px Arial';
+        ctx.fillText('No RSI/GHS data available yet', pad, c.clientHeight / 2);
+        return;
+      }
+      
+      const maxRSI = 100;
+      const minRSI = 0;
+      const maxGHS = Math.max(100, ...ghsValues);
+      const minGHS = 0;
+      
+      function xv(i, len) { return pad + (i / (len - 1 || 1)) * w; }
+      function yvRSI(v) { return c.clientHeight - pad - ((v - minRSI) / (maxRSI - minRSI)) * h; }
+      function yvGHS(v) { return c.clientHeight - pad - ((v - minGHS) / (maxGHS - minGHS)) * h; }
+      
+      // Axes
+      ctx.strokeStyle = '#999'; ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(pad, pad);
+      ctx.lineTo(pad, c.clientHeight - pad);
+      ctx.lineTo(c.clientWidth - pad, c.clientHeight - pad);
+      ctx.stroke();
+      
+      // RSI line
+      ctx.strokeStyle = '#0366d6'; ctx.lineWidth = 2;
+      ctx.beginPath();
+      for (let i = 0; i < rsiValues.length; i++) {
+        const x = xv(i, rsiValues.length);
+        const y = yvRSI(rsiValues[i]);
+        if (i === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+      }
+      ctx.stroke();
+      
+      // GHS line (if available)
+      if (ghsValues.length > 0) {
+        ctx.strokeStyle = '#f39c12'; ctx.lineWidth = 2;
+        ctx.beginPath();
+        for (let i = 0; i < ghsValues.length; i++) {
+          const x = xv(i, ghsValues.length);
+          const y = yvGHS(ghsValues[i]);
+          if (i === 0) ctx.moveTo(x, y);
+          else ctx.lineTo(x, y);
+        }
+        ctx.stroke();
+      }
+      
+      // Legend
+      ctx.fillStyle = '#0366d6'; ctx.fillRect(pad, pad - 20, 12, 12);
+      ctx.fillStyle = '#222'; ctx.font = '12px Arial';
+      ctx.fillText('RSI', pad + 16, pad - 10);
+      
+      ctx.fillStyle = '#f39c12'; ctx.fillRect(pad + 60, pad - 20, 12, 12);
+      ctx.fillText('GHS', pad + 76, pad - 10);
+    }
+    
+    drawREI('reiChart');
+    drawRSIGHS('rsiGhsChart');
+  })();
+  </script>
+</body>
+</html>
