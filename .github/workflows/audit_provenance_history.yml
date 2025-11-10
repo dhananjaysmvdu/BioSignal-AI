@@ -919,8 +919,47 @@ jobs:
         run: |
           echo "🧠 Governance memory consolidated — analyzed ${{ steps.memory.outputs.cycles }} cycles, trend: ${{ steps.memory.outputs.trend }}, conflicts: ${{ steps.memory.outputs.conflicts }}." >> $GITHUB_STEP_SUMMARY
 
-  adaptive-learning-rate:
+  governance-meta-reflection:
     needs: [governance-memory-consolidator]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+          cache-dependency-path: requirements.lock
+      - name: Generate meta-reflection report
+        id: reflect
+        run: |
+          python scripts/workflow_utils/governance_meta_reflection.py > reflection_out.json
+          MODE=$(jq -r '.dominant_mode' reflection_out.json || echo 'monitor')
+          TREND=$(jq -r '.overall_trend' reflection_out.json || echo 'stable')
+          COHERENCE=$(jq -r '.coherence_index' reflection_out.json || echo 100)
+          echo "mode=${MODE}" >> $GITHUB_OUTPUT
+          echo "trend=${TREND}" >> $GITHUB_OUTPUT
+          echo "coherence=${COHERENCE}" >> $GITHUB_OUTPUT
+      - name: Commit meta-reflection artifacts
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add reports/governance_meta_reflection.md reports/audit_summary.md
+          if git diff --cached --quiet; then
+            echo "No meta-reflection changes to commit."
+          else
+            git commit -m "ci: generate meta-reflection report on governance evolution"
+            git push
+          fi
+      - name: Append meta-reflection summary
+        run: |
+          echo "🪞 Governance meta-reflection generated — mode: ${{ steps.reflect.outputs.mode }}, trend: ${{ steps.reflect.outputs.trend }}, coherence: ${{ steps.reflect.outputs.coherence }}%." >> $GITHUB_STEP_SUMMARY
+
+  adaptive-learning-rate:
+    needs: [governance-meta-reflection]
     runs-on: ubuntu-latest
     permissions:
       contents: write
