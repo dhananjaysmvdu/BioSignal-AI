@@ -54,6 +54,8 @@ jobs:
           start=$(date +%s)
           # Preflight: run focused workflow utils tests first
           python -m pytest -q tests/test_workflow_utils.py || exit 1
+          # Quick regime alerts logic sanity
+          python -m pytest -q tests/test_regime_alerts.py || exit 1
           # Tox environment parity check
           pip install tox || exit 1
           tox -e py311 || exit 1

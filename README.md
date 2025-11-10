@@ -15,7 +15,7 @@ author: "Mrityunjay Dhananjay"
 <!-- COVERAGE_BADGE:END -->
 
 <!-- REGIME_ALERT_BADGE:BEGIN -->
-Regime Stability: Stable (RSI 100%)
+Regime Stability: Stable (RSI 100%) — last update pending next scheduled governance audit.
 <!-- REGIME_ALERT_BADGE:END -->
 
 *Multimodal dermatology research toolkit for pairing dermoscopy imagery with contextual patient data.*
