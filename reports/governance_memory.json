@@ -1,0 +1,31 @@
+{
+  "timestamp": "2025-11-10T21:19:03.221411",
+  "summary_period": "Last 1 governance cycles",
+  "cycles_analyzed": 1,
+  "metrics": {
+    "avg_health": 0.0,
+    "var_health": 0.0,
+    "avg_stability": 0.0,
+    "var_stability": 0.0,
+    "avg_coherence": 100.0
+  },
+  "mode_distribution": {
+    "monitor": 100.0
+  },
+  "dominant_mode": "monitor",
+  "recurrent_conflicts": [
+    "Persistent low stability: 1/1 cycles below 50% MSI"
+  ],
+  "trends": {
+    "ghs": "insufficient_data",
+    "msi": "insufficient_data",
+    "overall": "stable"
+  },
+  "recommendations": [],
+  "data_quality": {
+    "ghs_samples": 1,
+    "msi_samples": 1,
+    "coherence_samples": 1,
+    "decision_records": 1
+  }
+}
