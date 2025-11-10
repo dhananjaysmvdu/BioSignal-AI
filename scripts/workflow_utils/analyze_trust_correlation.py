@@ -56,9 +56,15 @@ def main():
     msi = load_json('reports/meta_stability.json')
     ghs_hist = load_json('reports/governance_health_history.json')
     # Parse history
+    if versions is None:
+        versions = {}
     history = versions if isinstance(versions, list) else versions.get('history', [])
     ghs_map = {}
     msi_map = {}
+    if ghs is None:
+        ghs = {}
+    if msi is None:
+        msi = {}
     if ghs_hist and isinstance(ghs_hist, list):
         for e in ghs_hist:
             ts = parse_ts(e.get('timestamp',''))
