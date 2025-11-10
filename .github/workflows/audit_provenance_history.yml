@@ -1368,8 +1368,57 @@ jobs:
       - name: Append reflex evaluation summary
         run: |
           echo "🧩 Reflex evaluation completed — REI=${{ steps.reflex.outputs.rei }} (${{ steps.reflex.outputs.classification }})." >> $GITHUB_STEP_SUMMARY
-  generate-reflex-feedback-dashboard:
+
+  governance-reflex-learning-model:
     needs: [governance-reflex-evaluator]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+        - name: Checkout
+          uses: actions/checkout@v4
+        - name: Set up Python 3.11
+          uses: actions/setup-python@v5
+          with:
+            python-version: '3.11'
+            cache: 'pip'
+            cache-dependency-path: requirements.lock
+        - name: Install scikit-learn
+          run: |
+            pip install scikit-learn numpy || echo "⚠️  scikit-learn install failed, will use fallback"
+        - name: Train reflex learning model
+          id: learning
+          run: |
+            python scripts/workflow_utils/governance_reflex_learning_model.py \
+              --actions-log logs/regime_policy_actions.json \
+              --reflex reports/reflex_evaluation.json \
+              --history logs/regime_stability_history.json \
+              --health reports/governance_health.json \
+              --output reports/reflex_learning_model.json \
+              --history-output logs/reflex_model_history.json \
+              --audit-summary reports/audit_summary.md > learning_out.json || true
+            cat learning_out.json || true
+            R2=$(jq -r '.r2' learning_out.json 2>/dev/null || echo 0)
+            SAMPLES=$(jq -r '.n_samples' learning_out.json 2>/dev/null || echo 0)
+            echo "r2=${R2}" >> $GITHUB_OUTPUT
+            echo "samples=${SAMPLES}" >> $GITHUB_OUTPUT
+        - name: Commit learning model
+          run: |
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add reports/reflex_learning_model.json reports/audit_summary.md || true
+            if git diff --cached --quiet; then
+              echo "No learning model changes to commit."
+            else
+              git commit -m "ci: train governance reflex learning model for adaptive prediction"
+              git push || true
+            fi
+        - name: Append learning model summary
+          run: |
+            echo "🧠 Reflex learning model updated — R²=${{ steps.learning.outputs.r2 }}, samples=${{ steps.learning.outputs.samples }}." >> $GITHUB_STEP_SUMMARY
+
+  generate-reflex-feedback-dashboard:
+    needs: [governance-reflex-learning-model]
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -1411,8 +1460,52 @@ jobs:
       - name: Append dashboard summary
         run: |
           echo "🪞 Reflex feedback dashboard updated — REI trajectory visualized." >> $GITHUB_STEP_SUMMARY
-  adaptive-learning-rate:
+
+  generate-reflex-predictive-dashboard:
     needs: [generate-reflex-feedback-dashboard]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+        - name: Checkout
+          uses: actions/checkout@v4
+        - name: Set up Python 3.11
+          uses: actions/setup-python@v5
+          with:
+            python-version: '3.11'
+            cache: 'pip'
+            cache-dependency-path: requirements.lock
+        - name: Generate predictive performance dashboard
+          id: predictive
+          run: |
+            python scripts/workflow_utils/generate_reflex_predictive_dashboard.py \
+              --actions-log logs/regime_policy_actions.json \
+              --model reports/reflex_learning_model.json \
+              --history logs/regime_stability_history.json \
+              --output reports/reflex_predictive_dashboard.html \
+              --audit-summary reports/audit_summary.md > predictive_out.json || true
+            cat predictive_out.json || true
+            R2=$(jq -r '.r2' predictive_out.json 2>/dev/null || echo 0)
+            MEAN_ERR=$(jq -r '.mean_error' predictive_out.json 2>/dev/null || echo 0)
+            echo "r2=${R2}" >> $GITHUB_OUTPUT
+            echo "mean_error=${MEAN_ERR}" >> $GITHUB_OUTPUT
+        - name: Commit predictive dashboard
+          run: |
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add reports/reflex_predictive_dashboard.html reports/audit_summary.md || true
+            if git diff --cached --quiet; then
+              echo "No predictive dashboard changes to commit."
+            else
+              git commit -m "ci: generate reflex predictive performance dashboard"
+              git push || true
+            fi
+        - name: Append predictive dashboard summary
+          run: |
+            echo "📊 Reflex prediction dashboard generated — R²=${{ steps.predictive.outputs.r2 }}, mean error=${{ steps.predictive.outputs.mean_error }}." >> $GITHUB_STEP_SUMMARY
+
+  adaptive-learning-rate:
+    needs: [generate-reflex-predictive-dashboard]
     runs-on: ubuntu-latest
     permissions:
       contents: write

@@ -1,0 +1,18 @@
+{
+  "method": "WeightedAverage",
+  "coefficients": {
+    "rsi_prev": 0.0,
+    "rsi_delta": 0.0,
+    "ghs_prev": 0.0,
+    "learning_rate_factor": 0.0,
+    "audit_freq": 0.0,
+    "policy_mode": 0.0
+  },
+  "intercept": 0.0,
+  "r2": 0.0,
+  "mae": 0.0,
+  "n_samples": 1,
+  "last_train_time": "2025-11-10T23:22:44.207284Z",
+  "sklearn_available": true,
+  "last_predicted_rei": 0.0
+}

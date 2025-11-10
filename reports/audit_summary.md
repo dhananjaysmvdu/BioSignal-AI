@@ -128,3 +128,11 @@ Reflex Evaluation: Mode Normal Operation, ΔRSI=+0.0, ΔGHS=+0.0 → ➡️ Neut
 <!-- REFLEX_FEEDBACK:BEGIN -->
 Reflex Feedback: last REI +0.00 ➡️ Neutral, RSI→100.0%, GHS→0.0%.
 <!-- REFLEX_FEEDBACK:END -->
+
+<!-- REFLEX_LEARNING:BEGIN -->
+Reflex Learning Model: insufficient data (n=1), using baseline prediction.
+<!-- REFLEX_LEARNING:END -->
+
+<!-- REFLEX_PREDICTION:BEGIN -->
+Reflex Prediction: last actual REI=+0.00, predicted=+0.00, error=0.00.
+<!-- REFLEX_PREDICTION:END -->

@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Reflex Predictive Performance</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      margin: 20px;
+      background: #f5f5f5;
+    }
+    h1 {
+      color: #2c3e50;
+      border-bottom: 3px solid #3498db;
+      padding-bottom: 10px;
+    }
+    .status {
+      background: #ecf0f1;
+      padding: 15px;
+      border-radius: 8px;
+      margin: 20px 0;
+      border-left: 4px solid #3498db;
+    }
+    .panel {
+      background: white;
+      padding: 20px;
+      margin: 20px 0;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    h3 {
+      color: #34495e;
+      margin-top: 0;
+    }
+    canvas {
+      max-width: 100%;
+      height: 400px;
+    }
+    .metrics {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 15px;
+      margin: 20px 0;
+    }
+    .metric {
+      background: #3498db;
+      color: white;
+      padding: 15px;
+      border-radius: 8px;
+      text-align: center;
+    }
+    .metric-value {
+      font-size: 24px;
+      font-weight: bold;
+    }
+    .metric-label {
+      font-size: 14px;
+      opacity: 0.9;
+    }
+  </style>
+</head>
+<body>
+  <h1>🔮 Reflex Predictive Performance Dashboard</h1>
+  
+  <div class="status">
+    <strong>Current Status:</strong> 
+    Actual REI=+0.00, Predicted=+0.00, Error=0.00
+  </div>
+  
+  <div class="metrics">
+    <div class="metric">
+      <div class="metric-value">0.000</div>
+      <div class="metric-label">R² Score</div>
+    </div>
+    <div class="metric">
+      <div class="metric-value">0.000</div>
+      <div class="metric-label">Mean Abs Error</div>
+    </div>
+    <div class="metric">
+      <div class="metric-value">1</div>
+      <div class="metric-label">Training Samples</div>
+    </div>
+    <div class="metric">
+      <div class="metric-value">WeightedAverage</div>
+      <div class="metric-label">Model Type</div>
+    </div>
+  </div>
+  
+  <div class="panel">
+    <h3>📊 Panel 1: Predicted vs Actual REI (Scatter)</h3>
+    <canvas id="scatterChart"></canvas>
+  </div>
+  
+  <div class="panel">
+    <h3>📈 Panel 2: Temporal Alignment (Predicted + Actual Trends)</h3>
+    <canvas id="temporalChart"></canvas>
+  </div>
+  
+  <div class="panel">
+    <h3>📐 Panel 3: Model Coefficients (Feature Importance)</h3>
+    <canvas id="coefChart"></canvas>
+  </div>
+  
+  <script>
+  (function() {
+    const scatterData = [{"predicted": 0.0, "actual": 0.0, "mode": "Normal Operation"}];
+    const temporalData = [{"timestamp": "2025-11-10T22:36:22.242920+00:00", "predicted": 0.0, "actual": 0.0}];
+    const coefData = [{"name": "rsi_prev", "value": 0.0}, {"name": "rsi_delta", "value": 0.0}, {"name": "ghs_prev", "value": 0.0}, {"name": "learning_rate_factor", "value": 0.0}, {"name": "audit_freq", "value": 0.0}, {"name": "policy_mode", "value": 0.0}];
+    
+    // Panel 1: Scatter Plot
+    function drawScatter(canvasId) {
+      const canvas = document.getElementById(canvasId);
+      const ctx = canvas.getContext('2d');
+      const width = canvas.width = canvas.offsetWidth;
+      const height = canvas.height = 400;
+      
+      ctx.clearRect(0, 0, width, height);
+      
+      if (scatterData.length === 0) {
+        ctx.fillStyle = '#7f8c8d';
+        ctx.font = '16px sans-serif';
+        ctx.fillText('No data available', width/2 - 60, height/2);
+        return;
+      }
+      
+      // Calculate bounds
+      const allValues = scatterData.flatMap(d => [d.predicted, d.actual]);
+      const minVal = Math.min(...allValues, -5);
+      const maxVal = Math.max(...allValues, 5);
+      const range = maxVal - minVal;
+      
+      const padding = 60;
+      const plotWidth = width - 2 * padding;
+      const plotHeight = height - 2 * padding;
+      
+      // Scale functions
+      const scaleX = (val) => padding + ((val - minVal) / range) * plotWidth;
+      const scaleY = (val) => height - padding - ((val - minVal) / range) * plotHeight;
+      
+      // Draw axes
+      ctx.strokeStyle = '#bdc3c7';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(padding, height - padding);
+      ctx.lineTo(width - padding, height - padding);
+      ctx.moveTo(padding, padding);
+      ctx.lineTo(padding, height - padding);
+      ctx.stroke();
+      
+      // Draw diagonal (perfect prediction line)
+      ctx.strokeStyle = '#e74c3c';
+      ctx.lineWidth = 2;
+      ctx.setLineDash([5, 5]);
+      ctx.beginPath();
+      ctx.moveTo(scaleX(minVal), scaleY(minVal));
+      ctx.lineTo(scaleX(maxVal), scaleY(maxVal));
+      ctx.stroke();
+      ctx.setLineDash([]);
+      
+      // Draw points
+      scatterData.forEach(d => {
+        const x = scaleX(d.predicted);
+        const y = scaleY(d.actual);
+        
+        // Color by mode
+        if (d.mode === "Critical Intervention") {
+          ctx.fillStyle = '#e74c3c';
+        } else if (d.mode === "Caution Mode") {
+          ctx.fillStyle = '#f39c12';
+        } else {
+          ctx.fillStyle = '#27ae60';
+        }
+        
+        ctx.beginPath();
+        ctx.arc(x, y, 5, 0, 2 * Math.PI);
+        ctx.fill();
+      });
+      
+      // Labels
+      ctx.fillStyle = '#2c3e50';
+      ctx.font = '14px sans-serif';
+      ctx.fillText('Predicted REI →', width/2 - 50, height - 20);
+      ctx.save();
+      ctx.translate(20, height/2 + 50);
+      ctx.rotate(-Math.PI/2);
+      ctx.fillText('Actual REI →', 0, 0);
+      ctx.restore();
+    }
+    
+    // Panel 2: Temporal Chart
+    function drawTemporal(canvasId) {
+      const canvas = document.getElementById(canvasId);
+      const ctx = canvas.getContext('2d');
+      const width = canvas.width = canvas.offsetWidth;
+      const height = canvas.height = 400;
+      
+      ctx.clearRect(0, 0, width, height);
+      
+      if (temporalData.length === 0) {
+        ctx.fillStyle = '#7f8c8d';
+        ctx.font = '16px sans-serif';
+        ctx.fillText('No data available', width/2 - 60, height/2);
+        return;
+      }
+      
+      // Calculate bounds
+      const allREI = temporalData.flatMap(d => [d.predicted, d.actual]);
+      const minREI = Math.min(...allREI, -5);
+      const maxREI = Math.max(...allREI, 5);
+      const rangeREI = maxREI - minREI;
+      
+      const padding = 60;
+      const plotWidth = width - 2 * padding;
+      const plotHeight = height - 2 * padding;
+      
+      // Scale functions
+      const scaleX = (index) => padding + (index / (temporalData.length - 1)) * plotWidth;
+      const scaleY = (val) => height - padding - ((val - minREI) / rangeREI) * plotHeight;
+      
+      // Draw axes
+      ctx.strokeStyle = '#bdc3c7';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(padding, height - padding);
+      ctx.lineTo(width - padding, height - padding);
+      ctx.moveTo(padding, padding);
+      ctx.lineTo(padding, height - padding);
+      ctx.stroke();
+      
+      // Draw zero line
+      if (minREI < 0 && maxREI > 0) {
+        const y0 = scaleY(0);
+        ctx.strokeStyle = '#95a5a6';
+        ctx.setLineDash([3, 3]);
+        ctx.beginPath();
+        ctx.moveTo(padding, y0);
+        ctx.lineTo(width - padding, y0);
+        ctx.stroke();
+        ctx.setLineDash([]);
+      }
+      
+      // Draw predicted line
+      ctx.strokeStyle = '#3498db';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      temporalData.forEach((d, i) => {
+        const x = scaleX(i);
+        const y = scaleY(d.predicted);
+        if (i === 0) {
+          ctx.moveTo(x, y);
+        } else {
+          ctx.lineTo(x, y);
+        }
+      });
+      ctx.stroke();
+      
+      // Draw actual line
+      ctx.strokeStyle = '#e74c3c';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      temporalData.forEach((d, i) => {
+        const x = scaleX(i);
+        const y = scaleY(d.actual);
+        if (i === 0) {
+          ctx.moveTo(x, y);
+        } else {
+          ctx.lineTo(x, y);
+        }
+      });
+      ctx.stroke();
+      
+      // Legend
+      ctx.fillStyle = '#3498db';
+      ctx.fillRect(width - 180, 20, 20, 10);
+      ctx.fillStyle = '#2c3e50';
+      ctx.font = '12px sans-serif';
+      ctx.fillText('Predicted', width - 155, 30);
+      
+      ctx.fillStyle = '#e74c3c';
+      ctx.fillRect(width - 180, 40, 20, 10);
+      ctx.fillStyle = '#2c3e50';
+      ctx.fillText('Actual', width - 155, 50);
+      
+      // Labels
+      ctx.fillStyle = '#2c3e50';
+      ctx.font = '14px sans-serif';
+      ctx.fillText('Time →', width/2 - 30, height - 20);
+      ctx.save();
+      ctx.translate(20, height/2 + 20);
+      ctx.rotate(-Math.PI/2);
+      ctx.fillText('REI →', 0, 0);
+      ctx.restore();
+    }
+    
+    // Panel 3: Coefficient Bar Chart
+    function drawCoef(canvasId) {
+      const canvas = document.getElementById(canvasId);
+      const ctx = canvas.getContext('2d');
+      const width = canvas.width = canvas.offsetWidth;
+      const height = canvas.height = 400;
+      
+      ctx.clearRect(0, 0, width, height);
+      
+      if (coefData.length === 0) {
+        ctx.fillStyle = '#7f8c8d';
+        ctx.font = '16px sans-serif';
+        ctx.fillText('No coefficients available', width/2 - 80, height/2);
+        return;
+      }
+      
+      const padding = 60;
+      const plotHeight = height - 2 * padding;
+      const barHeight = plotHeight / coefData.length - 10;
+      
+      // Calculate max coefficient for scaling
+      const maxCoef = Math.max(...coefData.map(d => Math.abs(d.value)));
+      
+      coefData.forEach((d, i) => {
+        const y = padding + i * (barHeight + 10);
+        const barWidth = (Math.abs(d.value) / maxCoef) * (width - 2 * padding - 150);
+        const x = d.value >= 0 ? width/2 : width/2 - barWidth;
+        
+        // Draw bar
+        ctx.fillStyle = d.value >= 0 ? '#27ae60' : '#e74c3c';
+        ctx.fillRect(x, y, barWidth, barHeight);
+        
+        // Draw label
+        ctx.fillStyle = '#2c3e50';
+        ctx.font = '12px sans-serif';
+        ctx.textAlign = 'right';
+        ctx.fillText(d.name, width/2 - 10, y + barHeight/2 + 4);
+        
+        // Draw value
+        ctx.textAlign = 'left';
+        ctx.fillText(d.value.toFixed(3), width/2 + barWidth + 10, y + barHeight/2 + 4);
+      });
+      
+      // Draw zero line
+      ctx.strokeStyle = '#34495e';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(width/2, padding);
+      ctx.lineTo(width/2, height - padding);
+      ctx.stroke();
+      
+      ctx.textAlign = 'left';
+    }
+    
+    // Draw all charts
+    drawScatter('scatterChart');
+    drawTemporal('temporalChart');
+    drawCoef('coefChart');
+  })();
+  </script>
+</body>
+</html>
