@@ -1,0 +1,24 @@
+{
+  "decisions": [
+    {
+      "timestamp": "2025-11-10T21:12:09.694820",
+      "type": "stabilization_planning",
+      "trend": "neutral",
+      "confidence": 0.35,
+      "stabilization_mode": "monitor",
+      "action_taken": "Maintain current settings",
+      "changes": {
+        "learning_rate_factor": {
+          "previous": 1.0,
+          "new": 1.0,
+          "delta": 0.0
+        },
+        "audit_frequency": {
+          "previous": "7d",
+          "new": "7d"
+        }
+      },
+      "rationale": "Neutral trend or insufficient confidence (trend=neutral, confidence=0.35). No adjustments made."
+    }
+  ]
+}

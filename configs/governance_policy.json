@@ -2,5 +2,15 @@
   "trust_weight_factor": 0.5,
   "trust_correlation_last_update": "2025-11-10T21:01:22.874621",
   "trust_correlation_avg": 0.0,
-  "trust_correlation_confidence": 0.0
+  "trust_correlation_confidence": 0.0,
+  "learning_rate_factor": 1.0,
+  "audit_frequency": "7d",
+  "stabilization_mode": "monitor",
+  "last_stabilization": "2025-11-10T21:12:09.694077",
+  "stabilization_context": {
+    "trend": "neutral",
+    "confidence": 0.35,
+    "trend_score": 0.0,
+    "predicted_cycles": 999
+  }
 }
