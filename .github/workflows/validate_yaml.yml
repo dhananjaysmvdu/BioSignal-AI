@@ -1,0 +1,41 @@
+name: Validate YAML Workflows
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/*.yml'
+  pull_request:
+    paths:
+      - '.github/workflows/*.yml'
+
+jobs:
+  yaml-lint:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install PyYAML
+        run: pip install pyyaml
+
+      - name: Validate all workflow YAMLs
+        run: |
+          for f in .github/workflows/*.yml; do
+            echo "🔍 Validating $f"
+            python -c "import yaml; yaml.safe_load(open('$f', encoding='utf-8'))"
+            echo "✅ $f OK"
+          done
+
+      - name: Append summary
+        if: success()
+        run: echo "✅ All workflow YAML files passed syntax validation." >> $GITHUB_STEP_SUMMARY
+
+      - name: Fail summary
+        if: failure()
+        run: echo "❌ One or more workflow YAML files failed validation. Check logs for details." >> $GITHUB_STEP_SUMMARY

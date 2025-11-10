@@ -348,8 +348,39 @@ def _render_html(runs: List[Dict[str, Any]], metrics: Dict[str, Any], history: D
     ver_labels = [v["timestamp"] for v in ver_entries]
     ver_modes = [v["mode"] for v in ver_entries]
 
+    # Trust–Health Correlation panel data
+    trust_corr_path = os.path.join(REPORTS_DIR, 'trust_correlation.json')
+    trust_corr = {
+        "corr_trust_GHS": 0.0,
+        "corr_trust_MSI": 0.0,
+        "samples": 0,
+        "confidence": 0.0,
+        "interpretation": "Not enough data to compute correlation. Neutral output."
+    }
+    if os.path.exists(trust_corr_path):
+        try:
+            with open(trust_corr_path, 'r', encoding='utf-8') as f:
+                trust_corr.update(json.load(f))
+        except Exception:
+            pass
+
     # Tiny charting: inline canvas drawing without external libs
     html = f"""
+    <section id="trust_health_correlation" style="margin-top:40px">
+      <h2>Trust–Health Correlation</h2>
+      <div style="max-width:420px;padding:12px 0;">
+        <canvas id="trustCorrChart" height="60" style="width:100%;max-width:420px;"></canvas>
+      </div>
+      <div style="margin-top:8px;font-size:14px;">
+        <span>GHS correlation: <b>{trust_corr['corr_trust_GHS']:.2f}</b></span> &nbsp;|&nbsp; <span>MSI correlation: <b>{trust_corr['corr_trust_MSI']:.2f}</b></span>
+      </div>
+      <div style="margin-top:4px;font-size:13px;color:#666;">
+        Confidence: <b>{trust_corr['confidence']:.2f}</b>
+      </div>
+      <div style="margin-top:8px;font-size:13px;color:#d33;">
+        {'Not enough data yet.' if trust_corr['samples'] < 5 else trust_corr['interpretation']}
+      </div>
+    </section>
       <section id="verification_mode_timeline" style="margin-top:40px">
         <h2>Verification Mode Timeline</h2>
         <div style="max-width:700px;">
@@ -722,6 +753,33 @@ def _render_html(runs: List[Dict[str, Any]], metrics: Dict[str, Any], history: D
   drawImprovementGauge();
   // Pulse ring color adjustment
   const ring=document.getElementById('pulseRing'); if(ring){{ const v={cur_ghs:.1f}; ring.setAttribute('stroke', zoneColor(v)); }}
+
+  // Trust–Health Correlation panel
+  function drawTrustCorrChart(id, ghs, msi) {{
+    const c = document.getElementById(id);
+    if (!c) return;
+    const ctx = c.getContext('2d');
+    ctx.clearRect(0,0,c.width,c.height);
+    const w = c.width, h = c.height;
+    const pad = 32, barW = 48;
+    const vals = [ghs, msi];
+    const labels = ['GHS', 'MSI'];
+    for (let i=0;i<2;i++) {{
+      let v = vals[i];
+      let color = '#dfb317';
+      if (v > 0.5) color = '#2cbe4e';
+      else if (v < -0.5) color = '#d73a49';
+      ctx.fillStyle = color;
+      const x = pad + i*(w/2) + (w/4-barW/2);
+      const y = h - 8;
+      const barH = Math.abs(v) * (h-24);
+      ctx.fillRect(x, y-barH, barW, barH);
+      ctx.fillStyle = '#222'; ctx.font = '13px Arial'; ctx.textAlign='center';
+      ctx.fillText(labels[i], x+barW/2, h-2);
+      ctx.fillText(v.toFixed(2), x+barW/2, y-barH-6);
+    }}
+  }}
+  drawTrustCorrChart('trustCorrChart', {trust_corr['corr_trust_GHS']:.2f}, {trust_corr['corr_trust_MSI']:.2f});
 }})();
 </script>
 </body>

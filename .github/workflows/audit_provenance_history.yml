@@ -1,3 +1,4 @@
+
 name: Audit Provenance History
 
 on:
@@ -652,6 +653,7 @@ jobs:
         run: |
           echo "🧪 Meta-learning coefficient trends plotted on Governance Pulse dashboard." >> $GITHUB_STEP_SUMMARY
 
+
   compute-meta-stability:
     needs: [record-governance-history]
     runs-on: ubuntu-latest
@@ -691,8 +693,43 @@ jobs:
         run: |
           echo "📊 Meta-Stability Index computed — learning stability gauge updated." >> $GITHUB_STEP_SUMMARY
 
-  adaptive-learning-rate:
+  trust-correlation-analyzer:
     needs: [compute-meta-stability]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+          cache-dependency-path: requirements.lock
+      - name: Run Trust–Health Correlation Analyzer
+        run: |
+          python scripts/workflow_utils/analyze_trust_correlation.py
+      - name: Regenerate dashboard with trust correlation panel
+        run: |
+          python scripts/workflow_utils/generate_provenance_dashboard.py
+      - name: Commit trust correlation artifacts
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add reports/trust_correlation.json reports/audit_summary.md reports/provenance_dashboard.html
+          if git diff --cached --quiet; then
+            echo "No trust correlation changes to commit."
+          else
+            git commit -m "ci: add Trust–Health Correlation Analyzer and dashboard visualization"
+            git push
+          fi
+      - name: Append trust correlation summary
+        run: |
+          echo "🤝 Trust–Health Correlation analysis completed — GHS/MSI alignment quantified." >> $GITHUB_STEP_SUMMARY
+
+  adaptive-learning-rate:
+    needs: [trust-correlation-analyzer]
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -1024,3 +1061,43 @@ jobs:
       - name: Append reliability summary
         run: |
           echo "Reliability weight: ${{ steps.reliability.outputs.reliability_weight }} (Avg: ${{ steps.reliability.outputs.avg_reliability }}). LRF: ${{ steps.reliability.outputs.learning_rate_factor }}; ConfThresh: ${{ steps.reliability.outputs.confidence_threshold }}." >> $GITHUB_STEP_SUMMARY
+
+  governance-anomaly-detector:
+    needs: [forecast-reliability-controller]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+          cache-dependency-path: requirements.lock
+      - name: Run governance anomaly detector
+        id: anomaly
+        run: |
+          python scripts/workflow_utils/governance_anomaly_detector.py
+          if [ ! -f governance_anomaly_out.json ]; then
+            echo "::error::governance_anomaly_out.json not generated"
+            exit 1
+          fi
+          ANOMALY_TOTAL=$(jq -r '.total' governance_anomaly_out.json || echo 0)
+          echo "total=${ANOMALY_TOTAL}" >> $GITHUB_OUTPUT
+          echo "🛡️ Governance anomaly detection complete. Total anomalies: ${ANOMALY_TOTAL}." >> $GITHUB_STEP_SUMMARY
+      - name: Commit anomaly detection results
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add governance_anomaly_out.json
+          if git diff --cached --quiet; then
+            echo "No anomaly detection changes to commit."
+          else
+            git commit -m "ci: update governance anomaly detection results"
+            git push
+          fi
+      - name: Append anomaly summary
+        run: |
+          echo "Governance anomalies detected: ${{ steps.anomaly.outputs.total }}." >> $GITHUB_STEP_SUMMARY
