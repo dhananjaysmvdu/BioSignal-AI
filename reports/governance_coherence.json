@@ -1,0 +1,25 @@
+{
+  "timestamp": "2025-11-10T21:04:24.266478",
+  "coherence_index": 100.0,
+  "status": "Stable",
+  "coherent_rules": 0,
+  "conflicting_rules": 0,
+  "total_rules_evaluated": 0,
+  "rules": [],
+  "deltas": {
+    "trust_weight_factor": 0.0,
+    "confidence_weight": 0.0,
+    "drift_weight": 0.0,
+    "human_feedback_weight": 0.0,
+    "msi": 0.0,
+    "ghs": 0.0
+  },
+  "snapshot": {
+    "trust_weight_factor": 0.5,
+    "confidence_weight": 0.0,
+    "drift_weight": 0.0,
+    "human_feedback_weight": 0.0,
+    "msi": 0.0,
+    "ghs": 0.0
+  }
+}
