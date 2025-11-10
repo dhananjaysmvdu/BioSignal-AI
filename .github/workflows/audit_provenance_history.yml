@@ -1145,8 +1145,144 @@ jobs:
       - name: Append regime stability monitor summary
         run: |
           echo "⚠️ Regime stability monitor executed — current RSI ${{ steps.regime_monitor.outputs.rsi }}%, status ${{ steps.regime_monitor.outputs.regime_status }}." >> $GITHUB_STEP_SUMMARY
-  adaptive-learning-rate:
+  embed-regime-gauge:
     needs: [governance-regime-stability-monitor]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+          cache-dependency-path: requirements.lock
+      - name: Embed regime stability gauge into dashboard
+        run: |
+          python scripts/workflow_utils/integrate_regime_gauge.py --dashboard reports/provenance_dashboard.html --gauge reports/regime_stability_gauge.html --current reports/regime_stability.json > embed_out.json || true
+          cat embed_out.json || true
+      - name: Commit embedded dashboard
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add reports/provenance_dashboard.html || true
+          if git diff --cached --quiet; then
+            echo "No gauge embedding changes to commit."
+          else
+            git commit -m "ci: embed regime stability gauge into provenance dashboard"
+            git push || true
+          fi
+  regime-stability-alerts:
+    needs: [governance-regime-stability-monitor]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      issues: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+          cache-dependency-path: requirements.lock
+      - name: Install minimal deps
+        run: |
+          python -m pip install --upgrade pip
+          if [ -f requirements.lock ]; then pip install -r requirements.lock --no-deps || true; fi
+      - name: Check regime alerts
+        id: check
+        env:
+          OWNER: ${{ github.repository_owner }}
+        run: |
+          python scripts/workflow_utils/check_regime_alerts.py \
+            --current reports/regime_stability.json \
+            --history logs/regime_stability_history.json \
+            --threshold-warning 80 \
+            --threshold-critical 50 \
+            --owner "$OWNER" > regime_alert_check.json || true
+          cat regime_alert_check.json || true
+          ALERT=$(jq -r '.alert' regime_alert_check.json 2>/dev/null || echo false)
+          echo "alert=${ALERT}" >> $GITHUB_OUTPUT
+          echo "severity=$(jq -r '.severity' regime_alert_check.json 2>/dev/null || echo '')" >> $GITHUB_OUTPUT
+          echo "action=$(jq -r '.action' regime_alert_check.json 2>/dev/null || echo 'none')" >> $GITHUB_OUTPUT
+          echo "title=$(jq -r '.title' regime_alert_check.json 2>/dev/null || echo '')" >> $GITHUB_OUTPUT
+          echo "body<<EOF" >> $GITHUB_OUTPUT
+          jq -r '.body' regime_alert_check.json 2>/dev/null || echo '' >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+          echo "labels=$(jq -r '.labels | join(",")' regime_alert_check.json 2>/dev/null || echo '')" >> $GITHUB_OUTPUT
+      - name: Install gh CLI (fallback)
+        if: always()
+        run: |
+          if ! command -v gh >/dev/null 2>&1; then
+            sudo apt-get update -y && sudo apt-get install -y git && \
+            curl -fsSL https://github.com/cli/cli/releases/download/v2.47.0/gh_2.47.0_linux_amd64.deb -o gh.deb && \
+            sudo dpkg -i gh.deb || echo "gh install failed; will fallback";
+          fi
+      - name: Create or comment on alert issue
+        if: ${{ steps.check.outputs.alert == 'true' && (steps.check.outputs.action == 'create' || steps.check.outputs.action == 'comment') }}
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -e
+          if ! command -v gh >/dev/null 2>&1; then
+            echo "gh CLI unavailable; skipping issue operations" >> $GITHUB_STEP_SUMMARY
+            exit 0
+          fi
+          gh auth status || gh auth login --with-token <<< "$GH_TOKEN" || true
+          TITLE="${{ steps.check.outputs.title }}"
+          BODY="${{ steps.check.outputs.body }}"
+          LABELS="${{ steps.check.outputs.labels }}"
+          ACTION="${{ steps.check.outputs.action }}"
+          SEVERITY="${{ steps.check.outputs.severity }}"
+          ISSUE_NUMBER=""
+          # Attempt to find existing issue by title severity prefix
+          EXISTING=$(gh issue list --label governance --state open --json number,title | jq -r --arg sev "$SEVERITY" '.[] | select(.title|startswith("Regime Stability Alert: ") and (.title|contains($sev;))) | .number' | head -n1)
+          if [ "$ACTION" = "create" ]; then
+            if [ -n "$EXISTING" ]; then
+              echo "Existing issue #$EXISTING found for severity; switching to comment" >> $GITHUB_STEP_SUMMARY
+              ACTION="comment"
+            fi
+          fi
+          if [ "$ACTION" = "create" ]; then
+            echo "Creating new regime stability $SEVERITY issue" >> $GITHUB_STEP_SUMMARY
+            IURL=$(gh issue create --title "$TITLE" --body "$BODY" --label "$LABELS" || echo "")
+            echo "Issue URL: $IURL" >> $GITHUB_STEP_SUMMARY
+          elif [ "$ACTION" = "comment" ]; then
+            if [ -z "$EXISTING" ]; then
+              echo "No existing issue found to comment; creating instead" >> $GITHUB_STEP_SUMMARY
+              IURL=$(gh issue create --title "$TITLE" --body "$BODY" --label "$LABELS" || echo "")
+              echo "Issue URL: $IURL" >> $GITHUB_STEP_SUMMARY
+            else
+              echo "Commenting on existing issue #$EXISTING" >> $GITHUB_STEP_SUMMARY
+              gh issue comment "$EXISTING" --body "Update: $(date -u +'%Y-%m-%d %H:%M:%S UTC') RSI ${{ steps.check.outputs.severity }} severity persists. See dashboard." || echo "Comment failed"
+            fi
+          else
+            echo "No issue action needed" >> $GITHUB_STEP_SUMMARY
+          fi
+      - name: Commit alert log updates
+        if: ${{ steps.check.outputs.alert == 'true' }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          if [ -f logs/regime_alerts.json ]; then git add logs/regime_alerts.json || true; fi
+          if git diff --cached --quiet; then
+            echo "No regime alert log changes to commit."
+          else
+            RSI=$(jq -r '.rsi' regime_alert_check.json 2>/dev/null || echo 0)
+            SEV=$(jq -r '.severity' regime_alert_check.json 2>/dev/null || echo unknown)
+            git commit -m "ci: record regime stability alert (RSI ${RSI}% - ${SEV})"
+            git push || true
+          fi
+      - name: Append alert summary
+        if: always()
+        run: |
+          echo "🔔 Regime alert evaluation complete — action: ${{ steps.check.outputs.action }} severity: ${{ steps.check.outputs.severity }}." >> $GITHUB_STEP_SUMMARY
+  adaptive-learning-rate:
+    needs: [regime-stability-alerts]
     runs-on: ubuntu-latest
     permissions:
       contents: write
