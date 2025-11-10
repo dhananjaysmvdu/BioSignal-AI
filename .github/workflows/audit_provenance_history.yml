@@ -1034,8 +1034,47 @@ jobs:
         run: |
           echo "🔄 Archetype transition mapped — latest: ${{ steps.map.outputs.from }} → ${{ steps.map.outputs.to }}, confidence ${{ steps.map.outputs.confidence }}%." >> $GITHUB_STEP_SUMMARY
 
-  adaptive-learning-rate:
+  generate-archetype-dynamics-dashboard:
     needs: [governance-archetype-transition-mapper]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+          cache-dependency-path: requirements.lock
+      - name: Generate archetype dynamics dashboard
+        id: dynamics
+        run: |
+          python scripts/workflow_utils/generate_archetype_dynamics_dashboard.py > dynamics_out.json
+          TRANS=$(jq -r '.transitions' dynamics_out.json || echo 0)
+          PATH=$(jq -r '.dominant_path' dynamics_out.json || echo 'N/A')
+          PVAL=$(jq -r '.p' dynamics_out.json || echo 0)
+          echo "transitions=${TRANS}" >> $GITHUB_OUTPUT
+          echo "dominant_path=${PATH}" >> $GITHUB_OUTPUT
+          echo "p=${PVAL}" >> $GITHUB_OUTPUT
+      - name: Commit dynamics dashboard artifacts
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add reports/archetype_dynamics_dashboard.html reports/audit_summary.md
+          if git diff --cached --quiet; then
+            echo "No archetype dynamics changes to commit."
+          else
+            git commit -m "ci: generate archetype dynamics visualization and summary"
+            git push
+          fi
+      - name: Append archetype dynamics summary
+        run: |
+          echo "🧭 Archetype dynamics dashboard updated — transition matrix and dwell timeline refreshed (transitions: ${{ steps.dynamics.outputs.transitions }}, dominant: ${{ steps.dynamics.outputs.dominant_path }} p=${{ steps.dynamics.outputs.p }})." >> $GITHUB_STEP_SUMMARY
+
+  adaptive-learning-rate:
+    needs: [generate-archetype-dynamics-dashboard]
     runs-on: ubuntu-latest
     permissions:
       contents: write

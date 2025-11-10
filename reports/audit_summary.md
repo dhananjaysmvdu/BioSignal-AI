@@ -101,3 +101,8 @@ Archetype detected: Unknown Archetype (confidence 0%).
 <!-- ARCHETYPE_TRANSITIONS:BEGIN -->
 Latest transition: Unknown Archetype → Unknown Archetype (confidence 0%, dwell 1 cycles).
 <!-- ARCHETYPE_TRANSITIONS:END -->
+
+
+<!-- ARCHETYPE_DYNAMICS:BEGIN -->
+🧭 Archetype Dynamics: 0 total transitions, dominant path N/A → N/A (p=0.00).
+<!-- ARCHETYPE_DYNAMICS:END -->
