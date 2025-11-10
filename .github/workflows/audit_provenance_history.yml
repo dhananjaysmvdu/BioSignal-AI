@@ -1441,7 +1441,7 @@ jobs:
           run: echo "📈 Reflex meta-evaluation completed — see REFLEX_META block in audit summary." >> $GITHUB_STEP_SUMMARY
 
   generate-reflex-feedback-dashboard:
-    needs: [governance-reflex-learning-model]
+    needs: [governance-reflex-learning-model, governance-reflex-meta-evaluator]
     runs-on: ubuntu-latest
     permissions:
       contents: write
