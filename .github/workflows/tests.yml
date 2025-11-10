@@ -58,6 +58,8 @@ jobs:
           python -m pytest -q tests/test_regime_alerts.py || exit 1
           # Regime policy engine validation
           python -m pytest -q tests/test_regime_policy_engine.py || exit 1
+          # Reflex evaluator validation
+          python -m pytest -q tests/test_reflex_evaluator.py || exit 1
           # Tox environment parity check
           pip install tox || exit 1
           tox -e py311 || exit 1

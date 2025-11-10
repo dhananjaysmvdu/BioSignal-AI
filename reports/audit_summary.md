@@ -120,3 +120,7 @@ Regime Stability: 100.0% — Regime stable (entropy 0.0, dwell σ² 0.0, recurre
 <!-- REGIME_POLICY:BEGIN -->
 🧭 Regime policy applied — mode: Normal Operation, learning_rate_factor: 1.2, audit_freq: 7d.
 <!-- REGIME_POLICY:END -->
+
+<!-- REFLEX_EVALUATION:BEGIN -->
+Reflex Evaluation: Mode Normal Operation, ΔRSI=+0.0, ΔGHS=+0.0 → ➡️ Neutral (REI=+0.00).
+<!-- REFLEX_EVALUATION:END -->

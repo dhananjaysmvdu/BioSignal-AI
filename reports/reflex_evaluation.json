@@ -1,0 +1,14 @@
+{
+  "status": "ok",
+  "timestamp": "2025-11-10T22:50:53.339387+00:00",
+  "policy_timestamp": "2025-11-10T22:36:22.242920+00:00",
+  "policy_mode": "Normal Operation",
+  "current_rsi": 100.0,
+  "previous_rsi": 100.0,
+  "delta_rsi": 0.0,
+  "current_ghs": 0.0,
+  "previous_ghs": 0.0,
+  "delta_ghs": 0.0,
+  "rei": 0.0,
+  "classification": "Neutral"
+}
