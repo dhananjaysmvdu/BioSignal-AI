@@ -728,8 +728,45 @@ jobs:
         run: |
           echo "🤝 Trust–Health Correlation analysis completed — GHS/MSI alignment quantified." >> $GITHUB_STEP_SUMMARY
 
-  adaptive-learning-rate:
+  trust-correlation-controller:
     needs: [trust-correlation-analyzer]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+          cache-dependency-path: requirements.lock
+      - name: Adjust trust weighting from correlation
+        id: adjust
+        run: |
+          python scripts/workflow_utils/trust_correlation_controller.py > trust_ctrl_out.json
+          NEW_WEIGHT=$(jq -r '.new_weight' trust_ctrl_out.json || echo 0.5)
+          ADJ=$(jq -r '.adjustment' trust_ctrl_out.json || echo 0.0)
+          echo "new_weight=${NEW_WEIGHT}" >> $GITHUB_OUTPUT
+          echo "adjustment=${ADJ}" >> $GITHUB_OUTPUT
+      - name: Commit trust weighting updates
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add configs/governance_policy.json reports/audit_summary.md
+          if git diff --cached --quiet; then
+            echo "No trust weighting changes to commit."
+          else
+            git commit -m "ci: adjust trust weighting based on correlation analysis"
+            git push
+          fi
+      - name: Append trust weighting summary
+        run: |
+          echo "⚖️ Trust weighting adjusted from correlation insight (new weight: ${{ steps.adjust.outputs.new_weight }}, Δ${{ steps.adjust.outputs.adjustment }})." >> $GITHUB_STEP_SUMMARY
+
+  adaptive-learning-rate:
+    needs: [trust-correlation-controller]
     runs-on: ubuntu-latest
     permissions:
       contents: write
