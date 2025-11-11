@@ -338,3 +338,95 @@ Successfully completed all automated governance artifact normalization, validati
 - ✅ All automated checks passing
 
 **Next Session Start Point**: After GitHub release creation, execute DOI integration workflow from `logs/zenodo_integration_pending.md` Step 4 onwards.
+
+---
+
+## Phase II Update: DOI Integration & Release Certification Complete
+
+**Session Date**: 2025-11-11 (Phase II)
+**Status**: ✅ Instructions 4-5 COMPLETE
+
+### Instruction 4 — Zenodo DOI Integration ✅
+
+**Actions Completed**:
+1. ✅ Created `zenodo.json` with DOI: `10.5281/zenodo.14173152`
+2. ✅ Ran DOI propagation script (`update_doi_reference.py`)
+3. ✅ Verified DOI presence in:
+   - README.md
+   - docs/GOVERNANCE_WHITEPAPER.md
+   - GOVERNANCE_TRANSPARENCY.md (via manifest generator)
+4. ✅ Regenerated reproducibility capsule with DOI metadata
+   - New file count: 31 artifacts (increased from 26)
+   - New SHA256: `e8cf3e3fd735ce0f7bda3a46b4a0a13f0800372138ef6721940f9848ebb9329e`
+   - Manifest: `exports/capsule_manifest.json` updated
+5. ✅ Committed all changes
+
+**Commit**: `aed9f86` - DOI propagation
+**Commit**: `777d5a4` - Capsule regeneration
+
+### Instruction 5 — Final Validation & Release Tagging ✅
+
+**Actions Completed**:
+1. ✅ Ran reproducibility validator (`verify_release_integrity.py`)
+   - Result: All checks passed (4/4)
+   - DOI verified in GOVERNANCE_WHITEPAPER.md ✅
+   - DOI verified in GOVERNANCE_TRANSPARENCY.md ✅
+   - Documentation files exist ✅
+2. ✅ Updated audit_summary.md with RELEASE_VALIDATION marker
+3. ✅ Created annotated tag `v1.0.0-Whitepaper` with full metadata:
+   - DOI citation included
+   - Capsule SHA256 checksum
+   - Integrity metrics
+   - Repository and license info
+4. ✅ Pushed tag to remote origin
+5. ✅ Appended to schema_provenance_ledger.jsonl
+6. ✅ Added Publication Record section to GOVERNANCE_TRANSPARENCY.md
+
+**Tag**: `v1.0.0-Whitepaper` created and pushed
+**Commit**: `777d5a4a253bd13fbea5e6725db835e90d2f432e`
+
+### Release Certification Summary
+
+| Metric | Value |
+|--------|-------|
+| **DOI** | https://doi.org/10.5281/zenodo.14173152 |
+| **Release Tag** | v1.0.0-Whitepaper |
+| **Capsule File** | governance_reproducibility_capsule_2025-11-11.zip |
+| **Capsule SHA256** | e8cf3e3fd735ce0f7bda3a46b4a0a13f0800372138ef6721940f9848ebb9329e |
+| **Artifact Count** | 31 files |
+| **Validation Status** | ✅ REPRODUCIBLE (4/4 checks passed) |
+| **Integrity Score** | 97.5% |
+| **Violations** | 0 |
+| **Warnings** | 1 |
+| **Health Score** | 69.3% |
+| **RRI** | 15.1 |
+
+### Files Updated in Phase II
+
+**Core Documentation**:
+- `zenodo.json` (created)
+- `README.md` (DOI added)
+- `docs/GOVERNANCE_WHITEPAPER.md` (DOI added)
+- `GOVERNANCE_TRANSPARENCY.md` (DOI + Publication Record)
+- `scripts/workflow_utils/generate_transparency_manifest.py` (DOI template)
+
+**Audit & Tracking**:
+- `audit_summary.md` (DOI_PROPAGATION + RELEASE_VALIDATION markers)
+- `exports/schema_provenance_ledger.jsonl` (release entry appended)
+
+**Reproducibility Artifacts**:
+- `exports/governance_reproducibility_capsule_2025-11-11.zip` (regenerated)
+- `exports/capsule_manifest.json` (updated with 31 files)
+
+### Commits in Phase II
+
+1. **aed9f86**: "docs: propagate Zenodo DOI across governance documentation"
+   - DOI propagation to README, GOVERNANCE_WHITEPAPER, manifest generator
+2. **777d5a4**: "release: propagate Zenodo DOI and regenerate reproducibility capsule"
+   - Capsule regeneration, zenodo.json creation, audit markers
+
+### Tags Created
+
+- **v1.0.0-Whitepaper** (annotated tag with full release metadata)
+  - Pushed to remote: ✅
+  - Visible at: https://github.com/dhananjaysmvdu/BioSignal-AI/releases/tag/v1.0.0-Whitepaper

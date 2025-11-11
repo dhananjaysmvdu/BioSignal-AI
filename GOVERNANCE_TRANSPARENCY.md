@@ -120,5 +120,16 @@ If you use or build on this governance reflex architecture, please cite:
 - badges/integrity_status.json — nightly integrity score (for dashboards)
 - GOVERNANCE_TRANSPARENCY.md — human-readable system manifest
 
+## Publication Record
+
+**Version 1.0.0-Whitepaper** (2025-11-11)
+- **Tag**: v1.0.0-Whitepaper
+- **DOI**: https://doi.org/10.5281/zenodo.14173152
+- **Commit**: 777d5a4a253bd13fbea5e6725db835e90d2f432e
+- **Capsule**: governance_reproducibility_capsule_2025-11-11.zip
+- **SHA256**: e8cf3e3fd735ce0f7bda3a46b4a0a13f0800372138ef6721940f9848ebb9329e
+- **Files**: 31 artifacts
+- **Status**: Reproducibility certified, DOI verified, all integrity checks passed (4/4)
+
 ---
 This file is auto-generated; do not edit manually.

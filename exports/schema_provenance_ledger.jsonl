@@ -1,0 +1,1 @@
+{"timestamp": "2025-11-11T14:45:22Z", "schema_hash": "6eb446f7cca747bf7bc4c3473c6b1d2a0bfb61a338740b521a74159aa82f5cfb", "fields": ["timestamp", "integrity_score", "violations", "warnings", "health_score", "rri", "mpi", "confidence", "status"], "commit": "777d5a4"}

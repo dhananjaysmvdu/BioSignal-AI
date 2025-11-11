@@ -34,6 +34,11 @@ Updated: 2025-11-11T14:50:15+00:00
 ✅ DOI propagated across governance documentation — README.md, GOVERNANCE_WHITEPAPER.md, GOVERNANCE_TRANSPARENCY.md verified. DOI: https://doi.org/10.5281/zenodo.14173152
 <!-- DOI_PROPAGATION:END -->
 
+<!-- RELEASE_VALIDATION:BEGIN -->
+Updated: 2025-11-11T14:52:30+00:00
+✅ Release integrity validation passed — All checks: 4/4 passed. DOI verified in documentation. Capsule ready. Status: REPRODUCIBLE (pending capsule tag creation via workflow).
+<!-- RELEASE_VALIDATION:END -->
+
 <!-- INSTRUCTION_EXECUTION:BEGIN -->
 Updated: 2025-11-11T14:40:30+00:00
 ✅ Instructions 1-3 complete: ISO 8601 normalization enforced, reproducibility validated, artifacts synchronized and pushed (commits 6b1a559, b3d46ae, f8c0830). Instructions 4-5 blocked pending manual GitHub release creation. See: INSTRUCTION_EXECUTION_SUMMARY.md
