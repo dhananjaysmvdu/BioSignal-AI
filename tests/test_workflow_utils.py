@@ -248,3 +248,115 @@ def test_forecast_evaluator_end_to_end(tmp_path, capsys):
     assert '<!-- REFLEX_FORECAST:BEGIN -->' in audit
     assert '<!-- REFLEX_FORECAST:END -->' in audit
     assert 'REI-MPI correlation' in audit
+
+
+def test_consistency_monitor_sign_change(tmp_path):
+    """Test consistency monitor detects sign change."""
+    from scripts.workflow_utils.governance_forecast_consistency_monitor import detect_inconsistency
+    
+    # Positive to negative (sign change)
+    triggered, status, reasons = detect_inconsistency(0.6, -0.3, "Aligned improvement", "Neutral coupling")
+    assert triggered == True
+    assert "Sign change detected" in reasons[0]
+    assert "⚠️" in status
+    
+    # Negative to positive (sign change)
+    triggered, status, reasons = detect_inconsistency(-0.5, 0.4, "Diverging signals", "Neutral coupling")
+    assert triggered == True
+    assert "Sign change detected" in reasons[0]
+
+
+def test_consistency_monitor_divergence_threshold(tmp_path):
+    """Test consistency monitor detects divergence threshold."""
+    from scripts.workflow_utils.governance_forecast_consistency_monitor import detect_inconsistency
+    
+    # Below -0.4 threshold
+    triggered, status, reasons = detect_inconsistency(-0.2, -0.45, "Neutral coupling", "Diverging signals")
+    assert triggered == True
+    assert any("divergence threshold" in r for r in reasons)
+    
+    # Not below threshold
+    triggered, status, reasons = detect_inconsistency(-0.2, -0.3, "Neutral coupling", "Neutral coupling")
+    assert triggered == False
+
+
+def test_consistency_monitor_sudden_shift(tmp_path):
+    """Test consistency monitor detects sudden correlation shift."""
+    from scripts.workflow_utils.governance_forecast_consistency_monitor import detect_inconsistency
+    
+    # Large shift (> 0.5)
+    triggered, status, reasons = detect_inconsistency(0.7, 0.1, "Aligned improvement", "Neutral coupling")
+    assert triggered == True
+    assert any("Sudden correlation shift" in r for r in reasons)
+    
+    # Small shift
+    triggered, status, reasons = detect_inconsistency(0.5, 0.6, "Aligned improvement", "Aligned improvement")
+    assert triggered == False
+
+
+def test_consistency_monitor_end_to_end(tmp_path, capsys):
+    """Test consistency monitor creates full report."""
+    os.chdir(tmp_path)
+    
+    # Create directories
+    reports = Path('reports')
+    logs = Path('logs')
+    reports.mkdir(exist_ok=True)
+    logs.mkdir(exist_ok=True)
+    
+    # Create current alignment
+    current_alignment = {
+        "timestamp": "2025-01-15T12:00:00Z",
+        "rei_mpi_correlation": -0.45,
+        "classification": "Diverging signals",
+        "n_samples": 5
+    }
+    (reports / 'reflex_forecast_alignment.json').write_text(json.dumps(current_alignment), encoding='utf-8')
+    
+    # Create history with previous alignment (sign change scenario)
+    history = [
+        {
+            "timestamp": "2025-01-15T10:00:00Z",
+            "rei_mpi_correlation": 0.6,
+            "classification": "Aligned improvement",
+            "n_samples": 5
+        }
+    ]
+    (logs / 'forecast_alignment_history.json').write_text(json.dumps(history), encoding='utf-8')
+    
+    # Run monitor
+    from scripts.workflow_utils.governance_forecast_consistency_monitor import main
+    result = main([
+        '--alignment', str(reports / 'reflex_forecast_alignment.json'),
+        '--history', str(logs / 'forecast_alignment_history.json'),
+        '--output', str(reports / 'forecast_consistency.json'),
+        '--audit-summary', 'audit_summary.md'
+    ])
+    
+    assert result == 0
+    
+    # Check output file
+    consistency_file = reports / 'forecast_consistency.json'
+    assert consistency_file.exists()
+    
+    # Validate output structure
+    consistency = json.loads(consistency_file.read_text(encoding='utf-8'))
+    assert consistency['triggered'] == True
+    assert '⚠️' in consistency['status']
+    assert consistency['current_correlation'] == -0.45
+    assert consistency['previous_correlation'] == 0.6
+    assert abs(consistency['delta_correlation'] - (-1.05)) < 0.01
+    assert len(consistency['reasons']) > 0
+    assert 'Sign change detected' in consistency['reasons'][0]
+    
+    # Check history updated
+    history_file = logs / 'forecast_alignment_history.json'
+    assert history_file.exists()
+    updated_history = json.loads(history_file.read_text(encoding='utf-8'))
+    assert len(updated_history) == 2  # Original + new entry
+    
+    # Check audit summary
+    audit = Path('audit_summary.md').read_text(encoding='utf-8')
+    assert '<!-- FORECAST_CONSISTENCY:BEGIN -->' in audit
+    assert '<!-- FORECAST_CONSISTENCY:END -->' in audit
+    assert 'Forecast Consistency' in audit

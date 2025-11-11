@@ -1417,28 +1417,28 @@ jobs:
           run: |
             echo "🧠 Reflex learning model updated — R²=${{ steps.learning.outputs.r2 }}, samples=${{ steps.learning.outputs.samples }}." >> $GITHUB_STEP_SUMMARY
 
-    governance-reflex-meta-evaluator:
-      needs: [governance-reflex-learning-model]
-      runs-on: ubuntu-latest
-      steps:
-        - name: Checkout repo
-          uses: actions/checkout@v4
-        - name: Set up Python
-          uses: actions/setup-python@v5
-          with:
-            python-version: '3.11'
-            cache: 'pip'
-        - name: Evaluate Reflex Meta-Performance
-          run: |
-            python scripts/workflow_utils/governance_reflex_meta_evaluator.py || true
-        - name: Commit meta-performance results
-          run: |
-            git config user.name "github-actions"
-            git config user.email "actions@github.com"
-            git add reports/reflex_meta_performance.json reports/audit_summary.md || true
-            git commit -m "ci: evaluate reflex learning meta-performance and drift" || echo "No changes"
-        - name: Append run summary
-          run: echo "📈 Reflex meta-evaluation completed — see REFLEX_META block in audit summary." >> $GITHUB_STEP_SUMMARY
+  governance-reflex-meta-evaluator:
+    needs: [governance-reflex-learning-model]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+      - name: Evaluate Reflex Meta-Performance
+        run: |
+          python scripts/workflow_utils/governance_reflex_meta_evaluator.py || true
+      - name: Commit meta-performance results
+        run: |
+          git config user.name "github-actions"
+          git config user.email "actions@github.com"
+          git add reports/reflex_meta_performance.json reports/audit_summary.md || true
+          git commit -m "ci: evaluate reflex learning meta-performance and drift" || echo "No changes"
+      - name: Append run summary
+        run: echo "📈 Reflex meta-evaluation completed — see REFLEX_META block in audit summary." >> $GITHUB_STEP_SUMMARY
 
   governance-reflex-forecast-evaluator:
     needs: [governance-reflex-meta-evaluator]
@@ -1463,8 +1463,31 @@ jobs:
       - name: Append run summary
         run: echo "🔗 Reflex forecast alignment evaluated — see REFLEX_FORECAST block in audit summary." >> $GITHUB_STEP_SUMMARY
 
+  governance-forecast-consistency-monitor:
+    needs: [governance-reflex-forecast-evaluator]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+      - name: Monitor forecast consistency
+        run: |
+          python scripts/workflow_utils/governance_forecast_consistency_monitor.py || true
+      - name: Commit consistency monitoring results
+        run: |
+          git config user.name "github-actions"
+          git config user.email "actions@github.com"
+          git add reports/forecast_consistency.json logs/forecast_alignment_history.json reports/audit_summary.md || true
+          git commit -m "ci: monitor forecast consistency and detect correlation drift" || echo "No changes"
+      - name: Append run summary
+        run: echo "🔍 Forecast consistency monitored — see FORECAST_CONSISTENCY block in audit summary." >> $GITHUB_STEP_SUMMARY
+
   generate-reflex-feedback-dashboard:
-    needs: [governance-reflex-learning-model, governance-reflex-meta-evaluator, governance-reflex-forecast-evaluator]
+    needs: [governance-reflex-learning-model, governance-reflex-meta-evaluator, governance-reflex-forecast-evaluator, governance-forecast-consistency-monitor]
     runs-on: ubuntu-latest
     permissions:
       contents: write
