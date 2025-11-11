@@ -143,3 +143,108 @@ def test_drift_detector_output_structure_and_shift(tmp_path):
     assert isinstance(rep['feature_drifts'], dict)
     # Expect non-zero drift rate due to large shift in 'x'
     assert rep['overall_drift_rate'] > 0.0
+
+
+def test_forecast_evaluator_correlation_computation(tmp_path):
+    """Test Pearson correlation computation in forecast evaluator."""
+    from scripts.workflow_utils.governance_reflex_forecast_evaluator import compute_pearson_correlation
+    
+    # Perfect positive correlation
+    x = [1.0, 2.0, 3.0, 4.0, 5.0]
+    y = [2.0, 4.0, 6.0, 8.0, 10.0]
+    corr = compute_pearson_correlation(x, y)
+    assert abs(corr - 1.0) < 0.01
+    
+    # Perfect negative correlation
+    y_neg = [10.0, 8.0, 6.0, 4.0, 2.0]
+    corr_neg = compute_pearson_correlation(x, y_neg)
+    assert abs(corr_neg + 1.0) < 0.01
+    
+    # No correlation
+    x_rand = [1.0, 2.0, 3.0, 4.0, 5.0]
+    y_rand = [3.0, 1.0, 4.0, 2.0, 5.0]
+    corr_weak = compute_pearson_correlation(x_rand, y_rand)
+    assert abs(corr_weak) < 0.8  # Should be weak
+    
+    # Edge cases
+    assert compute_pearson_correlation([], []) == 0.0
+    assert compute_pearson_correlation([1.0], [1.0]) == 0.0  # Need at least 2
+
+
+def test_forecast_evaluator_classification(tmp_path):
+    """Test correlation classification thresholds."""
+    from scripts.workflow_utils.governance_reflex_forecast_evaluator import classify_correlation
+    
+    assert classify_correlation(0.8) == "Aligned improvement"
+    assert classify_correlation(0.5) == "Aligned improvement"
+    assert classify_correlation(0.49) == "Neutral coupling"
+    assert classify_correlation(0.0) == "Neutral coupling"
+    assert classify_correlation(-0.49) == "Neutral coupling"
+    assert classify_correlation(-0.5) == "Diverging signals"
+    assert classify_correlation(-0.8) == "Diverging signals"
+
+
+def test_forecast_evaluator_end_to_end(tmp_path, capsys):
+    """Test forecast evaluator creates alignment report."""
+    os.chdir(tmp_path)
+    
+    # Create minimal input files
+    reports = Path('reports')
+    reports.mkdir(exist_ok=True)
+    
+    # Reflex evaluation
+    reflex = {
+        "rei": 0.15,
+        "classification": "Effective",
+        "timestamp": "2025-01-15T10:00:00Z"
+    }
+    (reports / 'reflex_evaluation.json').write_text(json.dumps(reflex), encoding='utf-8')
+    
+    # Meta-performance
+    meta = {
+        "mpi": 85.0,
+        "classification": "Stable",
+        "timestamp": "2025-01-15T10:00:00Z"
+    }
+    (reports / 'reflex_meta_performance.json').write_text(json.dumps(meta), encoding='utf-8')
+    
+    # Model history with MPI values showing aligned improvement
+    history = [
+        {"meta_performance": {"mpi": 75.0}, "timestamp": "2025-01-14T10:00:00Z"},
+        {"meta_performance": {"mpi": 78.0}, "timestamp": "2025-01-14T11:00:00Z"},
+        {"meta_performance": {"mpi": 80.0}, "timestamp": "2025-01-14T12:00:00Z"},
+        {"meta_performance": {"mpi": 82.0}, "timestamp": "2025-01-15T09:00:00Z"},
+        {"meta_performance": {"mpi": 85.0}, "timestamp": "2025-01-15T10:00:00Z"}
+    ]
+    (reports / 'reflex_learning_model.json').write_text(json.dumps(history), encoding='utf-8')
+    
+    # Run evaluator
+    from scripts.workflow_utils.governance_reflex_forecast_evaluator import main
+    result = main([
+        '--reflex', str(reports / 'reflex_evaluation.json'),
+        '--meta-performance', str(reports / 'reflex_meta_performance.json'),
+        '--model-history', str(reports / 'reflex_learning_model.json'),
+        '--output', str(reports / 'reflex_forecast_alignment.json'),
+        '--audit-summary', 'audit_summary.md'
+    ])
+    
+    assert result == 0
+    
+    # Check output file exists
+    alignment_file = reports / 'reflex_forecast_alignment.json'
+    assert alignment_file.exists()
+    
+    # Validate output structure
+    alignment = json.loads(alignment_file.read_text(encoding='utf-8'))
+    assert 'rei_mpi_correlation' in alignment
+    assert 'classification' in alignment
+    assert 'n_samples' in alignment
+    assert 'timestamp' in alignment
+    assert isinstance(alignment['rei_values'], list)
+    assert isinstance(alignment['mpi_values'], list)
+    
+    # Check audit summary updated
+    audit = Path('audit_summary.md').read_text(encoding='utf-8')
+    assert '<!-- REFLEX_FORECAST:BEGIN -->' in audit
+    assert '<!-- REFLEX_FORECAST:END -->' in audit
+    assert 'REI-MPI correlation' in audit

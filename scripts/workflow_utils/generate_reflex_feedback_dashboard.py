@@ -126,6 +126,33 @@ def build_dashboard_html(
             elif delta < -5:
                 mpi_trend_direction = "↓ degrading"
     
+    # Compute MPI forecast using least squares linear regression
+    mpi_forecast_values = []
+    mpi_forecast_slope = 0.0
+    if len(mpi_trend_values) >= 3:
+        n = len(mpi_trend_values)
+        x = list(range(n))
+        y = mpi_trend_values
+        
+        # Least squares: slope = (n*Σxy - Σx*Σy) / (n*Σx² - (Σx)²)
+        sum_x = sum(x)
+        sum_y = sum(y)
+        sum_xy = sum(x[i] * y[i] for i in range(n))
+        sum_x2 = sum(xi ** 2 for xi in x)
+        
+        slope = (n * sum_xy - sum_x * sum_y) / (n * sum_x2 - sum_x ** 2) if (n * sum_x2 - sum_x ** 2) != 0 else 0
+        intercept = (sum_y - slope * sum_x) / n
+        
+        mpi_forecast_slope = slope
+        
+        # Project 5 cycles ahead
+        last_value = y[-1]
+        for i in range(1, 6):
+            forecast_val = last_value + slope * i
+            # Clamp forecast to [0, 150] range (MPI can theoretically exceed 100)
+            forecast_val = max(0, min(forecast_val, 150))
+            mpi_forecast_values.append(forecast_val)
+    
     # Prepare data for JavaScript
     rei_labels = []
     rei_values = []
@@ -211,7 +238,7 @@ def build_dashboard_html(
         <h4 style="margin: 8px 0;">Meta-Performance Trend — Last {len(mpi_trend_values)} Runs (MPI %) {mpi_trend_direction}</h4>
         <canvas id="mpiTrendChart" width="600" height="150"></canvas>
         <p style="font-size: 12px; color: #666; margin-top: 4px;">
-          Green = stable (≥80%), yellow = mild drift (60-79%), red = degradation (<60%). Rolling mean shows short-term stability.
+          Green = stable (≥80%), yellow = mild drift (60-79%), red = degradation (<60%). Rolling mean (dotted gray) shows short-term stability. <strong>Forecast (dashed blue)</strong> projects 5 cycles ahead assuming current trend continues (slope: {mpi_forecast_slope:+.2f}% per cycle).
         </p>
       </div>
 """
@@ -494,7 +521,7 @@ def build_dashboard_html(
       ctx.fillText('100%', cx + radius + 5, cy + 5);
     }}
     
-    function drawMPITrend(id, data, labels) {{
+    function drawMPITrend(id, data, labels, forecast) {{
       const c = document.getElementById(id);
       if (!c || data.length === 0) return;
       
@@ -585,6 +612,38 @@ def build_dashboard_html(
       ctx.stroke();
       ctx.setLineDash([]);
       
+      // Draw forecast projection (dashed blue line extending 5 cycles ahead)
+      if (forecast && forecast.length > 0) {{
+        ctx.beginPath();
+        ctx.setLineDash([8, 4]);
+        ctx.strokeStyle = '#2196F3';  // Blue to distinguish from historical
+        ctx.lineWidth = 2;
+        
+        // Start from last historical data point
+        const lastX = pad + ((data.length - 1) / (data.length - 1 || 1)) * w;
+        const lastY = c.clientHeight - pad - (data[data.length - 1] / 100) * h;
+        ctx.moveTo(lastX, lastY);
+        
+        // Draw forecast points
+        const forecastExtension = w * 0.4;  // Extend 40% of chart width
+        for (let i = 0; i < forecast.length; i++) {{
+          const x = lastX + ((i + 1) / forecast.length) * forecastExtension;
+          const y = c.clientHeight - pad - (forecast[i] / 100) * h;
+          ctx.lineTo(x, y);
+          
+          // Draw forecast point
+          ctx.fillStyle = '#2196F3';
+          ctx.save();
+          ctx.setLineDash([]);
+          ctx.beginPath();
+          ctx.arc(x, y, 2, 0, 2 * Math.PI);
+          ctx.fill();
+          ctx.restore();
+        }}
+        ctx.stroke();
+        ctx.setLineDash([]);
+      }}
+      
       // Labels
       ctx.fillStyle = '#666';
       ctx.font = '11px Arial';
@@ -631,14 +690,15 @@ def build_dashboard_html(
     if (document.getElementById('mpiTrendChart')) {{
       const mpiTrendData = {json.dumps(mpi_trend_values)};
       const mpiTrendLabels = {json.dumps(mpi_trend_labels)};
-      drawMPITrend('mpiTrendChart', mpiTrendData, mpiTrendLabels);
+      const mpiForecast = {json.dumps(mpi_forecast_values)};
+      drawMPITrend('mpiTrendChart', mpiTrendData, mpiTrendLabels, mpiForecast);
     }}
   }})();
   </script>
 </body>
 </html>
 """
-    return html
+    return html, mpi_forecast_slope
 
 
 def update_audit_summary(
@@ -663,13 +723,14 @@ def update_audit_summary(
     if meta_performance:
         mpi_val = meta_performance.get("mpi", 0.0)
         mpi_status = meta_performance.get("classification", "Unknown")
+        mpi_slope = meta_performance.get("forecast_slope", 0.0)
         if mpi_val >= 80:
             mpi_emoji = "🟢"
         elif mpi_val >= 60:
             mpi_emoji = "🟡"
         else:
             mpi_emoji = "🔴"
-        mpi_info = f" | MPI {mpi_val:.1f}% {mpi_emoji} {mpi_status}, Trend chart rendered"
+        mpi_info = f" | MPI {mpi_val:.1f}% {mpi_emoji} {mpi_status}, Trend chart rendered, Forecast projection (slope: {mpi_slope:+.2f}%, horizon: 5 runs)"
     
     block = (
         f"{AUDIT_MARKER_BEGIN}\n"
@@ -803,7 +864,12 @@ def main(argv: list[str] | None = None) -> int:
         })
     
     # Build dashboard
-    html = build_dashboard_html(rei_history, rsi_series, ghs_series, current_eval, meta_perf, model_hist)
+    html, forecast_slope = build_dashboard_html(rei_history, rsi_series, ghs_series, current_eval, meta_perf, model_hist)
+    
+    # Add forecast slope to meta_perf for audit summary
+    if meta_perf is None:
+        meta_perf = {}
+    meta_perf["forecast_slope"] = forecast_slope
     
     # Write dashboard
     os.makedirs(os.path.dirname(args.output), exist_ok=True)

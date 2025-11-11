@@ -1440,8 +1440,31 @@ jobs:
         - name: Append run summary
           run: echo "📈 Reflex meta-evaluation completed — see REFLEX_META block in audit summary." >> $GITHUB_STEP_SUMMARY
 
+  governance-reflex-forecast-evaluator:
+    needs: [governance-reflex-meta-evaluator]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+      - name: Evaluate REI-MPI Forecast Alignment
+        run: |
+          python scripts/workflow_utils/governance_reflex_forecast_evaluator.py || true
+      - name: Commit forecast alignment results
+        run: |
+          git config user.name "github-actions"
+          git config user.email "actions@github.com"
+          git add reports/reflex_forecast_alignment.json reports/audit_summary.md || true
+          git commit -m "ci: evaluate REI-MPI forecast alignment and correlation" || echo "No changes"
+      - name: Append run summary
+        run: echo "🔗 Reflex forecast alignment evaluated — see REFLEX_FORECAST block in audit summary." >> $GITHUB_STEP_SUMMARY
+
   generate-reflex-feedback-dashboard:
-    needs: [governance-reflex-learning-model, governance-reflex-meta-evaluator]
+    needs: [governance-reflex-learning-model, governance-reflex-meta-evaluator, governance-reflex-forecast-evaluator]
     runs-on: ubuntu-latest
     permissions:
       contents: write
