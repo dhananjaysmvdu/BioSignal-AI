@@ -6,8 +6,8 @@ Updated: 2025-11-11T14:29:45+00:00
 <!-- REFLEX_HEALTH_DASHBOARD:END -->
 
 <!-- INTEGRITY_REGISTRY:BEGIN -->
-Updated: 2025-11-11T14:30:02+00:00
-📘 Integrity registry updated — 5 total entries tracked (latest score: 97.5%).
+Updated: 2025-11-11T15:18:10+00:00
+📘 Integrity registry updated — 7 total entries tracked (latest score: 97.5%).
 <!-- INTEGRITY_REGISTRY:END -->
 
 <!-- INTEGRITY_REGISTRY_SCHEMA:BEGIN -->
@@ -38,6 +38,11 @@ Updated: 2025-11-11T14:50:15+00:00
 Updated: 2025-11-11T14:52:30+00:00
 ✅ Release integrity validation passed — All checks: 4/4 passed. DOI verified in documentation. Capsule ready. Status: REPRODUCIBLE (pending capsule tag creation via workflow).
 <!-- RELEASE_VALIDATION:END -->
+
+<!-- LONG_TERM_MONITORING:BEGIN -->
+Updated: 2025-11-11T14:57:00+00:00
+🔍 Long-term reproducibility monitoring initialized — Weekly validation scheduled (Monday 04:00 UTC). Baseline metrics recorded. Registry updated with release entry (7 total entries).
+<!-- LONG_TERM_MONITORING:END -->
 
 <!-- INSTRUCTION_EXECUTION:BEGIN -->
 Updated: 2025-11-11T14:40:30+00:00
