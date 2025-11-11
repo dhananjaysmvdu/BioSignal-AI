@@ -15,8 +15,8 @@ Updated: 2025-11-11T14:30:02+00:00
 <!-- INTEGRITY_REGISTRY_SCHEMA:END -->
 
 <!-- TRANSPARENCY_MANIFEST:BEGIN -->
-Updated: 2025-11-11T14:42:01+00:00
-📄 Governance transparency manifest refreshed — 5976 bytes written.
+Updated: 2025-11-11T14:46:31+00:00
+📄 Governance transparency manifest refreshed — 6042 bytes written.
 <!-- TRANSPARENCY_MANIFEST:END -->
 
 <!-- REPRODUCIBILITY_VALIDATION:BEGIN -->

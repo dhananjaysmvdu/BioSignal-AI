@@ -147,7 +147,7 @@ Reflex Prediction: last actual REI=+0.00, predicted=+0.00, error=0.00.
 <!-- REFLEX_REINFORCEMENT:END -->
 
 <!-- REPRODUCIBILITY_CAPSULE:BEGIN -->
-Capsule generated 2025-11-11 (26 files, SHA256 verified)
+Capsule generated 2025-11-11 (31 files, SHA256 verified)
 <!-- REPRODUCIBILITY_CAPSULE:END -->
 
 <!-- REFLEX_SELF_AUDIT:BEGIN -->
@@ -175,6 +175,10 @@ Updated: 2025-11-11T14:30:08+00:00
 <!-- INTEGRITY_REGISTRY_SCHEMA:END -->
 
 <!-- TRANSPARENCY_MANIFEST:BEGIN -->
-Updated: 2025-11-11T14:30:18+00:00
-📄 Governance transparency manifest refreshed — 5983 bytes written.
+Updated: 2025-11-11T14:46:37+00:00
+📄 Governance transparency manifest refreshed — 6042 bytes written.
 <!-- TRANSPARENCY_MANIFEST:END -->
+
+<!-- SCHEMA_PROVENANCE:BEGIN -->
+Schema ledger updated — new entry 6eb446f7cca7…
+<!-- SCHEMA_PROVENANCE:END -->
