@@ -14,6 +14,12 @@ author: "Mrityunjay Dhananjay"
 ![Coverage](badges/coverage.svg)
 <!-- COVERAGE_BADGE:END -->
 
+![Integrity](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/dhananjaysmvdu/BioSignal-AI/main/badges/integrity_status.json)
+![Reproducibility](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/dhananjaysmvdu/BioSignal-AI/main/badges/reproducibility_status.json)
+
+> **Governance Health:** Live integrity and reproducibility scores updated with each release.  
+> Scores ≥90 = 🟢 High Integrity | 70–89 = 🟡 Stable | <70 = 🔴 Review Required
+
 <!-- REGIME_ALERT_BADGE:BEGIN -->
 Regime Stability: Stable (RSI 100%) — last update pending next scheduled governance audit.
 <!-- REGIME_ALERT_BADGE:END -->
@@ -83,6 +89,16 @@ Notebook `notebooks/generate_eval_report.ipynb` (planned) will aggregate calibra
 - Traceability: `logs/traceability.json` records model hash, config, dataset, and timestamps.
 - Literature and experimental roadmap guide bias audits and reader study planning.
 
+### Reflex Integrity Sentinel Scoring
+Integrity = 100 − (Σ violations × 15 + Σ warnings × 2.5)
+
+Notes:
+• Violations represent critical rule breaches (e.g., missing required artifacts, non-monotonic timestamps, data integrity failures, parameter incoherence). Each violation deducts 15 points.
+• Warnings represent tolerable inconsistencies (e.g., minor cross-validation mismatches, insufficient history, missing optional fields). Each warning deducts 2.5 points.
+• Score is clamped to [0, 100].
+
+Adaptive-learning gates below 70 are skipped for safety.
+
 ## Post-Market Surveillance (Planned)
 Upcoming modules will extend drift detection, adverse event logging, and periodic performance re-evaluation aligned with ISO 14971 risk controls and IEC 62304 maintenance procedures.
 
@@ -97,6 +113,12 @@ If you use BioSignal-X in your research, please cite using the included `CITATIO
 	url = {https://huggingface.co/spaces/LogDMax/BioSignal-X}
 }
 ```
+
+**Governance Whitepaper:** For a formal description of the Reflex Governance Architecture, see [`docs/GOVERNANCE_WHITEPAPER.md`](docs/GOVERNANCE_WHITEPAPER.md). This IEEE/ACM-style document describes the self-verifying feedback system, schema provenance ledger, and adaptive control mechanisms. Cite as:
+
+> Reflex Governance Architecture: Self-Verifying Adaptive Control System, v1.0  
+> DOI: https://doi.org/10.5281/zenodo.14173152
+> Repository: https://github.com/dhananjaysmvdu/BioSignal-AI
 
 ## Project Overview
 - **Title:** BioSignal-X
