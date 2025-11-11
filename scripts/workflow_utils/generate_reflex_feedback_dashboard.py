@@ -208,10 +208,10 @@ def build_dashboard_html(
         if mpi_trend_values:
             trend_chart = f"""
       <div style="margin-top: 16px;">
-        <h4 style="margin: 8px 0;">MPI Trend (Last {len(mpi_trend_values)} Runs): {mpi_trend_direction}</h4>
+        <h4 style="margin: 8px 0;">Meta-Performance Trend — Last {len(mpi_trend_values)} Runs (MPI %) {mpi_trend_direction}</h4>
         <canvas id="mpiTrendChart" width="600" height="150"></canvas>
         <p style="font-size: 12px; color: #666; margin-top: 4px;">
-          Meta-Performance Index trend — green = stable (≥80%), yellow = mild drift (60-79%), red = degradation (<60%).
+          Green = stable (≥80%), yellow = mild drift (60-79%), red = degradation (<60%). Rolling mean shows short-term stability.
         </p>
       </div>
 """
@@ -242,14 +242,16 @@ def build_dashboard_html(
     h1 {{ margin-bottom: 8px; }}
     .status {{ background: #f5f5f5; padding: 12px 16px; border-radius: 8px; margin-bottom: 16px; }}
     .grid {{ display: grid; grid-template-columns: 1fr; gap: 24px; }}
-    canvas {{ width: 100%; max-width: 900px; height: 300px; border: 1px solid #eee; background: #fff; }}
+    canvas {{ width: 100%; max-width: 900px; height: 300px; border: 1px solid #eee; background: #fff; cursor: crosshair; }}
     table {{ border-collapse: collapse; width: 100%; max-width: 900px; }}
     th, td {{ border: 1px solid #ddd; padding: 8px; }}
     th {{ background: #fafafa; text-align: left; }}
     .foot {{ margin-top: 16px; color: #666; font-size: 13px; }}
+    #mpiTooltip {{ position: absolute; display: none; background: #222; color: #fff; padding: 4px 8px; border-radius: 4px; font-size: 12px; pointer-events: none; z-index: 1000; }}
   </style>
 </head>
 <body>
+  <div id="mpiTooltip"></div>
   <h1>Reflex Feedback Dashboard</h1>
   <div class="status">
     <strong>Current Status:</strong> REI {current_rei:+.2f} {current_emoji} {current_class} | RSI {current_rsi:.1f}% | GHS {current_ghs:.1f}%
@@ -561,6 +563,28 @@ def build_dashboard_html(
       
       ctx.stroke();
       
+      // Compute and draw rolling mean (5-point window)
+      const rolling = [];
+      for (let i = 0; i < data.length; i++) {{
+        const start = Math.max(0, i - 4);
+        const subset = data.slice(start, i + 1);
+        const mean = subset.reduce((a, b) => a + b, 0) / subset.length;
+        rolling.push(mean);
+      }}
+      
+      ctx.beginPath();
+      ctx.setLineDash([5, 5]);
+      ctx.strokeStyle = '#999';
+      ctx.lineWidth = 1.5;
+      for (let i = 0; i < rolling.length; i++) {{
+        const x = pad + (i / (data.length - 1 || 1)) * w;
+        const y = c.clientHeight - pad - (rolling[i] / 100) * h;
+        if (i === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+      }}
+      ctx.stroke();
+      ctx.setLineDash([]);
+      
       // Labels
       ctx.fillStyle = '#666';
       ctx.font = '11px Arial';
@@ -575,6 +599,28 @@ def build_dashboard_html(
       ctx.fillText('0%', pad - 5, c.clientHeight - pad);
       ctx.fillText('50%', pad - 5, c.clientHeight - pad - h / 2);
       ctx.fillText('100%', pad - 5, pad + 5);
+      
+      // Add tooltip interactivity
+      const tooltip = document.getElementById('mpiTooltip');
+      c.addEventListener('mousemove', (e) => {{
+        const rect = c.getBoundingClientRect();
+        const mouseX = e.clientX - rect.left - pad;
+        const pointSpacing = w / (data.length - 1 || 1);
+        const idx = Math.round(mouseX / pointSpacing);
+        
+        if (idx >= 0 && idx < data.length) {{
+          tooltip.style.left = (e.clientX + 10) + 'px';
+          tooltip.style.top = (e.clientY - 30) + 'px';
+          tooltip.innerHTML = `<strong>Run ${{idx + 1}}</strong><br>MPI: ${{data[idx].toFixed(1)}}%<br>${{labels[idx]}}`;
+          tooltip.style.display = 'block';
+        }} else {{
+          tooltip.style.display = 'none';
+        }}
+      }});
+      
+      c.addEventListener('mouseleave', () => {{
+        tooltip.style.display = 'none';
+      }});
     }}
     
     drawREI('reiChart');
