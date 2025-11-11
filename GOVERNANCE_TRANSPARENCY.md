@@ -1,6 +1,6 @@
 # Governance Transparency Manifest
 
-Generated: 2025-11-11T14:30:18+00:00
+Generated: 2025-11-11T14:42:01+00:00
 
 - Integrity Score: 97.5% — Violations: 0
 
@@ -8,7 +8,7 @@ Generated: 2025-11-11T14:30:18+00:00
 
 Name | Status | Updated (UTC) | Size | Notes
 ---|---|---:|---:|---
-Audit Summary | present | 2025-11-11T14:30:08+00:00 | 5954 | Consolidated audit run markers and notes
+Audit Summary | present | 2025-11-11T14:33:15+00:00 | 5954 | Consolidated audit run markers and notes
 Reflex Integrity | present | 2025-11-11T14:00:33+00:00 | 181 | Integrity score, violations, and warnings
 Reflex Self-Audit | present | 2025-11-11T13:59:23+00:00 | 840 | Comprehensive reflex health and classification
 Reflex Reinforcement | present | 2025-11-11T10:26:37+00:00 | 427 | Reinforcement index and alignment
@@ -111,7 +111,7 @@ Schema hash: 6eb446f7cca747bf7bc4c3473c6b1d2a0bfb61a338740b521a74159aa82f5cfb
 If you use or build on this governance reflex architecture, please cite:
 
 > Reflex Governance Architecture: Self-Verifying Adaptive Control System, v1.0  
-> DOI: (to be assigned via Zenodo upon first release)  
+> DOI: https://doi.org/10.5281/zenodo.14173152  
 > Repository: https://github.com/dhananjaysmvdu/BioSignal-AI
 
 ### Research Export Artifacts

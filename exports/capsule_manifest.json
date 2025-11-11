@@ -1,0 +1,174 @@
+{
+  "generated_on": "2025-11-11",
+  "capsule": {
+    "path": "exports/governance_reproducibility_capsule_2025-11-11.zip",
+    "size": 42050,
+    "sha256": "e8cf3e3fd735ce0f7bda3a46b4a0a13f0800372138ef6721940f9848ebb9329e",
+    "file_count": 31
+  },
+  "files": [
+    {
+      "path": "GOVERNANCE_TRANSPARENCY.md",
+      "size": 5976,
+      "sha256": "3e1457ce7fb091da08c35c3d604854b7ce1049e6e1e589b4b06ed1f520c0c1e8"
+    },
+    {
+      "path": "archives/transparency_snapshots/README.md",
+      "size": 3523,
+      "sha256": "3dc21d918ff37e94e6a632b611dbc224a99d19400069389f7d621dc75b2a21e8"
+    },
+    {
+      "path": "badges/integrity_status.json",
+      "size": 105,
+      "sha256": "1d33ee13bb02bbec348f79830b139553fd6b8fd82070e073072c87fe710b9dae"
+    },
+    {
+      "path": "badges/reproducibility_status.json",
+      "size": 111,
+      "sha256": "3583b9eff91fd30d1688cc8f0f29cf6633535d1049a078b7547b93262c54fa2b"
+    },
+    {
+      "path": "docs/GOVERNANCE_WHITEPAPER.md",
+      "size": 22654,
+      "sha256": "2f1ea9373287e17ff543da126d98eeb4acf668310ba79452f17b37b4ef27a613"
+    },
+    {
+      "path": "exports/integrity_metrics_registry.csv",
+      "size": 517,
+      "sha256": "f90d4d62ae37886e05b5a01a8e8e69078bc85a3ca1baf9643adb35ac8c9bb50e"
+    },
+    {
+      "path": "exports/reflex_health_timeline.csv",
+      "size": 288,
+      "sha256": "aeaaa8ee606f6f7ee6f691204f5ec16f90766d8adb2a41a1a74cdeb6721cc288"
+    },
+    {
+      "path": "reports/archetype_dynamics_dashboard.html",
+      "size": 5499,
+      "sha256": "f0c26aafc1b24c78c9979428004efd6df31a868ad6fd17c4db86214bd24b9b7d"
+    },
+    {
+      "path": "reports/archetype_transitions.json",
+      "size": 662,
+      "sha256": "b22be072d3466cf1007fdc044d0ef6d6ca8154a9a597e7a6d412f7e8221e21f4"
+    },
+    {
+      "path": "reports/audit_summary.md",
+      "size": 5954,
+      "sha256": "84e2c975eebd62725e8b1d0f30dbf12f643d6478ef7fd6acefdf106ce096a0c8"
+    },
+    {
+      "path": "reports/confidence_adaptation.json",
+      "size": 101,
+      "sha256": "871ab4f7b020c7cf92b7200073d5f8bc362e1c893b0f677449a99fb61590bb55"
+    },
+    {
+      "path": "reports/forecast_confidence.json",
+      "size": 32,
+      "sha256": "6c72d4257114e2124e32db29d49c2db54869a0878cbd35db1806d35af48d8a0a"
+    },
+    {
+      "path": "reports/governance_archetype.json",
+      "size": 826,
+      "sha256": "141a5fbbd902865fb94f0213c79b7409ed2aede391f1aa41f291f51819074888"
+    },
+    {
+      "path": "reports/governance_coherence.json",
+      "size": 559,
+      "sha256": "b22ab80aa274d7dc3f03eb5f10c6870b6bda6ebb1ca7799af07299b436a47f48"
+    },
+    {
+      "path": "reports/governance_equilibrium.json",
+      "size": 649,
+      "sha256": "a49e78aadfac2a21f1f8b90fa5e5c080d95f627d926810d52a44d123ead8ab7b"
+    },
+    {
+      "path": "reports/governance_memory.json",
+      "size": 719,
+      "sha256": "208ba714a68fa84a044ee504b6ee0374a6cf318d905505b5b0b055221e69167d"
+    },
+    {
+      "path": "reports/governance_meta_reflection.md",
+      "size": 1773,
+      "sha256": "1c0563a17443b1fe30f3c13f7f60b5262d37f9c4e4150e8da9db0d5b982ea937"
+    },
+    {
+      "path": "reports/governance_policy.json",
+      "size": 37,
+      "sha256": "50121c4af3d782812f9c8f5a26d677a759950f2e0949cdd084a8b48d50b80ecb"
+    },
+    {
+      "path": "reports/provenance_dashboard.html",
+      "size": 22958,
+      "sha256": "abad1928a4ff8f3386f502373632e78cab16bb139191f9fa293248bacfe93c0a"
+    },
+    {
+      "path": "reports/reflex_evaluation.json",
+      "size": 358,
+      "sha256": "9af7c25169363ba4d3bbb7024c66a80701f2f2900cd8554483226517c0f03f63"
+    },
+    {
+      "path": "reports/reflex_feedback_dashboard.html",
+      "size": 24144,
+      "sha256": "fc1bd0c7976d34dc1393d83f92947b7a5ac3195dd78284ceee36316a5a81784e"
+    },
+    {
+      "path": "reports/reflex_health_dashboard.html",
+      "size": 11360,
+      "sha256": "917f45fdfa7068b9ecd4f9f1a8e2d5213eb93d760e93b5f17adf74feee50454e"
+    },
+    {
+      "path": "reports/reflex_integrity.json",
+      "size": 181,
+      "sha256": "824d75b634819a346bc94ca9ced9cb8348693296d8ece43648bc95e835fd5364"
+    },
+    {
+      "path": "reports/reflex_learning_model.json",
+      "size": 393,
+      "sha256": "d24424b409e0b9245a180032cc338e939031880f6bd55f8670a5328c6e165d39"
+    },
+    {
+      "path": "reports/reflex_meta_performance.json",
+      "size": 80,
+      "sha256": "0ca71f46caa9bd9f62cb32e1e2a3c4a15203d54821517e5388bdb4d51ae6e72b"
+    },
+    {
+      "path": "reports/reflex_predictive_dashboard.html",
+      "size": 11011,
+      "sha256": "693fd423222e64a704ad3a9b1eb4b72186c157ecfb88235430a8b95522e1dad8"
+    },
+    {
+      "path": "reports/reflex_reinforcement.json",
+      "size": 427,
+      "sha256": "2c428c43ec630a066c648c56bef84053f8cd51f33eca1b94cd7a76003695dcf0"
+    },
+    {
+      "path": "reports/reflex_self_audit.json",
+      "size": 840,
+      "sha256": "7d2ec1ec68d1865e0d670e89f9f239db986fc8d3f59396a47edb06836de650e0"
+    },
+    {
+      "path": "reports/regime_stability.json",
+      "size": 357,
+      "sha256": "d25ef4aa86aaa148992106e3ee63b97a374669841ba3a6abb67a753d5793e2cf"
+    },
+    {
+      "path": "reports/regime_stability_gauge.html",
+      "size": 1616,
+      "sha256": "d2190459c9480534da9b651cb2c0900fdb3d08bfc5cbf6e04db962d1f14c2696"
+    },
+    {
+      "path": "reports/trust_correlation.json",
+      "size": 220,
+      "sha256": "527722e9a7edee5f6b7418b494f5188ff010eeb89f2a36b6fac555822b031586"
+    }
+  ],
+  "sources": [
+    "reports",
+    "exports",
+    "badges",
+    "archives/transparency_snapshots",
+    "GOVERNANCE_TRANSPARENCY.md",
+    "docs/GOVERNANCE_WHITEPAPER.md"
+  ]
+}

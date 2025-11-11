@@ -15,8 +15,8 @@ Updated: 2025-11-11T14:30:02+00:00
 <!-- INTEGRITY_REGISTRY_SCHEMA:END -->
 
 <!-- TRANSPARENCY_MANIFEST:BEGIN -->
-Updated: 2025-11-11T14:30:13+00:00
-📄 Governance transparency manifest refreshed — 5983 bytes written.
+Updated: 2025-11-11T14:42:01+00:00
+📄 Governance transparency manifest refreshed — 5976 bytes written.
 <!-- TRANSPARENCY_MANIFEST:END -->
 
 <!-- REPRODUCIBILITY_VALIDATION:BEGIN -->
@@ -25,9 +25,14 @@ Updated: 2025-11-11T14:30:45+00:00
 <!-- REPRODUCIBILITY_VALIDATION:END -->
 
 <!-- REPRODUCIBILITY_CAPSULE_STATUS:BEGIN -->
-Updated: 2025-11-11T14:35:12+00:00
-📦 Reproducibility capsule ready — exports/governance_reproducibility_capsule_2025-11-11.zip (26 files, SHA256: 23610ee4). Awaiting Zenodo DOI for DOI propagation.
+Updated: 2025-11-11T14:50:15+00:00
+📦 Reproducibility capsule regenerated with DOI metadata — exports/governance_reproducibility_capsule_2025-11-11.zip (31 files, SHA256: e8cf3e3f). DOI: https://doi.org/10.5281/zenodo.14173152
 <!-- REPRODUCIBILITY_CAPSULE_STATUS:END -->
+
+<!-- DOI_PROPAGATION:BEGIN -->
+Updated: 2025-11-11T14:50:15+00:00
+✅ DOI propagated across governance documentation — README.md, GOVERNANCE_WHITEPAPER.md, GOVERNANCE_TRANSPARENCY.md verified. DOI: https://doi.org/10.5281/zenodo.14173152
+<!-- DOI_PROPAGATION:END -->
 
 <!-- INSTRUCTION_EXECUTION:BEGIN -->
 Updated: 2025-11-11T14:40:30+00:00
