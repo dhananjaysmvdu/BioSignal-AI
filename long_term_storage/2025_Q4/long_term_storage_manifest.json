@@ -1,0 +1,16 @@
+{
+  "generated": "2025-11-11T15:00:00+00:00",
+  "quarter": "2025_Q4",
+  "files": [
+    {
+      "path": "integrity_metrics_registry.csv",
+      "size": 577,
+      "sha256": "73bb7db891e9abe9960488aee2d2562b75c96bdba87665c4469bf053e9ba73e1"
+    },
+    {
+      "path": "reflex_health_timeline.csv",
+      "size": 288,
+      "sha256": "aeaaa8ee606f6f7ee6f691204f5ec16f90766d8adb2a41a1a74cdeb6721cc288"
+    }
+  ]
+}

@@ -1,0 +1,6 @@
+# Reflex Health Timeline - Compliance Export
+# Generated: 2025-11-11 14:29:51 UTC
+# This report is auto-generated for governance audit transparency.
+
+timestamp,rei_score,mpi_score,confidence,rri_score,health_score,classification
+2025-11-11T13:59:23Z,0.00,0.00,0.000,0.00,69.31,Stable
