@@ -120,6 +120,10 @@ If you use BioSignal-X in your research, please cite using the included `CITATIO
 > DOI: https://doi.org/10.5281/zenodo.14173152
 > Repository: https://github.com/dhananjaysmvdu/BioSignal-AI
 
+### Governance Bulletins
+Quarterly summaries of governance health, integrity trends, and reproducibility certification status:
+- **[Q4 2025 Bulletin](docs/quarterly/GOVERNANCE_SUMMARY_Q4_2025.md)** — v1.0.0-Whitepaper release metrics, DOI integration, and operational continuity
+
 ## Project Overview
 - **Title:** BioSignal-X
 - **Description:** AI-driven biosignal analysis platform integrating deep learning with biomedical data visualization and explainability (Grad-CAM).
