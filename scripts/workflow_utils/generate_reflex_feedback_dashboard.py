@@ -92,6 +92,7 @@ def build_dashboard_html(
     # Extract MPI trend from model history (last 10 runs)
     mpi_trend_values = []
     mpi_trend_labels = []
+    mpi_trend_direction = "→ steady"
     if model_history:
         # Get last 10 entries
         recent_history = model_history[-10:] if len(model_history) > 10 else model_history
@@ -113,6 +114,17 @@ def build_dashboard_html(
             except Exception:
                 label = ts[:10] if ts else "N/A"
             mpi_trend_labels.append(label)
+        
+        # Calculate trend direction
+        if len(mpi_trend_values) >= 2:
+            mid = len(mpi_trend_values) // 2
+            first_half_avg = sum(mpi_trend_values[:mid]) / mid if mid > 0 else 0
+            second_half_avg = sum(mpi_trend_values[mid:]) / (len(mpi_trend_values) - mid)
+            delta = second_half_avg - first_half_avg
+            if delta > 5:
+                mpi_trend_direction = "↑ improving"
+            elif delta < -5:
+                mpi_trend_direction = "↓ degrading"
     
     # Prepare data for JavaScript
     rei_labels = []
@@ -196,10 +208,10 @@ def build_dashboard_html(
         if mpi_trend_values:
             trend_chart = f"""
       <div style="margin-top: 16px;">
-        <h4 style="margin: 8px 0;">MPI Trend (Last {len(mpi_trend_values)} Runs)</h4>
+        <h4 style="margin: 8px 0;">MPI Trend (Last {len(mpi_trend_values)} Runs): {mpi_trend_direction}</h4>
         <canvas id="mpiTrendChart" width="600" height="150"></canvas>
         <p style="font-size: 12px; color: #666; margin-top: 4px;">
-          Meta-Performance Index trend — green = stable, yellow = mild drift, red = degradation.
+          Meta-Performance Index trend — green = stable (≥80%), yellow = mild drift (60-79%), red = degradation (<60%).
         </p>
       </div>
 """
@@ -493,6 +505,17 @@ def build_dashboard_html(
       const w = c.clientWidth - pad * 2;
       const h = c.clientHeight - pad * 2;
       
+      // Gridlines (horizontal at 0%, 20%, 40%, 60%, 80%, 100%)
+      ctx.strokeStyle = '#f0f0f0';
+      ctx.lineWidth = 1;
+      for (let pct = 0; pct <= 100; pct += 20) {{
+        const y = c.clientHeight - pad - (pct / 100) * h;
+        ctx.beginPath();
+        ctx.moveTo(pad, y);
+        ctx.lineTo(c.clientWidth - pad, y);
+        ctx.stroke();
+      }}
+      
       // Axes
       ctx.strokeStyle = '#ddd';
       ctx.lineWidth = 1;
@@ -501,6 +524,18 @@ def build_dashboard_html(
       ctx.lineTo(pad, c.clientHeight - pad);
       ctx.lineTo(c.clientWidth - pad, c.clientHeight - pad);
       ctx.stroke();
+      
+      // Calculate trend direction
+      let trendDir = '→';
+      if (data.length >= 2) {{
+        const firstHalf = data.slice(0, Math.floor(data.length / 2));
+        const secondHalf = data.slice(Math.floor(data.length / 2));
+        const avgFirst = firstHalf.reduce((a, b) => a + b, 0) / firstHalf.length;
+        const avgSecond = secondHalf.reduce((a, b) => a + b, 0) / secondHalf.length;
+        const delta = avgSecond - avgFirst;
+        if (delta > 5) trendDir = '↑';
+        else if (delta < -5) trendDir = '↓';
+      }}
       
       // Draw line
       const latest = data[data.length - 1];

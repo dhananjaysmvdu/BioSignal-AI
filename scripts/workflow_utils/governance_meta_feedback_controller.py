@@ -206,9 +206,10 @@ def main(argv: list[str] | None = None) -> int:
     adjustments = compute_adjustments(mpi, current_lr_factor, current_audit_freq)
     
     # Build output
+    timestamp = datetime.now(timezone.utc).isoformat()
     result = {
         "status": "ok",
-        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "timestamp": timestamp,
         "mpi": mpi,
         "mpi_classification": classification,
         "meta_feedback_status": adjustments["status"],
@@ -220,6 +221,15 @@ def main(argv: list[str] | None = None) -> int:
     os.makedirs(args.output.parent, exist_ok=True)
     with open(args.output, "w", encoding="utf-8") as f:
         json.dump(result, f, indent=2)
+    
+    # Update policy file with new parameters (persistence)
+    policy["learning_rate_factor"] = round(adjustments["learning_rate_factor"]["new"], 3)
+    policy["audit_frequency_days"] = int(adjustments["audit_frequency_days"]["new"])
+    policy["meta_feedback_status"] = adjustments["status"]
+    policy["last_meta_feedback"] = timestamp
+    
+    with open(args.policy, "w", encoding="utf-8") as f:
+        json.dump(policy, f, indent=2)
     
     # Update audit summary
     update_audit_summary(
