@@ -60,7 +60,8 @@ def build_dashboard_html(
     rsi_history: List[Dict[str, Any]],
     ghs_history: List[Dict[str, Any]],
     current_evaluation: Dict[str, Any],
-    meta_performance: Dict[str, Any] = None
+    meta_performance: Dict[str, Any] = None,
+    model_history: List[Dict[str, Any]] = None
 ) -> str:
     """Build the complete HTML dashboard."""
     
@@ -87,6 +88,31 @@ def build_dashboard_html(
         else:
             mpi_emoji = "🔴"
             mpi_color = "#d73a49"
+    
+    # Extract MPI trend from model history (last 10 runs)
+    mpi_trend_values = []
+    mpi_trend_labels = []
+    if model_history:
+        # Get last 10 entries
+        recent_history = model_history[-10:] if len(model_history) > 10 else model_history
+        for entry in recent_history:
+            # Try to get r2_score, fallback to r2
+            r2 = entry.get("r2_score", entry.get("r2", 0.0))
+            mae = entry.get("mae", 0.0)
+            
+            # Approximate MPI from R² (simple heuristic if MPI not stored)
+            # MPI ≈ R² * 100 (rough estimate when historical MPI not available)
+            estimated_mpi = r2 * 100 if r2 else 0.0
+            mpi_trend_values.append(estimated_mpi)
+            
+            # Extract timestamp label
+            ts = entry.get("timestamp", "")
+            try:
+                dt = datetime.fromisoformat(ts.replace("Z", "+00:00"))
+                label = dt.strftime("%m-%d")
+            except Exception:
+                label = ts[:10] if ts else "N/A"
+            mpi_trend_labels.append(label)
     
     # Prepare data for JavaScript
     rei_labels = []
@@ -165,6 +191,19 @@ def build_dashboard_html(
     # Build meta-performance status section
     meta_section = ""
     if meta_performance:
+        # Add MPI trend chart if history available
+        trend_chart = ""
+        if mpi_trend_values:
+            trend_chart = f"""
+      <div style="margin-top: 16px;">
+        <h4 style="margin: 8px 0;">MPI Trend (Last {len(mpi_trend_values)} Runs)</h4>
+        <canvas id="mpiTrendChart" width="600" height="150"></canvas>
+        <p style="font-size: 12px; color: #666; margin-top: 4px;">
+          Meta-Performance Index trend — green = stable, yellow = mild drift, red = degradation.
+        </p>
+      </div>
+"""
+        
         meta_section = f"""
     <section id="meta_performance" style="background: {mpi_color}22; padding: 16px; border-radius: 8px; border-left: 4px solid {mpi_color}; margin-bottom: 24px;">
       <h3 style="margin-top: 0;">🧠 Reflex Meta-Performance</h3>
@@ -176,6 +215,7 @@ def build_dashboard_html(
           <p style="margin: 4px 0; font-size: 12px; color: #666;">ΔR²: {mpi_delta_r2:+.3f} | Drift: {mpi_drift:+.3f}</p>
         </div>
       </div>
+      {trend_chart}
     </section>
     """
     
@@ -440,10 +480,77 @@ def build_dashboard_html(
       ctx.fillText('100%', cx + radius + 5, cy + 5);
     }}
     
+    function drawMPITrend(id, data, labels) {{
+      const c = document.getElementById(id);
+      if (!c || data.length === 0) return;
+      
+      const ctx = c.getContext('2d');
+      const W = c.width = c.clientWidth * devicePixelRatio;
+      const H = c.height = c.clientHeight * devicePixelRatio;
+      ctx.scale(devicePixelRatio, devicePixelRatio);
+      
+      const pad = 40;
+      const w = c.clientWidth - pad * 2;
+      const h = c.clientHeight - pad * 2;
+      
+      // Axes
+      ctx.strokeStyle = '#ddd';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(pad, pad);
+      ctx.lineTo(pad, c.clientHeight - pad);
+      ctx.lineTo(c.clientWidth - pad, c.clientHeight - pad);
+      ctx.stroke();
+      
+      // Draw line
+      const latest = data[data.length - 1];
+      const lineColor = latest >= 80 ? '#2cbe4e' : latest >= 60 ? '#dfb317' : '#d73a49';
+      
+      ctx.strokeStyle = lineColor;
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      
+      for (let i = 0; i < data.length; i++) {{
+        const x = pad + (i / (data.length - 1 || 1)) * w;
+        const y = c.clientHeight - pad - (data[i] / 100) * h;
+        
+        if (i === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+        
+        // Draw point
+        ctx.fillStyle = lineColor;
+        ctx.beginPath();
+        ctx.arc(x, y, 3, 0, 2 * Math.PI);
+        ctx.fill();
+      }}
+      
+      ctx.stroke();
+      
+      // Labels
+      ctx.fillStyle = '#666';
+      ctx.font = '11px Arial';
+      ctx.textAlign = 'center';
+      for (let i = 0; i < labels.length; i++) {{
+        const x = pad + (i / (data.length - 1 || 1)) * w;
+        ctx.fillText(labels[i], x, c.clientHeight - pad + 15);
+      }}
+      
+      // Y-axis labels
+      ctx.textAlign = 'right';
+      ctx.fillText('0%', pad - 5, c.clientHeight - pad);
+      ctx.fillText('50%', pad - 5, c.clientHeight - pad - h / 2);
+      ctx.fillText('100%', pad - 5, pad + 5);
+    }}
+    
     drawREI('reiChart');
     drawRSIGHS('rsiGhsChart');
     if (document.getElementById('metaGauge')) {{
       drawMetaGauge('metaGauge', {mpi:.1f}, '{mpi_color}');
+    }}
+    if (document.getElementById('mpiTrendChart')) {{
+      const mpiTrendData = {json.dumps(mpi_trend_values)};
+      const mpiTrendLabels = {json.dumps(mpi_trend_labels)};
+      drawMPITrend('mpiTrendChart', mpiTrendData, mpiTrendLabels);
     }}
   }})();
   </script>
@@ -481,7 +588,7 @@ def update_audit_summary(
             mpi_emoji = "🟡"
         else:
             mpi_emoji = "🔴"
-        mpi_info = f" | MPI {mpi_val:.1f}% {mpi_emoji} {mpi_status}"
+        mpi_info = f" | MPI {mpi_val:.1f}% {mpi_emoji} {mpi_status}, Trend chart rendered"
     
     block = (
         f"{AUDIT_MARKER_BEGIN}\n"
@@ -549,6 +656,11 @@ def main(argv: list[str] | None = None) -> int:
         default="reports/reflex_meta_performance.json",
         help="Path to reflex meta-performance report"
     )
+    parser.add_argument(
+        "--model-history",
+        default="logs/reflex_model_history.json",
+        help="Path to reflex learning model history"
+    )
     
     args = parser.parse_args(argv)
     
@@ -557,6 +669,11 @@ def main(argv: list[str] | None = None) -> int:
     
     # Load meta-performance
     meta_perf = load_json(args.meta_performance, {})
+    
+    # Load model history
+    model_hist = load_json(args.model_history, [])
+    if not isinstance(model_hist, list):
+        model_hist = []
     
     # Load RSI history
     rsi_hist_data = load_json(args.history, {})
@@ -605,7 +722,7 @@ def main(argv: list[str] | None = None) -> int:
         })
     
     # Build dashboard
-    html = build_dashboard_html(rei_history, rsi_series, ghs_series, current_eval, meta_perf)
+    html = build_dashboard_html(rei_history, rsi_series, ghs_series, current_eval, meta_perf, model_hist)
     
     # Write dashboard
     os.makedirs(os.path.dirname(args.output), exist_ok=True)

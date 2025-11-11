@@ -1462,6 +1462,8 @@ jobs:
             --history logs/regime_stability_history.json \
             --health reports/governance_health.json \
             --actions-log logs/regime_policy_actions.json \
+            --meta-performance reports/reflex_meta_performance.json \
+            --model-history logs/reflex_model_history.json \
             --output reports/reflex_feedback_dashboard.html \
             --audit-summary reports/audit_summary.md > dashboard_out.json || true
           cat dashboard_out.json || true
@@ -1527,8 +1529,65 @@ jobs:
           run: |
             echo "📊 Reflex prediction dashboard generated — R²=${{ steps.predictive.outputs.r2 }}, mean error=${{ steps.predictive.outputs.mean_error }}." >> $GITHUB_STEP_SUMMARY
 
+  governance-meta-feedback-controller:
+    needs: [governance-reflex-meta-evaluator]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+          cache-dependency-path: requirements.lock
+      - name: Apply adaptive meta-feedback coupling
+        id: feedback
+        run: |
+          python scripts/workflow_utils/governance_meta_feedback_controller.py \
+            --meta-performance reports/reflex_meta_performance.json \
+            --policy reports/governance_policy.json \
+            --output reports/meta_feedback_actions.json \
+            --audit-summary reports/audit_summary.md
+          
+          # Extract outputs
+          status=$(jq -r '.meta_feedback_status' reports/meta_feedback_actions.json)
+          mpi=$(jq -r '.mpi' reports/meta_feedback_actions.json)
+          lr_delta=$(jq -r '.adjustments.learning_rate_factor.delta' reports/meta_feedback_actions.json)
+          audit_delta=$(jq -r '.adjustments.audit_frequency_days.delta' reports/meta_feedback_actions.json)
+          
+          echo "status=$status" >> $GITHUB_OUTPUT
+          echo "mpi=$mpi" >> $GITHUB_OUTPUT
+          echo "lr_delta=$lr_delta" >> $GITHUB_OUTPUT
+          echo "audit_delta=$audit_delta" >> $GITHUB_OUTPUT
+      - name: Commit meta-feedback adjustments
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add reports/meta_feedback_actions.json reports/audit_summary.md
+          if git diff --staged --quiet; then
+            echo "No changes to commit"
+          else
+            git commit -m "reflex: apply adaptive meta-feedback coupling" \
+              -m "MPI=${{ steps.feedback.outputs.mpi }}%, Status=${{ steps.feedback.outputs.status }}" \
+              -m "Learning rate Δ${{ steps.feedback.outputs.lr_delta }}, Audit freq Δ${{ steps.feedback.outputs.audit_delta }} days"
+            git push
+          fi
+      - name: Append meta-feedback summary
+        run: |
+          if [ "${{ steps.feedback.outputs.status }}" = "critical" ]; then
+            emoji="🔴"
+          elif [ "${{ steps.feedback.outputs.status }}" = "caution" ]; then
+            emoji="🟡"
+          else
+            emoji="🟢"
+          fi
+          echo "🪶 Adaptive meta-feedback applied — status $emoji ${{ steps.feedback.outputs.status }}." >> $GITHUB_STEP_SUMMARY
+
   adaptive-learning-rate:
-    needs: [generate-reflex-predictive-dashboard]
+    needs: [governance-meta-feedback-controller]
     runs-on: ubuntu-latest
     permissions:
       contents: write
