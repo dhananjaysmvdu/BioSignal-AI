@@ -24,3 +24,8 @@ Updated: 2025-11-11T14:30:45+00:00
 ✅ Reproducibility validation complete — Pre-release state confirmed (no DOI/capsule tags yet). Documentation files verified.
 <!-- REPRODUCIBILITY_VALIDATION:END -->
 
+<!-- REPRODUCIBILITY_CAPSULE_STATUS:BEGIN -->
+Updated: 2025-11-11T14:35:12+00:00
+📦 Reproducibility capsule ready — exports/governance_reproducibility_capsule_2025-11-11.zip (26 files, SHA256: 23610ee4). Awaiting Zenodo DOI for DOI propagation.
+<!-- REPRODUCIBILITY_CAPSULE_STATUS:END -->
+
