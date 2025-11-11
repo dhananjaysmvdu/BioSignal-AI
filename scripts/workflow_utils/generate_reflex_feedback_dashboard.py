@@ -61,7 +61,8 @@ def build_dashboard_html(
     ghs_history: List[Dict[str, Any]],
     current_evaluation: Dict[str, Any],
     meta_performance: Dict[str, Any] = None,
-    model_history: List[Dict[str, Any]] = None
+    model_history: List[Dict[str, Any]] = None,
+    forecast_alignment: Dict[str, Any] = None
 ) -> str:
     """Build the complete HTML dashboard."""
     
@@ -258,6 +259,47 @@ def build_dashboard_html(
     </section>
     """
     
+    # Build forecast alignment section if available
+    alignment_section = ""
+    if forecast_alignment:
+        alignment_corr = forecast_alignment.get("rei_mpi_correlation", 0.0)
+        alignment_class = forecast_alignment.get("classification", "Unknown")
+        rei_values_align = forecast_alignment.get("rei_values", [])
+        mpi_values_align = forecast_alignment.get("mpi_values", [])
+        
+        # Color based on classification
+        if alignment_class == "Aligned improvement":
+            align_color = "#2cbe4e"
+            align_emoji = "✅"
+        elif alignment_class == "Diverging signals":
+            align_color = "#d73a49"
+            align_emoji = "⚠️"
+        else:
+            align_color = "#dfb317"
+            align_emoji = "➡️"
+        
+        alignment_section = f"""
+    <section id="forecast_alignment" style="background: {align_color}22; padding: 16px; border-radius: 8px; border-left: 4px solid {align_color}; margin-bottom: 24px;">
+      <h3 style="margin-top: 0;">🔗 Forecast Alignment (REI–MPI Correlation)</h3>
+      <div style="display: flex; align-items: flex-start; gap: 16px;">
+        <canvas id="alignmentScatter" width="400" height="300"></canvas>
+        <div>
+          <p style="font-size: 18px; margin: 4px 0;"><strong>Correlation:</strong> r = {alignment_corr:+.3f}</p>
+          <p style="font-size: 16px; margin: 4px 0;">{align_emoji} {alignment_class}</p>
+          <p style="margin: 8px 0 4px 0; font-size: 14px; color: #666;"><strong>Interpretation:</strong></p>
+          <p style="margin: 4px 0; font-size: 13px; color: #666;">
+            {"Policy effectiveness and meta-learning move together. Forecasts are mutually reinforcing." if alignment_class == "Aligned improvement" else 
+             "Policy and meta-learning are anti-correlated. Investigate discrepancies between REI and MPI trends." if alignment_class == "Diverging signals" else
+             "Weak correlation. Policy effectiveness and meta-learning are loosely coupled."}
+          </p>
+          <p style="margin: 8px 0 4px 0; font-size: 12px; color: #999;">
+            Scatter shows {len(rei_values_align)} recent samples with best-fit line.
+          </p>
+        </div>
+      </div>
+    </section>
+    """
+    
     html = f"""<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -285,6 +327,8 @@ def build_dashboard_html(
   </div>
   
   {meta_section}
+  
+  {alignment_section}
   
   <div class="grid">
     <div>
@@ -682,6 +726,136 @@ def build_dashboard_html(
       }});
     }}
     
+    function drawAlignmentScatter(id, reiData, mpiData, correlation, classification) {{
+      const c = document.getElementById(id);
+      if (!c || reiData.length === 0 || mpiData.length === 0) return;
+      
+      const ctx = c.getContext('2d');
+      const W = c.width = c.clientWidth * devicePixelRatio;
+      const H = c.height = c.clientHeight * devicePixelRatio;
+      ctx.scale(devicePixelRatio, devicePixelRatio);
+      
+      const pad = 50;
+      const w = c.clientWidth - pad * 2;
+      const h = c.clientHeight - pad * 2;
+      
+      // Find data ranges
+      const reiMin = Math.min(...reiData);
+      const reiMax = Math.max(...reiData);
+      const mpiMin = Math.min(...mpiData);
+      const mpiMax = Math.max(...mpiData);
+      
+      // Expand ranges slightly for padding
+      const reiRange = reiMax - reiMin || 1;
+      const mpiRange = mpiMax - mpiMin || 1;
+      const reiPad = reiRange * 0.1;
+      const mpiPad = mpiRange * 0.1;
+      
+      const xMin = reiMin - reiPad;
+      const xMax = reiMax + reiPad;
+      const yMin = mpiMin - mpiPad;
+      const yMax = mpiMax + mpiPad;
+      
+      // Mapping functions
+      const xMap = (rei) => pad + ((rei - xMin) / (xMax - xMin)) * w;
+      const yMap = (mpi) => c.clientHeight - pad - ((mpi - yMin) / (yMax - yMin)) * h;
+      
+      // Draw axes
+      ctx.strokeStyle = '#999';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(pad, pad);
+      ctx.lineTo(pad, c.clientHeight - pad);
+      ctx.lineTo(c.clientWidth - pad, c.clientHeight - pad);
+      ctx.stroke();
+      
+      // Grid lines
+      ctx.strokeStyle = '#f0f0f0';
+      ctx.lineWidth = 1;
+      for (let i = 0; i <= 4; i++) {{
+        // Vertical
+        const x = pad + (i / 4) * w;
+        ctx.beginPath();
+        ctx.moveTo(x, pad);
+        ctx.lineTo(x, c.clientHeight - pad);
+        ctx.stroke();
+        
+        // Horizontal
+        const y = c.clientHeight - pad - (i / 4) * h;
+        ctx.beginPath();
+        ctx.moveTo(pad, y);
+        ctx.lineTo(c.clientWidth - pad, y);
+        ctx.stroke();
+      }}
+      
+      // Best-fit line (linear regression)
+      if (reiData.length >= 2) {{
+        const n = reiData.length;
+        let sumX = 0, sumY = 0, sumXY = 0, sumX2 = 0;
+        for (let i = 0; i < n; i++) {{
+          sumX += reiData[i];
+          sumY += mpiData[i];
+          sumXY += reiData[i] * mpiData[i];
+          sumX2 += reiData[i] * reiData[i];
+        }}
+        
+        const slope = (n * sumXY - sumX * sumY) / (n * sumX2 - sumX * sumX);
+        const intercept = (sumY - slope * sumX) / n;
+        
+        // Draw line
+        ctx.strokeStyle = '#999';
+        ctx.lineWidth = 2;
+        ctx.setLineDash([5, 5]);
+        ctx.beginPath();
+        const x1 = xMin;
+        const y1 = slope * x1 + intercept;
+        const x2 = xMax;
+        const y2 = slope * x2 + intercept;
+        ctx.moveTo(xMap(x1), yMap(y1));
+        ctx.lineTo(xMap(x2), yMap(y2));
+        ctx.stroke();
+        ctx.setLineDash([]);
+      }}
+      
+      // Draw points (color by classification)
+      let pointColor = '#2cbe4e';  // green
+      if (classification === 'Diverging signals') {{
+        pointColor = '#d73a49';  // red
+      }} else if (classification === 'Neutral coupling') {{
+        pointColor = '#dfb317';  // yellow
+      }}
+      
+      ctx.fillStyle = pointColor;
+      for (let i = 0; i < reiData.length; i++) {{
+        const x = xMap(reiData[i]);
+        const y = yMap(mpiData[i]);
+        ctx.beginPath();
+        ctx.arc(x, y, 5, 0, 2 * Math.PI);
+        ctx.fill();
+      }}
+      
+      // Axis labels
+      ctx.fillStyle = '#666';
+      ctx.font = '12px Arial';
+      ctx.textAlign = 'center';
+      ctx.fillText('REI', c.clientWidth / 2, c.clientHeight - 10);
+      
+      ctx.save();
+      ctx.translate(15, c.clientHeight / 2);
+      ctx.rotate(-Math.PI / 2);
+      ctx.fillText('MPI (%)', 0, 0);
+      ctx.restore();
+      
+      // Axis tick labels
+      ctx.textAlign = 'center';
+      ctx.fillText(xMin.toFixed(2), pad, c.clientHeight - pad + 15);
+      ctx.fillText(xMax.toFixed(2), c.clientWidth - pad, c.clientHeight - pad + 15);
+      
+      ctx.textAlign = 'right';
+      ctx.fillText(yMin.toFixed(0), pad - 5, c.clientHeight - pad);
+      ctx.fillText(yMax.toFixed(0), pad - 5, pad + 5);
+    }}
+    
     drawREI('reiChart');
     drawRSIGHS('rsiGhsChart');
     if (document.getElementById('metaGauge')) {{
@@ -692,6 +866,13 @@ def build_dashboard_html(
       const mpiTrendLabels = {json.dumps(mpi_trend_labels)};
       const mpiForecast = {json.dumps(mpi_forecast_values)};
       drawMPITrend('mpiTrendChart', mpiTrendData, mpiTrendLabels, mpiForecast);
+    }}
+    if (document.getElementById('alignmentScatter')) {{
+      const reiAlign = {json.dumps(rei_values_align if forecast_alignment else [])};
+      const mpiAlign = {json.dumps(mpi_values_align if forecast_alignment else [])};
+      const alignCorr = {json.dumps(alignment_corr if forecast_alignment else 0.0)};
+      const alignClass = {json.dumps(alignment_class if forecast_alignment else "Unknown")};
+      drawAlignmentScatter('alignmentScatter', reiAlign, mpiAlign, alignCorr, alignClass);
     }}
   }})();
   </script>
@@ -707,7 +888,8 @@ def update_audit_summary(
     classification: str,
     current_rsi: float,
     current_ghs: float,
-    meta_performance: Dict[str, Any] = None
+    meta_performance: Dict[str, Any] = None,
+    forecast_alignment: Dict[str, Any] = None
 ) -> None:
     """Update audit summary with reflex feedback block (idempotent)."""
     try:
@@ -731,6 +913,12 @@ def update_audit_summary(
         else:
             mpi_emoji = "🔴"
         mpi_info = f" | MPI {mpi_val:.1f}% {mpi_emoji} {mpi_status}, Trend chart rendered, Forecast projection (slope: {mpi_slope:+.2f}%, horizon: 5 runs)"
+    
+    # Include alignment info if available
+    if forecast_alignment:
+        align_corr = forecast_alignment.get("rei_mpi_correlation", 0.0)
+        align_class = forecast_alignment.get("classification", "Unknown")
+        mpi_info += f", Alignment panel rendered (r={align_corr:+.3f}, {align_class})"
     
     block = (
         f"{AUDIT_MARKER_BEGIN}\n"
@@ -803,6 +991,11 @@ def main(argv: list[str] | None = None) -> int:
         default="logs/reflex_model_history.json",
         help="Path to reflex learning model history"
     )
+    parser.add_argument(
+        "--forecast-alignment",
+        default="reports/reflex_forecast_alignment.json",
+        help="Path to forecast alignment report"
+    )
     
     args = parser.parse_args(argv)
     
@@ -816,6 +1009,9 @@ def main(argv: list[str] | None = None) -> int:
     model_hist = load_json(args.model_history, [])
     if not isinstance(model_hist, list):
         model_hist = []
+    
+    # Load forecast alignment
+    forecast_align = load_json(args.forecast_alignment, {})
     
     # Load RSI history
     rsi_hist_data = load_json(args.history, {})
@@ -864,7 +1060,7 @@ def main(argv: list[str] | None = None) -> int:
         })
     
     # Build dashboard
-    html, forecast_slope = build_dashboard_html(rei_history, rsi_series, ghs_series, current_eval, meta_perf, model_hist)
+    html, forecast_slope = build_dashboard_html(rei_history, rsi_series, ghs_series, current_eval, meta_perf, model_hist, forecast_align)
     
     # Add forecast slope to meta_perf for audit summary
     if meta_perf is None:
@@ -887,7 +1083,8 @@ def main(argv: list[str] | None = None) -> int:
         classification,
         current_rsi,
         current_ghs,
-        meta_perf
+        meta_perf,
+        forecast_align
     )
     
     # Output summary

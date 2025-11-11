@@ -1510,6 +1510,7 @@ jobs:
             --actions-log logs/regime_policy_actions.json \
             --meta-performance reports/reflex_meta_performance.json \
             --model-history logs/reflex_model_history.json \
+            --forecast-alignment reports/reflex_forecast_alignment.json \
             --output reports/reflex_feedback_dashboard.html \
             --audit-summary reports/audit_summary.md > dashboard_out.json || true
           cat dashboard_out.json || true
