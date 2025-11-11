@@ -126,7 +126,8 @@ Reflex Evaluation: Mode Normal Operation, ΔRSI=+0.0, ΔGHS=+0.0 → ➡️ Neut
 <!-- REFLEX_EVALUATION:END -->
 
 <!-- REFLEX_FEEDBACK:BEGIN -->
-Reflex Feedback: last REI +0.00 ➡️ Neutral, RSI→100.0%, GHS→0.0%.
+Updated: 2025-11-10T22:50:53Z
+Reflex Feedback: last REI +0.00 Γ₧í∩╕Å Neutral, RSIΓåÆ100.0%, GHSΓåÆ0.0% | MPI 86.0% ≡ƒƒó Stable learning, trend chart rendered, forecast projection slope +0.00% (5 runs).
 <!-- REFLEX_FEEDBACK:END -->
 
 <!-- REFLEX_LEARNING:BEGIN -->
@@ -136,3 +137,44 @@ Reflex Learning Model: insufficient data (n=1), using baseline prediction.
 <!-- REFLEX_PREDICTION:BEGIN -->
 Reflex Prediction: last actual REI=+0.00, predicted=+0.00, error=0.00.
 <!-- REFLEX_PREDICTION:END -->
+
+<!-- CONFIDENCE_ADAPTATION:BEGIN -->
+🧭 **Confidence-Weighted Adaptation**: trust=High trust, lr→1.000 (confidence=1.000)
+<!-- CONFIDENCE_ADAPTATION:END -->
+
+<!-- REFLEX_REINFORCEMENT:BEGIN -->
+🧩 **Reflex Reinforcement**: RRI=+15.1 → 🟢 Reinforcing (ΔR²=+0.150, ΔMPI=+12.0, ΔLR=+0.200)
+<!-- REFLEX_REINFORCEMENT:END -->
+
+<!-- REPRODUCIBILITY_CAPSULE:BEGIN -->
+Capsule generated 2025-11-11 (26 files, SHA256 verified)
+<!-- REPRODUCIBILITY_CAPSULE:END -->
+
+<!-- REFLEX_SELF_AUDIT:BEGIN -->
+Updated: 2025-11-11T13:59:23Z
+🧠 **Reflex Self-Audit**: Health=69.3% → 🟡 Stable (REI=Neutral, MPI=Stable learning, Confidence=Moderate trust)
+<!-- REFLEX_SELF_AUDIT:END -->
+
+<!-- REFLEX_HEALTH_DASHBOARD:BEGIN -->
+Updated: 2025-11-11T14:29:51+00:00
+🧭 Reflex Health Dashboard generated — 1-run timeline & CSV export available. Integrity score 97.5%. RRI 15.1.
+<!-- REFLEX_HEALTH_DASHBOARD:END -->
+
+<!-- REFLEX_INTEGRITY:BEGIN -->
+Updated: 2025-11-11T14:00:33Z
+🧩 Reflex Integrity: 97.5% — 1 minor warning (no critical violations)
+<!-- REFLEX_INTEGRITY:END -->
+
+<!-- INTEGRITY_REGISTRY:BEGIN -->
+Updated: 2025-11-11T14:30:08+00:00
+📘 Integrity registry updated — 6 total entries tracked (latest score: 97.5%).
+<!-- INTEGRITY_REGISTRY:END -->
+
+<!-- INTEGRITY_REGISTRY_SCHEMA:BEGIN -->
+✅ Integrity registry schema OK (hash 6eb446f7cca7).
+<!-- INTEGRITY_REGISTRY_SCHEMA:END -->
+
+<!-- TRANSPARENCY_MANIFEST:BEGIN -->
+Updated: 2025-11-11T14:30:18+00:00
+📄 Governance transparency manifest refreshed — 5983 bytes written.
+<!-- TRANSPARENCY_MANIFEST:END -->
