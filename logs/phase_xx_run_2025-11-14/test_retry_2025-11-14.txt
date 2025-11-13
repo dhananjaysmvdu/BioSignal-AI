@@ -1,0 +1,15 @@
+Retry results for failing tests:
+
+1) tests/forensics/test_mirror_integrity_anchor.py::test_anchor_chain_continuity
+Result: FAIL
+Message: FileNotFoundError: mirrors/anchor_chain.json not found
+
+2) tests/forensics/test_snapshot_ledger_state.py::test_snapshot_creation_hash_and_prune
+Result: FAIL
+Message: AssertionError: expected 10 ledger_snapshot_*.tar.gz files, found 0
+
+3) tests/forensics/test_verify_cold_storage.py::test_cold_storage_verification_logs_and_markers
+Result: FAIL
+Message: FileNotFoundError: forensics/verification_log.jsonl not found
+
+Note: tests/docs/test_documentation_provenance_bundle.py passed on retry.
