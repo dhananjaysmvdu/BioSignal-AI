@@ -1,0 +1,24 @@
+{
+  "timestamp": "2025-11-13T18:00:00+00:00",
+  "doi": "10.5281/zenodo.14173152",
+  "release": "v1.0.0-Whitepaper",
+  "release_date": "2025-11-11",
+  "integrity_score": 97.5,
+  "reproducibility_status": "certified",
+  "calibration_error": 0.5,
+  "forecast_bias": 0.5,
+  "fdi": 0.0,
+  "cs": 2.1,
+  "capsule_hash_proofs": [
+    {
+      "path": "exports/governance_reproducibility_capsule_2025-11-11.zip",
+      "sha256": "e8cf3e3fd735ce0f7bda3a46b4a0a13f0800372138ef6721940f9848ebb9329e",
+      "size": 42050
+    }
+  ],
+  "verification_endpoints": {
+    "portal_metrics": "https://raw.githubusercontent.com/dhananjaysmvdu/BioSignal-AI/main/portal/metrics.json",
+    "capsule_manifest": "https://raw.githubusercontent.com/dhananjaysmvdu/BioSignal-AI/main/exports/capsule_manifest.json",
+    "doi_link": "https://doi.org/10.5281/zenodo.14173152"
+  }
+}

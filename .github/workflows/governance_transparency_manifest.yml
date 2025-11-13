@@ -1,0 +1,58 @@
+name: Governance Transparency Manifest
+
+on:
+  schedule:
+    - cron: "0 3 * * *"  # Daily at 03:00 UTC
+  workflow_dispatch:
+
+jobs:
+  generate-transparency-manifest:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+      - name: Generate Integrity Status Badge
+        run: |
+          python scripts/workflow_utils/generate_integrity_status_badge.py || true
+      - name: Generate Governance Transparency Manifest
+        run: |
+          python scripts/workflow_utils/generate_transparency_manifest.py || true
+      - name: Commit Manifest, Badge, and Ledger
+        run: |
+          git config user.name "governance-bot"
+          git config user.email "actions@github.com"
+          git add GOVERNANCE_TRANSPARENCY.md badges/integrity_status.json exports/schema_provenance_ledger.jsonl || true
+          if git diff --cached --quiet; then
+            echo "No changes to commit"
+          else
+            git commit -m "ci: refresh governance transparency outputs (manifest, badge, ledger)"
+            git push
+          fi
+      - name: Archive Weekly Transparency Snapshots
+        run: |
+          # Archive only on Sundays (day 0 in cron, but GitHub Actions uses ISO where Sunday=7)
+          if [ "$(date +%u)" = "7" ]; then
+            mkdir -p archives/transparency_snapshots
+            snapshot_date=$(date +'%Y-%m-%d')
+            cp GOVERNANCE_TRANSPARENCY.md "archives/transparency_snapshots/${snapshot_date}.md"
+            git add archives/transparency_snapshots/
+            if git diff --cached --quiet; then
+              echo "No new snapshot to archive (file unchanged)"
+            else
+              git commit -m "docs: archive weekly transparency snapshot (${snapshot_date})"
+              git push
+              echo "📦 Weekly transparency snapshot archived: ${snapshot_date}.md" >> $GITHUB_STEP_SUMMARY
+            fi
+          else
+            echo "⏭️ Skipping weekly archive (today is not Sunday)" >> $GITHUB_STEP_SUMMARY
+          fi
+      - name: Append summary
+        run: |
+          echo "📘 Governance Transparency Manifest and integrity badge refreshed." >> $GITHUB_STEP_SUMMARY

@@ -148,6 +148,14 @@ Schema hash: 6eb446f7cca747bf7bc4c3473c6b1d2a0bfb61a338740b521a74159aa82f5cfb
   - forecast_metrics: fdi (value, status, thresholds), cs (value, status, thresholds), predicted_integrity (mean, range, confidence), last_prediction, next_update
   - last_updated: ISO 8601 timestamp
 
+## Verification Channels
+- **Public Verification Gateway (PVG)**: verification_gateway/public_verification_api.json
+  - DOI, release, integrity/reproducibility status
+  - Calibration error (CE), forecast bias (FB), FDI, CS
+  - SHA-256 capsule hash proofs for external reproducibility validation
+  - Automated nightly updates at 02:15 UTC
+  - Available for third-party verification and cross-instance audit
+
 ## Portal Features
 **Live Dashboard** (portal/index.html):
 - Real-time metrics: Integrity, Reproducibility, Provenance, Forecast Accuracy

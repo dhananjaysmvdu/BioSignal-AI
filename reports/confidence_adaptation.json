@@ -1,0 +1,5 @@
+{
+  "original_learning_rate": 0.8,
+  "adjusted_learning_rate": 1.0,
+  "confidence_weight": 0.85
+}

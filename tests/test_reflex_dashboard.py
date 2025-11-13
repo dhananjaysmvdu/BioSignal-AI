@@ -51,6 +51,14 @@ def test_dashboard_generation_with_data():
         # Setup health
         health = {"GovernanceHealthScore": 75.0}
         write_json(root / "reports" / "governance_health.json", health)
+        write_json(
+            root / "reports" / "forecast_consistency.json",
+            {
+                "current_correlation": 0.82,
+                "delta_correlation": -0.05,
+                "status": "Stable predictive coupling"
+            },
+        )
         
         # Setup actions
         actions = [
@@ -82,6 +90,9 @@ def test_dashboard_generation_with_data():
         assert out["status"] == "ok"
         assert out["last_rei"] == 5.5
         assert out["classification"] == "Effective"
+        assert "forecast_consistency" in out
+        assert out["forecast_consistency"]["label"].startswith("Forecast")
+        assert out["forecast_consistency"]["score"] > 0
         
         # Check HTML file created
         dashboard = root / "reports" / "reflex_feedback_dashboard.html"
@@ -90,6 +101,10 @@ def test_dashboard_generation_with_data():
         assert "Reflex Feedback Dashboard" in html_content
         assert "REI +5.50" in html_content
         assert "Effective" in html_content
+        assert "Consistency:" in html_content
+    assert '<canvas id="consistencyGauge"' in html_content
+    assert '<!-- CONSISTENCY_GAUGE:BEGIN -->' in html_content
+    assert '<!-- CONSISTENCY_GAUGE:END -->' in html_content
 
 
 def test_first_run_empty_data():

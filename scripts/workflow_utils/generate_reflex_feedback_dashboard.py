@@ -15,7 +15,7 @@ import re
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional, Tuple
 
 
 AUDIT_MARKER_BEGIN = "<!-- REFLEX_FEEDBACK:BEGIN -->"
@@ -48,11 +48,11 @@ def get_rei_color(classification: str) -> str:
 def get_classification_emoji(classification: str) -> str:
     """Get emoji for classification."""
     if classification == "Effective":
-        return "✅"
+        return "Γ£à"
     elif classification == "Counterproductive":
-        return "⚠️"
+        return "ΓÜá∩╕Å"
     else:
-        return "➡️"
+        return "Γ₧í∩╕Å"
 
 
 def build_dashboard_html(
@@ -62,8 +62,9 @@ def build_dashboard_html(
     current_evaluation: Dict[str, Any],
     meta_performance: Dict[str, Any] = None,
     model_history: List[Dict[str, Any]] = None,
-    forecast_alignment: Dict[str, Any] = None
-) -> str:
+  forecast_alignment: Dict[str, Any] = None,
+  forecast_consistency: Dict[str, Any] = None
+) -> Tuple[str, float, Optional[Dict[str, Any]]]:
     """Build the complete HTML dashboard."""
     
     # Extract meta-performance data
@@ -71,7 +72,7 @@ def build_dashboard_html(
     mpi_status = "Unknown"
     mpi_delta_r2 = 0.0
     mpi_drift = 0.0
-    mpi_emoji = "⚪"
+    mpi_emoji = "ΓÜ¬"
     mpi_color = "#gray"
     
     if meta_performance:
@@ -81,19 +82,94 @@ def build_dashboard_html(
         mpi_drift = meta_performance.get("error_drift", 0.0)
         
         if mpi >= 80:
-            mpi_emoji = "🟢"
+            mpi_emoji = "≡ƒƒó"
             mpi_color = "#2cbe4e"
         elif mpi >= 60:
-            mpi_emoji = "🟡"
+            mpi_emoji = "≡ƒƒí"
             mpi_color = "#dfb317"
         else:
-            mpi_emoji = "🔴"
+            mpi_emoji = "≡ƒö┤"
             mpi_color = "#d73a49"
-    
+
+    # Compute stability score for forecast consistency gauge
+    stability_score_value = None
+    stability_color_value = "#2cbe4e"
+    stability_label = "Forecast Consistent"
+    stability_emoji = "🟢"
+    consistency_status = "Predictive coupling status available."
+    if isinstance(forecast_consistency, dict) and forecast_consistency:
+        curr_corr = float(forecast_consistency.get("current_correlation", 0.0))
+        delta_corr = float(forecast_consistency.get("delta_correlation", 0.0))
+        delta_clamped = min(max(abs(delta_corr), 0.0), 1.0)
+        base_score = max(0.0, 1.0 - delta_clamped)
+        polarity_multiplier = 1.0 if curr_corr > 0 else 0.5
+        stability_score_value = max(0.0, min(100.0, 100.0 * base_score * polarity_multiplier))
+
+        if stability_score_value >= 80:
+            stability_label = "Forecast Consistent"
+            stability_color_value = "#2cbe4e"
+            stability_emoji = "🟢"
+        elif stability_score_value >= 60:
+            stability_label = "Moderate Drift"
+            stability_color_value = "#dfb317"
+            stability_emoji = "🟡"
+        else:
+            stability_label = "Inconsistent Forecasts"
+            stability_color_value = "#d73a49"
+            stability_emoji = "🔴"
+
+        consistency_status = forecast_consistency.get(
+            "status",
+            "Forecast coupling monitored; stability score derived from REI↔MPI dynamics.",
+        )
+
+        forecast_consistency["stability_score"] = stability_score_value
+        forecast_consistency["stability_label"] = stability_label
+        forecast_consistency["stability_color"] = stability_color_value
+        forecast_consistency["stability_emoji"] = stability_emoji
+        forecast_consistency.setdefault("current_correlation", curr_corr)
+        forecast_consistency.setdefault("delta_correlation", delta_corr)
+    else:
+        forecast_consistency = {}
+
+    consistency_panel = ""
+    stability_snapshot = None
+    if stability_score_value is not None:
+        consistency_panel = f"""
+      <!-- CONSISTENCY_GAUGE:BEGIN -->
+      <div style=\"margin-top: 16px; display: flex; align-items: center; gap: 16px;\">
+        <canvas id=\"consistencyGauge\" width=\"200\" height=\"120\"></canvas>
+        <div>
+          <p style=\"font-size: 16px; margin: 4px 0; color: {stability_color_value};\"><strong>Consistency:</strong> {stability_emoji} {stability_label}</p>
+          <p style=\"margin: 4px 0;\"><strong>Stability Score:</strong> {stability_score_value:.1f}%</p>
+          <p style=\"margin: 4px 0; font-size: 12px; color: #666;\">Measures coherence of predictive coupling (REI↔MPI).</p>
+          <p style=\"margin: 4px 0; font-size: 12px; color: #999;\">{consistency_status}</p>
+        </div>
+      </div>
+      <!-- CONSISTENCY_GAUGE:END -->
+"""
+        stability_snapshot = {
+            "score": stability_score_value,
+            "label": stability_label,
+            "emoji": stability_emoji,
+            "color": stability_color_value,
+            "status": consistency_status,
+        }
+    stability_score_for_js = float(stability_score_value) if stability_score_value is not None else 0.0
+
+    standalone_consistency_panel = ""
+    if consistency_panel and not meta_performance:
+        standalone_consistency_panel = f"""
+    <section id="forecast_consistency" style="background: {stability_color_value}22; padding: 16px; border-radius: 8px; border-left: 4px solid {stability_color_value}; margin-bottom: 24px;">
+      <h3 style="margin-top: 0;">Forecast Consistency Monitor</h3>
+{consistency_panel}
+    </section>
+    """
+
     # Extract MPI trend from model history (last 10 runs)
     mpi_trend_values = []
     mpi_trend_labels = []
-    mpi_trend_direction = "→ steady"
+    mpi_trend_direction = "ΓåÆ steady"
     if model_history:
         # Get last 10 entries
         recent_history = model_history[-10:] if len(model_history) > 10 else model_history
@@ -102,8 +178,8 @@ def build_dashboard_html(
             r2 = entry.get("r2_score", entry.get("r2", 0.0))
             mae = entry.get("mae", 0.0)
             
-            # Approximate MPI from R² (simple heuristic if MPI not stored)
-            # MPI ≈ R² * 100 (rough estimate when historical MPI not available)
+            # Approximate MPI from R┬▓ (simple heuristic if MPI not stored)
+            # MPI Γëê R┬▓ * 100 (rough estimate when historical MPI not available)
             estimated_mpi = r2 * 100 if r2 else 0.0
             mpi_trend_values.append(estimated_mpi)
             
@@ -123,9 +199,9 @@ def build_dashboard_html(
             second_half_avg = sum(mpi_trend_values[mid:]) / (len(mpi_trend_values) - mid)
             delta = second_half_avg - first_half_avg
             if delta > 5:
-                mpi_trend_direction = "↑ improving"
+                mpi_trend_direction = "Γåæ improving"
             elif delta < -5:
-                mpi_trend_direction = "↓ degrading"
+                mpi_trend_direction = "Γåô degrading"
     
     # Compute MPI forecast using least squares linear regression
     mpi_forecast_values = []
@@ -135,7 +211,7 @@ def build_dashboard_html(
         x = list(range(n))
         y = mpi_trend_values
         
-        # Least squares: slope = (n*Σxy - Σx*Σy) / (n*Σx² - (Σx)²)
+        # Least squares: slope = (n*╬úxy - ╬úx*╬úy) / (n*╬úx┬▓ - (╬úx)┬▓)
         sum_x = sum(x)
         sum_y = sum(y)
         sum_xy = sum(x[i] * y[i] for i in range(n))
@@ -236,25 +312,26 @@ def build_dashboard_html(
         if mpi_trend_values:
             trend_chart = f"""
       <div style="margin-top: 16px;">
-        <h4 style="margin: 8px 0;">Meta-Performance Trend — Last {len(mpi_trend_values)} Runs (MPI %) {mpi_trend_direction}</h4>
+        <h4 style="margin: 8px 0;">Meta-Performance Trend ΓÇö Last {len(mpi_trend_values)} Runs (MPI %) {mpi_trend_direction}</h4>
         <canvas id="mpiTrendChart" width="600" height="150"></canvas>
         <p style="font-size: 12px; color: #666; margin-top: 4px;">
-          Green = stable (≥80%), yellow = mild drift (60-79%), red = degradation (<60%). Rolling mean (dotted gray) shows short-term stability. <strong>Forecast (dashed blue)</strong> projects 5 cycles ahead assuming current trend continues (slope: {mpi_forecast_slope:+.2f}% per cycle).
+          Green = stable (ΓëÑ80%), yellow = mild drift (60-79%), red = degradation (<60%). Rolling mean (dotted gray) shows short-term stability. <strong>Forecast (dashed blue)</strong> projects 5 cycles ahead assuming current trend continues (slope: {mpi_forecast_slope:+.2f}% per cycle).
         </p>
       </div>
 """
         
         meta_section = f"""
     <section id="meta_performance" style="background: {mpi_color}22; padding: 16px; border-radius: 8px; border-left: 4px solid {mpi_color}; margin-bottom: 24px;">
-      <h3 style="margin-top: 0;">🧠 Reflex Meta-Performance</h3>
+      <h3 style="margin-top: 0;">≡ƒºá Reflex Meta-Performance</h3>
       <div style="display: flex; align-items: center; gap: 16px;">
         <canvas id="metaGauge" width="200" height="120"></canvas>
         <div>
           <p style="font-size: 18px; margin: 4px 0;"><strong>Status:</strong> <span id="metaStatus">{mpi_emoji} {mpi_status}</span></p>
           <p style="margin: 4px 0;"><strong>MPI:</strong> {mpi:.1f}%</p>
-          <p style="margin: 4px 0; font-size: 12px; color: #666;">ΔR²: {mpi_delta_r2:+.3f} | Drift: {mpi_drift:+.3f}</p>
+          <p style="margin: 4px 0; font-size: 12px; color: #666;">╬öR┬▓: {mpi_delta_r2:+.3f} | Drift: {mpi_drift:+.3f}</p>
         </div>
       </div>
+      {consistency_panel}
       {trend_chart}
     </section>
     """
@@ -270,17 +347,17 @@ def build_dashboard_html(
         # Color based on classification
         if alignment_class == "Aligned improvement":
             align_color = "#2cbe4e"
-            align_emoji = "✅"
+            align_emoji = "Γ£à"
         elif alignment_class == "Diverging signals":
             align_color = "#d73a49"
-            align_emoji = "⚠️"
+            align_emoji = "ΓÜá∩╕Å"
         else:
             align_color = "#dfb317"
-            align_emoji = "➡️"
+            align_emoji = "Γ₧í∩╕Å"
         
         alignment_section = f"""
     <section id="forecast_alignment" style="background: {align_color}22; padding: 16px; border-radius: 8px; border-left: 4px solid {align_color}; margin-bottom: 24px;">
-      <h3 style="margin-top: 0;">🔗 Forecast Alignment (REI–MPI Correlation)</h3>
+      <h3 style="margin-top: 0;">≡ƒöù Forecast Alignment (REIΓÇôMPI Correlation)</h3>
       <div style="display: flex; align-items: flex-start; gap: 16px;">
         <canvas id="alignmentScatter" width="400" height="300"></canvas>
         <div>
@@ -327,6 +404,8 @@ def build_dashboard_html(
   </div>
   
   {meta_section}
+  
+  {standalone_consistency_panel}
   
   {alignment_section}
   
@@ -564,6 +643,80 @@ def build_dashboard_html(
       ctx.textAlign = 'right';
       ctx.fillText('100%', cx + radius + 5, cy + 5);
     }}
+
+    function drawConsistencyGauge(id, score, accentColor) {{
+      const c = document.getElementById(id);
+      if (!c) return;
+      const ctx = c.getContext('2d');
+      const w = c.width;
+      const h = c.height;
+      const cx = w / 2;
+      const cy = h - 10;
+      const radius = Math.min(w, h * 2) / 2 - 20;
+
+      const segments = [
+        {{ start: 0.0, end: 0.5, color: '#d73a49' }},
+        {{ start: 0.5, end: 0.75, color: '#dfb317' }},
+        {{ start: 0.75, end: 1.0, color: '#2cbe4e' }},
+      ];
+
+      ctx.lineWidth = 12;
+      ctx.lineCap = 'round';
+      segments.forEach(seg => {{
+        const startAngle = Math.PI + seg.start * Math.PI;
+        const endAngle = Math.PI + seg.end * Math.PI;
+        ctx.strokeStyle = seg.color;
+        ctx.beginPath();
+        ctx.arc(cx, cy, radius, startAngle, endAngle, false);
+        ctx.stroke();
+      }});
+
+      const normalized = Math.max(0, Math.min(score / 100, 1));
+      const gaugeAngle = Math.PI + normalized * Math.PI;
+
+      ctx.lineWidth = 6;
+      ctx.strokeStyle = accentColor;
+      ctx.beginPath();
+      ctx.arc(cx, cy, radius - 8, Math.PI, gaugeAngle, false);
+      ctx.stroke();
+
+      const needleLen = radius - 10;
+      ctx.strokeStyle = '#333';
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.moveTo(cx, cy);
+      ctx.lineTo(cx + needleLen * Math.cos(gaugeAngle), cy + needleLen * Math.sin(gaugeAngle));
+      ctx.stroke();
+
+      ctx.fillStyle = '#333';
+      ctx.beginPath();
+      ctx.arc(cx, cy, 5, 0, 2 * Math.PI);
+      ctx.fill();
+
+      const tickValues = [0, 50, 75, 100];
+      ctx.lineWidth = 2;
+      ctx.strokeStyle = '#bbb';
+      tickValues.forEach(val => {{
+        const angle = Math.PI + (val / 100) * Math.PI;
+        const outer = radius + 2;
+        const inner = radius - 10;
+        ctx.beginPath();
+        ctx.moveTo(cx + inner * Math.cos(angle), cy + inner * Math.sin(angle));
+        ctx.lineTo(cx + outer * Math.cos(angle), cy + outer * Math.sin(angle));
+        ctx.stroke();
+      }});
+
+      ctx.fillStyle = '#666';
+      ctx.font = '10px Arial';
+      ctx.textAlign = 'center';
+      tickValues.forEach(val => {{
+        const angle = Math.PI + (val / 100) * Math.PI;
+        const labelRadius = radius + 14;
+        const tx = cx + labelRadius * Math.cos(angle);
+        const ty = cy + labelRadius * Math.sin(angle);
+        ctx.fillText(`${{val}}%`, tx, ty + 4);
+      }});
+    }}
     
     function drawMPITrend(id, data, labels, forecast) {{
       const c = document.getElementById(id);
@@ -599,15 +752,15 @@ def build_dashboard_html(
       ctx.stroke();
       
       // Calculate trend direction
-      let trendDir = '→';
+      let trendDir = 'ΓåÆ';
       if (data.length >= 2) {{
         const firstHalf = data.slice(0, Math.floor(data.length / 2));
         const secondHalf = data.slice(Math.floor(data.length / 2));
         const avgFirst = firstHalf.reduce((a, b) => a + b, 0) / firstHalf.length;
         const avgSecond = secondHalf.reduce((a, b) => a + b, 0) / secondHalf.length;
         const delta = avgSecond - avgFirst;
-        if (delta > 5) trendDir = '↑';
-        else if (delta < -5) trendDir = '↓';
+        if (delta > 5) trendDir = 'Γåæ';
+        else if (delta < -5) trendDir = 'Γåô';
       }}
       
       // Draw line
@@ -861,6 +1014,9 @@ def build_dashboard_html(
     if (document.getElementById('metaGauge')) {{
       drawMetaGauge('metaGauge', {mpi:.1f}, '{mpi_color}');
     }}
+    if (document.getElementById('consistencyGauge')) {{
+      drawConsistencyGauge('consistencyGauge', {stability_score_for_js:.1f}, '{stability_color_value}');
+    }}
     if (document.getElementById('mpiTrendChart')) {{
       const mpiTrendData = {json.dumps(mpi_trend_values)};
       const mpiTrendLabels = {json.dumps(mpi_trend_labels)};
@@ -879,7 +1035,7 @@ def build_dashboard_html(
 </body>
 </html>
 """
-    return html, mpi_forecast_slope
+    return html, mpi_forecast_slope, stability_snapshot
 
 
 def update_audit_summary(
@@ -889,7 +1045,9 @@ def update_audit_summary(
     current_rsi: float,
     current_ghs: float,
     meta_performance: Dict[str, Any] = None,
-    forecast_alignment: Dict[str, Any] = None
+    forecast_alignment: Dict[str, Any] = None,
+    forecast_consistency: Dict[str, Any] = None,
+    updated_timestamp: Optional[str] = None,
 ) -> None:
     """Update audit summary with reflex feedback block (idempotent)."""
     try:
@@ -900,30 +1058,57 @@ def update_audit_summary(
     
     emoji = get_classification_emoji(classification)
     
-    # Include MPI status if available
-    mpi_info = ""
+    info_segments: List[str] = []
+
     if meta_performance:
         mpi_val = meta_performance.get("mpi", 0.0)
         mpi_status = meta_performance.get("classification", "Unknown")
         mpi_slope = meta_performance.get("forecast_slope", 0.0)
         if mpi_val >= 80:
-            mpi_emoji = "🟢"
+            mpi_emoji = "≡ƒƒó"
         elif mpi_val >= 60:
-            mpi_emoji = "🟡"
+            mpi_emoji = "≡ƒƒí"
         else:
-            mpi_emoji = "🔴"
-        mpi_info = f" | MPI {mpi_val:.1f}% {mpi_emoji} {mpi_status}, Trend chart rendered, Forecast projection (slope: {mpi_slope:+.2f}%, horizon: 5 runs)"
-    
-    # Include alignment info if available
+            mpi_emoji = "≡ƒö┤"
+        info_segments.append(
+            f"MPI {mpi_val:.1f}% {mpi_emoji} {mpi_status}, trend chart rendered, forecast projection slope {mpi_slope:+.2f}% (5 runs)"
+        )
+
     if forecast_alignment:
         align_corr = forecast_alignment.get("rei_mpi_correlation", 0.0)
         align_class = forecast_alignment.get("classification", "Unknown")
-        mpi_info += f", Alignment panel rendered (r={align_corr:+.3f}, {align_class})"
-    
+        info_segments.append(
+            f"Alignment panel rendered (r={align_corr:+.3f}, {align_class})"
+        )
+
+    if isinstance(forecast_consistency, dict):
+        stability_score = forecast_consistency.get("stability_score")
+        if stability_score is not None:
+            stability_label = forecast_consistency.get("stability_label", "Consistency assessed")
+            stability_emoji = forecast_consistency.get("stability_emoji", "🟢")
+            info_segments.append(
+                f"Forecast consistency gauge rendered — {stability_emoji} {stability_label} ({stability_score:.1f}%)"
+            )
+
+    info_suffix = ""
+    if info_segments:
+        info_suffix = " | " + " | ".join(info_segments)
+
+    normalized_ts: Optional[str] = None
+    if updated_timestamp:
+        try:
+            parsed = datetime.fromisoformat(updated_timestamp.replace("Z", "+00:00"))
+            normalized_ts = parsed.astimezone(timezone.utc).replace(microsecond=0).isoformat()
+        except ValueError:
+            normalized_ts = None
+    if not normalized_ts:
+        normalized_ts = datetime.now(timezone.utc).replace(microsecond=0).isoformat()
+
     block = (
         f"{AUDIT_MARKER_BEGIN}\n"
+    f"Updated: {normalized_ts}\n"
         f"Reflex Feedback: last REI {last_rei:+.2f} {emoji} {classification}, "
-        f"RSI→{current_rsi:.1f}%, GHS→{current_ghs:.1f}%{mpi_info}.\n"
+        f"RSIΓåÆ{current_rsi:.1f}%, GHSΓåÆ{current_ghs:.1f}%{info_suffix}.\n"
         f"{AUDIT_MARKER_END}"
     )
     
@@ -996,6 +1181,11 @@ def main(argv: list[str] | None = None) -> int:
         default="reports/reflex_forecast_alignment.json",
         help="Path to forecast alignment report"
     )
+    parser.add_argument(
+        "--forecast-consistency",
+        default="reports/forecast_consistency.json",
+        help="Path to forecast consistency monitor output"
+    )
     
     args = parser.parse_args(argv)
     
@@ -1012,6 +1202,11 @@ def main(argv: list[str] | None = None) -> int:
     
     # Load forecast alignment
     forecast_align = load_json(args.forecast_alignment, {})
+
+    # Load forecast consistency monitor output
+    forecast_consistency = load_json(args.forecast_consistency, {})
+    if not isinstance(forecast_consistency, dict):
+        forecast_consistency = {}
     
     # Load RSI history
     rsi_hist_data = load_json(args.history, {})
@@ -1060,7 +1255,16 @@ def main(argv: list[str] | None = None) -> int:
         })
     
     # Build dashboard
-    html, forecast_slope = build_dashboard_html(rei_history, rsi_series, ghs_series, current_eval, meta_perf, model_hist, forecast_align)
+    html, forecast_slope, stability_snapshot = build_dashboard_html(
+        rei_history,
+        rsi_series,
+        ghs_series,
+        current_eval,
+        meta_perf,
+        model_hist,
+        forecast_align,
+        forecast_consistency,
+    )
     
     # Add forecast slope to meta_perf for audit summary
     if meta_perf is None:
@@ -1078,13 +1282,15 @@ def main(argv: list[str] | None = None) -> int:
     current_rsi = current_eval.get("current_rsi", 100.0)
     
     update_audit_summary(
-        args.audit_summary,
-        last_rei,
-        classification,
-        current_rsi,
-        current_ghs,
-        meta_perf,
-        forecast_align
+        summary_path=args.audit_summary,
+        last_rei=last_rei,
+        classification=classification,
+        current_rsi=current_rsi,
+        current_ghs=current_ghs,
+        meta_performance=meta_perf,
+        forecast_alignment=forecast_align,
+        forecast_consistency=forecast_consistency,
+        updated_timestamp=current_eval.get("timestamp"),
     )
     
     # Output summary
@@ -1095,6 +1301,8 @@ def main(argv: list[str] | None = None) -> int:
         "last_rei": last_rei,
         "classification": classification,
     }
+    if stability_snapshot:
+        result["forecast_consistency"] = stability_snapshot
     
     print(json.dumps(result, indent=2))
     return 0

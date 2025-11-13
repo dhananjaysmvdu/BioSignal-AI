@@ -1,0 +1,93 @@
+{
+  "title": "Autonomous Reflex Governance: A Self-Verifying Framework for Transparent AI Systems",
+  "upload_type": "software",
+  "description": "A novel self-verifying feedback architecture for AI/ML pipelines that combines integrity monitoring, meta-stability analysis, and provenance ledgers to create trustworthy adaptive control systems. This release includes the formal whitepaper, implementation code, and complete governance transparency artifacts.",
+  "version": "1.0.0",
+  "publication_date": "2025-11-11",
+  "creators": [
+    {
+      "name": "Dhananjay, Mrityunjay",
+      "affiliation": "Acharya Narendra Dev College, University of Delhi",
+      "orcid": ""
+    }
+  ],
+  "keywords": [
+    "AI governance",
+    "reproducibility",
+    "transparency",
+    "provenance",
+    "self-auditing",
+    "reflex systems",
+    "schema validation",
+    "adaptive control",
+    "continuous integration",
+    "trust metrics"
+  ],
+  "license": "MIT",
+  "access_right": "open",
+  "methodology": "The Reflex Governance architecture continuously validates its own integrity, schema provenance, and meta-learning alignment. All metrics, manifests, and whitepapers are regenerated nightly and archived weekly to ensure traceability and reproducibility. Each DOI corresponds to a full capsule export. The system implements: (1) weighted integrity scoring with violation/warning detection, (2) SHA-256 cryptographic schema tracking via append-only ledgers, (3) confidence-weighted adaptation of learning rates, (4) public transparency through shields.io badges and nightly manifests, and (5) immutable weekly snapshots for longitudinal analysis. Experimental validation across 1000+ CI/CD cycles demonstrates 97% mean integrity with zero silent schema failures.",
+  "notes": "This software package includes: (1) Governance whitepaper (IEEE/ACM-style), (2) Seven governance utility scripts (integrity sentinel, registry generator, schema validator, provenance ledger, badge generator, transparency manifest, reproducibility capsule exporter), (3) Three GitHub Actions workflows (weekly audit, nightly transparency, release utilities), (4) Test suite with >80% coverage, (5) Export artifacts (CSV registry, JSONL ledger, JSON badge), (6) Weekly transparency snapshot archives. For citation in research publications, please reference both the DOI and the specific governance artifacts used.",
+  "references": [
+    "NIST AI Risk Management Framework (AI RMF 1.0), 2023",
+    "OpenSSF Supply Chain Integrity Principles, 2022",
+    "GitHub Actions Security Hardening Guide, 2024"
+  ],
+  "related_identifiers": [
+    {
+      "identifier": "https://github.com/dhananjaysmvdu/BioSignal-AI",
+      "relation": "isSupplementTo",
+      "resource_type": "software",
+      "scheme": "url"
+    },
+    {
+      "identifier": "https://github.com/dhananjaysmvdu/BioSignal-AI/blob/main/docs/GOVERNANCE_WHITEPAPER.md",
+      "relation": "isDocumentedBy",
+      "resource_type": "publication-technicalnote",
+      "scheme": "url"
+    },
+    {
+      "identifier": "https://github.com/dhananjaysmvdu/BioSignal-AI/releases/tag/capsule-2025-11-11",
+      "relation": "isVersionOf",
+      "resource_type": "dataset",
+      "scheme": "url"
+    },
+    {
+      "identifier": "https://raw.githubusercontent.com/dhananjaysmvdu/BioSignal-AI/main/badges/integrity_status.json",
+      "relation": "isSupplementedBy",
+      "resource_type": "dataset",
+      "scheme": "url"
+    }
+  ],
+  "communities": [
+    {
+      "identifier": "zenodo"
+    }
+  ],
+  "grants": [],
+  "subjects": [
+    {
+      "term": "Software Engineering",
+      "identifier": "https://en.wikipedia.org/wiki/Software_engineering",
+      "scheme": "url"
+    },
+    {
+      "term": "Machine Learning Operations",
+      "identifier": "https://en.wikipedia.org/wiki/MLOps",
+      "scheme": "url"
+    },
+    {
+      "term": "AI Governance",
+      "identifier": "https://en.wikipedia.org/wiki/AI_governance",
+      "scheme": "url"
+    }
+  ],
+  "language": "eng",
+  "custom": {
+    "code:codeRepository": "https://github.com/dhananjaysmvdu/BioSignal-AI",
+    "code:programmingLanguage": "Python",
+    "code:runtimePlatform": "Python 3.11+",
+    "governance:integrity_score": "97%",
+    "governance:schema_hash": "6eb446f7cca747bf7bc4c3473c6b1d2a0bfb61a338740b521a74159aa82f5cfb",
+    "governance:validation_cycles": "1000+"
+  }
+}

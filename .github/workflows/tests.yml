@@ -62,6 +62,8 @@ jobs:
           python -m pytest -q tests/test_reflex_evaluator.py || exit 1
           # Reflex dashboard validation
           python -m pytest -q tests/test_reflex_dashboard.py || exit 1
+          # Reflex integrity sentinel validation
+          python -m pytest -q tests/test_reflex_integrity_sentinel.py || exit 1
           # Reflex learning model validation
           python -m pytest -q tests/test_reflex_learning_model.py || exit 1
           # Reflex meta evaluator validation

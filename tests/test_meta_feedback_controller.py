@@ -16,13 +16,24 @@ import json
 import os
 import sys
 import tempfile
+from contextlib import contextmanager
 from pathlib import Path
+
+
+@contextmanager
+def cwd(path: str):
+    """Temporarily change the working directory."""
+    original = os.getcwd()
+    os.chdir(path)
+    try:
+        yield
+    finally:
+        os.chdir(original)
 
 
 def test_critical_low_mpi():
     """Test MPI=50 (critical) triggers aggressive adjustments."""
-    with tempfile.TemporaryDirectory() as tmpdir:
-        os.chdir(tmpdir)
+    with tempfile.TemporaryDirectory() as tmpdir, cwd(tmpdir):
         os.makedirs("reports", exist_ok=True)
         
         # Create meta-performance with critical MPI
@@ -96,8 +107,7 @@ def test_critical_low_mpi():
 
 def test_caution_mid_mpi():
     """Test MPI=70 (caution) triggers moderate adjustments."""
-    with tempfile.TemporaryDirectory() as tmpdir:
-        os.chdir(tmpdir)
+    with tempfile.TemporaryDirectory() as tmpdir, cwd(tmpdir):
         os.makedirs("reports", exist_ok=True)
         
         # Create meta-performance with caution MPI
@@ -158,8 +168,7 @@ def test_caution_mid_mpi():
 
 def test_stable_high_mpi():
     """Test MPI=90 (stable) increases learning rate with cap."""
-    with tempfile.TemporaryDirectory() as tmpdir:
-        os.chdir(tmpdir)
+    with tempfile.TemporaryDirectory() as tmpdir, cwd(tmpdir):
         os.makedirs("reports", exist_ok=True)
         
         # Create meta-performance with stable MPI
@@ -234,8 +243,7 @@ def test_stable_high_mpi():
 
 def test_audit_marker_idempotency():
     """Test that running controller twice produces single audit marker."""
-    with tempfile.TemporaryDirectory() as tmpdir:
-        os.chdir(tmpdir)
+    with tempfile.TemporaryDirectory() as tmpdir, cwd(tmpdir):
         os.makedirs("reports", exist_ok=True)
         
         # Create meta-performance
