@@ -1,0 +1,31 @@
+name: Integrity Anchor Publish
+
+on:
+  schedule:
+    - cron: "15 4 * * 1"  # Mondays 04:15 UTC
+  workflow_dispatch: {}
+
+jobs:
+  publish-anchor:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+      - name: Compute and publish integrity anchor
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ZENODO_TOKEN: ${{ secrets.ZENODO_TOKEN }}
+          ZENODO_DEPOSITION_ID: ${{ secrets.ZENODO_DEPOSITION_ID }}
+        run: |
+          python -m pip install --upgrade pip
+          python scripts/anchors/publish_integrity_anchor.py
+      - name: Commit anchor and log
+        run: |
+          git config user.name "github-actions"
+          git config user.email "actions@github.com"
+          git add integrity_anchor.json anchors/anchor_log.jsonl
+          git commit -m "anchor: publish cryptographic integrity proof (scheduled)" || echo "No changes"
+          git push

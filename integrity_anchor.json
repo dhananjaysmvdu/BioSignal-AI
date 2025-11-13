@@ -1,0 +1,9 @@
+{
+  "timestamp": "2025-11-13T20:32:18.118650+00:00",
+  "components": {
+    "governance_provenance_ledger.jsonl": "70c1248943908ceda8409a33c26d522cc8cb82792060354e0ec7ce81ece42dbc",
+    "portal/meta_audit_feed.json": "ae5e4ae9069dee0a1d8a2441db3a37495eee2d1ed9aeedb456c298fc234bcdcf",
+    "federation/federation_status.json": "700e6620b9f63e8d0ecb6565b04ad4bb3f096d7959f66feb3a78fb679182bc91"
+  },
+  "combined_sha256": "62b444d3361d43c8396485e6d6b8869a15adf0c9396d58f6d2ecdd288155a2ff"
+}
