@@ -132,6 +132,85 @@ Real-time transparency dashboard with live integrity, reproducibility, and prove
   - Calibration: `portal/calibration.html` — CE/FB metrics and forecast vs actual analysis
   - Publications & Datasets: `portal/publications.html` — DOIs and searchable datasets
 
+## Trust & Compliance Automation
+Automated jobs and scripts continuously verify provenance, reproducibility, and public compliance. Key components and artifacts:
+
+- Governance Ledger
+  - Builder: `scripts/ledger/governance_provenance_ledger.py`
+  - Artifacts: `artifacts/governance_provenance_ledger.jsonl`, `artifacts/governance_ledger_hash.json`
+  - Notes: Timestamps are timezone-aware (UTC) and preserved on upsert to keep hashes stable across runs.
+
+- Integrity Anchor
+  - Publisher: `scripts/anchors/publish_integrity_anchor.py`
+  - Artifact: `artifacts/integrity_anchor.json` and log `artifacts/anchors/anchor_log.jsonl`
+  - Purpose: Cryptographic combined SHA-256 over ledger and related components for external proof.
+
+- Trust Validation (weekly)
+  - Workflow: `.github/workflows/trust_validation.yml` (scheduled ~Sun 07:30 UTC)
+  - Script: `scripts/release/publish_archive_and_update_doi.py --trust-mode`
+  - Output: `logs/trust_validation_report.json` and audit marker `TRUST_MODE_RUN` in `docs/audit_summary.md`
+
+- Federated Trust Exchange (weekly)
+  - Workflow: `.github/workflows/trust_federation.yml`
+  - Script: `scripts/trust/federated_trust_exchange.py`
+  - Outputs: `results/trust_federation_report.json`, `results/trust_federation_log.jsonl` (drift and peer status)
+
+- Autonomous DOI Steward (weekly)
+  - Workflow: `.github/workflows/autonomous_doi_steward.yml`
+  - Script: `scripts/doi/autonomous_doi_steward.py`
+  - Output: `results/doi_steward_log.jsonl` (dry-run if no tokens configured)
+
+- Public Compliance Validator (nightly)
+  - Workflow: `.github/workflows/public_compliance_validator.yml`
+  - Script: `scripts/api/public_compliance_validator.py`
+  - Output: `portal/public_compliance_status.json` (used by the Governance Portal to display compliance badge)
+
+Quick local runs (PowerShell):
+
+```
+python scripts\release\publish_archive_and_update_doi.py --trust-mode
+python scripts\anchors\publish_integrity_anchor.py
+python scripts\trust\federated_trust_exchange.py
+python scripts\api\public_compliance_validator.py
+```
+
+Portal references:
+- Ledger view: `portal/ledger.html`
+- Compliance indicator: `portal/index.html` (reads `portal/public_compliance_status.json`)
+
+## 🔐 Trust & Compliance Federation
+
+The Reflex Governance Framework now maintains a live, verifiable trust and compliance layer.  
+All operations are validated nightly and weekly across distributed nodes.
+
+**Automated Components**
+
+- **Trust-Mode Validation** (`trust_validation.yml`)  
+  Runs every Sunday 07:30 UTC.  
+  Generates `logs/trust_validation_report.json` showing archive, ledger, and anchor hashes.
+
+- **Federated Trust Exchange** (`trust_federation.yml`)  
+  Cross-validates `governance_ledger_hash.json` and `integrity_anchor.json` among peers.  
+  Report: `trust_federation_report.json` → status `verified` when all peers align.
+
+- **Autonomous DOI Steward** (`autonomous_doi_steward.yml`)  
+  Keeps Zenodo metadata synchronized with the latest certified release.  
+  Logs to `results/doi_steward_log.jsonl`.
+
+- **Public Compliance Validator** (`public_compliance_validator.yml`)  
+  Nightly run ensures every ledger entry is timestamped, hashed, and certified.  
+  Outputs `portal/public_compliance_status.json` → displayed on the portal home as  
+  **“Compliance Status: Verified ✅”**
+
+**Portal Access**
+
+- [Governance Portal](./portal/index.html) – live compliance banner  
+- [Trust Federation Report](./results/trust_federation_report.json) – latest cross-ledger check  
+- [Public Compliance Status](./portal/public_compliance_status.json) – validator output  
+- [Provenance Ledger](./portal/ledger.html) – full timeline and hash history
+
+All workflows are dry-run-safe: if Zenodo tokens are absent, they still produce complete reports locally.
+
 ### Forecast Risk Scoring
 Predictive governance intelligence with automated risk evaluation:
 - **Forecast Deviation Index (FDI)**: Measures prediction accuracy as `|predicted - actual| / predicted × 100`
