@@ -1,0 +1,29 @@
+name: Publish Governance Archive and Update DOI
+
+on:
+  workflow_dispatch: {}
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+      - name: Build archive and (optionally) update DOI
+        env:
+          ZENODO_TOKEN: ${{ secrets.ZENODO_TOKEN }}
+          ZENODO_DEPOSITION_ID: ${{ secrets.ZENODO_DEPOSITION_ID }}
+          ZENODO_BUCKET_URL: ${{ secrets.ZENODO_BUCKET_URL }}
+        run: |
+          python -m pip install --upgrade pip
+          python scripts/release/publish_archive_and_update_doi.py
+      - name: Commit archive and DOI updates
+        run: |
+          git config user.name "github-actions"
+          git config user.email "actions@github.com"
+          git add exports/reflex_governance_archive_v1.6.zip README.md GOVERNANCE_TRANSPARENCY.md
+          git commit -m "release: publish Reflex Governance Archive v1.6 with public provenance and DOI" || echo "No changes"
+          git push
