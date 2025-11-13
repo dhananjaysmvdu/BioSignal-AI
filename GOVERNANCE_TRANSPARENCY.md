@@ -209,5 +209,16 @@ If you use or build on this governance reflex architecture, please cite:
 
 **Visualization**: Latest 5 governance decisions displayed on `portal/accountability.html`.
 
+## Automated Restoration & Integrity Recovery
+
+The **Self-Healing Governance Kernel (SHGK)** monitors critical governance artifacts and restores them automatically when corruption or drift is detected:
+
+- **Manifest**: `self_healing/recovery_manifest.json` (hash-based baseline per artifact)
+- **Execution**: Daily at 05:15 UTC via `.github/workflows/self_healing_monitor.yml`
+- **Logs**: `self_healing/self_healing_log.jsonl` with recovery summaries (`recovery_rate`, `issues_detected`, `issues_recovered`)
+- **Restoration Source**: Git history (`git show <ref>:<path>`) for deterministic recovery
+
+If an artifact is missing or its hash diverges from the manifest, SHGK restores the file from the pinned commit and records the event for audit replay. Recovery effectiveness is tracked and surfaced in the global dashboard.
+
 ---
 This file is auto-generated; do not edit manually.
