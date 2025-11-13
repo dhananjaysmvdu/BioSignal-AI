@@ -82,6 +82,11 @@ def upsert(records: list[dict], entry: dict) -> list[dict]:
     for r in records:
         k = (r.get("phase_id"), r.get("version_tag"))
         if k == key:
+            # Preserve immutable fields to ensure deterministic ledger content across runs
+            if r.get("timestamp"):
+                entry["timestamp"] = r["timestamp"]
+            if r.get("commit_hash") and entry.get("commit_hash") == "unknown":
+                entry["commit_hash"] = r["commit_hash"]
             new.append(entry)
             replaced = True
         else:
