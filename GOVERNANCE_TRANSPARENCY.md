@@ -152,9 +152,26 @@ Schema hash: 6eb446f7cca747bf7bc4c3473c6b1d2a0bfb61a338740b521a74159aa82f5cfb
 - **Public Verification Gateway (PVG)**: verification_gateway/public_verification_api.json
   - DOI, release, integrity/reproducibility status
   - Calibration error (CE), forecast bias (FB), FDI, CS
+  - **Ethics compliance**: bias_score, fairness_status, ethics_last_checked
+  - **Governance traceability**: latest decision_trace_id, ethics_report_hash
   - SHA-256 capsule hash proofs for external reproducibility validation
   - Automated nightly updates at 02:15 UTC
   - Available for third-party verification and cross-instance audit
+
+## Public Compliance Verification
+The Public Verification Gateway harmonizes governance, ethics, and reproducibility data into a single machine-readable API for external auditors and researchers:
+
+**Ethics Integration**:
+- `bias_score`: Latest Bias Score (BS) from fairness analysis
+- `fairness_status`: CERTIFIED, UNDER_REVIEW, or PENDING
+- `ethics_last_checked`: ISO 8601 timestamp of last ethics compliance run
+- `ethics_report_hash`: SHA-256 hash of quarterly ethics report for integrity verification
+
+**Decision Traceability**:
+- `decision_trace_id`: ID of most recent autonomous governance action
+- Linked to `exports/decision_trace_log.jsonl` for full decision history
+
+**Access**: `https://raw.githubusercontent.com/dhananjaysmvdu/BioSignal-AI/main/verification_gateway/public_verification_api.json`
 
 ## Portal Features
 **Live Dashboard** (portal/index.html):
@@ -177,6 +194,20 @@ If you use or build on this governance reflex architecture, please cite:
 - exports/schema_provenance_ledger.jsonl — append-only schema ledger
 - badges/integrity_status.json — nightly integrity score (for dashboards)
 - GOVERNANCE_TRANSPARENCY.md — human-readable system manifest
+
+## Governance Decision Traceability
+
+**GOVERNANCE_TRACE**: All autonomous governance actions are logged to `exports/decision_trace_log.jsonl` with full context:
+- **Timestamp**: ISO 8601 with timezone
+- **Action**: Type (e.g., adaptive_lr_update, forecast_recalibration, bias_escalation)
+- **Parameter Change**: Old → New values
+- **Trigger**: Condition that initiated the action
+- **Reason**: Human-readable justification
+- **Audit Reference**: Link to related audit marker or report
+
+**Purpose**: Enable transparent AI autonomy with auditable decision history. Each entry is immutable and append-only.
+
+**Visualization**: Latest 5 governance decisions displayed on `portal/accountability.html`.
 
 ---
 This file is auto-generated; do not edit manually.
