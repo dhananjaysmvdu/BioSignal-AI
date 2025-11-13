@@ -1,0 +1,4 @@
+{"timestamp":"2025-11-13T23:02:00+00:00","message":"Initial log"}
+{"operation": "compute_sha256", "path": "/tmp/nonexistent_file_12345.txt", "error": "File not found", "error_type": "FileNotFoundError", "timestamp": "2025-11-13T23:02:46.494851+00:00"}
+{"operation": "compute_sha256", "path": "/tmp/nonexistent_file_12345.txt", "error": "File not found", "error_type": "FileNotFoundError", "timestamp": "2025-11-13T23:03:07.049481+00:00"}
+{"operation": "compute_sha256", "path": "/tmp/nonexistent_file_12345.txt", "error": "File not found", "error_type": "FileNotFoundError", "timestamp": "2025-11-13T23:04:55.686117+00:00"}

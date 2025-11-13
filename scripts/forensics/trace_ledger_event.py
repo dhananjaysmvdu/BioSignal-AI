@@ -12,26 +12,14 @@ import json
 import tarfile
 from pathlib import Path
 from typing import Optional
-import hashlib
-from datetime import datetime, timezone
+
+# Import shared forensics utilities (Phase XXI - Instruction 111)
+from scripts.forensics.forensics_utils import utc_now_iso, compute_sha256
 
 ROOT = Path(__file__).resolve().parents[2]
 SNAPSHOTS = ROOT / 'snapshots'
 MIRRORS = ROOT / 'mirrors'
 FORENSICS = ROOT / 'forensics'
-
-
-def utc_now_iso() -> str:
-    from datetime import datetime, timezone
-    return datetime.now(timezone.utc).isoformat()
-
-
-def sha256_path(p: Path) -> str:
-    h = hashlib.sha256()
-    with p.open('rb') as f:
-        for chunk in iter(lambda: f.read(8192), b''):
-            h.update(chunk)
-    return h.hexdigest()
 
 
 def load_snapshot_hashes() -> list[dict]:
@@ -108,10 +96,10 @@ def main():
         if entry is not None:
             result['match'] = entry
             result['snapshot'] = bundle.name
-            if args.verify-hash:
+            if args.verify_hash:
                 rec = next((r for r in hashes if r.get('file') == bundle.name), None)
                 if rec:
-                    result['snapshot_hash_match'] = (rec.get('sha256') == sha256_path(bundle))
+                    result['snapshot_hash_match'] = (rec.get('sha256') == compute_sha256(bundle))
             break
 
     print(json.dumps(result, indent=2))
