@@ -13,6 +13,13 @@ This file tracks audit history and governance adjustments.
 
 <!-- AUTO_RECOVERY: SUCCESS -->
 
+<!-- HASH_GUARDRAIL:BEGIN -->
+- Updated: 2025-11-14T09:30:00+00:00
+- Action: Guardrail hashing executed with PowerShell fallback
+- Result: SHA-256 logged to federation_status.json (exports/integrity_metrics_registry.csv)
+- Notes: Header schema validated against integrity registry template
+<!-- HASH_GUARDRAIL:END -->
+
 <!-- TRUST_CORRELATION:BEGIN -->
 **Trust–Health Correlation Analysis**
 
