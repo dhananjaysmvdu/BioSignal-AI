@@ -15,13 +15,23 @@ import json
 import os
 import sys
 import tempfile
+from contextlib import contextmanager
 from pathlib import Path
+
+
+@contextmanager
+def cwd(path: str):
+    original = os.getcwd()
+    os.chdir(path)
+    try:
+        yield
+    finally:
+        os.chdir(original)
 
 
 def test_stable_classification_boundary():
     """Test MPI ≥ 80 classified as 'Stable learning'."""
-    with tempfile.TemporaryDirectory() as tmpdir:
-        os.chdir(tmpdir)
+    with tempfile.TemporaryDirectory() as tmpdir, cwd(tmpdir):
         os.makedirs("logs", exist_ok=True)
         os.makedirs("reports", exist_ok=True)
         
@@ -64,8 +74,7 @@ def test_stable_classification_boundary():
 
 def test_mild_drift_classification_boundary():
     """Test 60 ≤ MPI < 80 classified as 'Mild drift'."""
-    with tempfile.TemporaryDirectory() as tmpdir:
-        os.chdir(tmpdir)
+    with tempfile.TemporaryDirectory() as tmpdir, cwd(tmpdir):
         os.makedirs("logs", exist_ok=True)
         os.makedirs("reports", exist_ok=True)
         
@@ -100,8 +109,7 @@ def test_mild_drift_classification_boundary():
 
 def test_degradation_classification_boundary():
     """Test MPI < 60 classified as 'Learning degradation'."""
-    with tempfile.TemporaryDirectory() as tmpdir:
-        os.chdir(tmpdir)
+    with tempfile.TemporaryDirectory() as tmpdir, cwd(tmpdir):
         os.makedirs("logs", exist_ok=True)
         os.makedirs("reports", exist_ok=True)
         
@@ -136,8 +144,7 @@ def test_degradation_classification_boundary():
 
 def test_audit_marker_idempotency():
     """Test that running evaluator twice produces single audit marker."""
-    with tempfile.TemporaryDirectory() as tmpdir:
-        os.chdir(tmpdir)
+    with tempfile.TemporaryDirectory() as tmpdir, cwd(tmpdir):
         os.makedirs("logs", exist_ok=True)
         os.makedirs("reports", exist_ok=True)
         

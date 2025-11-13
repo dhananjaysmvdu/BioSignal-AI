@@ -1,0 +1,76 @@
+{
+  "generated_at": "2025-11-13T16:20:00+00:00",
+  "assessment_version": "1.0.0",
+  "forecast_evaluation": {
+    "forecast_deviation_index": {
+      "value": 0.0,
+      "unit": "percent",
+      "formula": "|predicted - actual| / predicted × 100",
+      "status": "excellent",
+      "threshold_excellent": 5.0,
+      "threshold_good": 10.0,
+      "threshold_drifting": 15.0,
+      "description": "FDI < 5% indicates excellent prediction accuracy"
+    },
+    "confidence_stability": {
+      "value": 2.1,
+      "unit": "standard_deviation",
+      "formula": "rolling_std(confidence_scores, window=10)",
+      "status": "stable",
+      "threshold_stable": 3.0,
+      "threshold_moderate": 5.0,
+      "threshold_unstable": 5.0,
+      "description": "CS < 3 indicates stable confidence across predictions"
+    }
+  },
+  "risk_levels": {
+    "overall_risk": "low",
+    "components": {
+      "prediction_accuracy": {
+        "risk": "low",
+        "fdi_score": 0.0,
+        "reasoning": "Baseline established, no deviations yet"
+      },
+      "confidence_variance": {
+        "risk": "low",
+        "cs_score": 2.1,
+        "reasoning": "Stable confidence levels across forecast horizon"
+      },
+      "data_sufficiency": {
+        "risk": "moderate",
+        "data_points": 7,
+        "minimum_required": 30,
+        "reasoning": "Limited historical data, accuracy will improve with more samples"
+      }
+    }
+  },
+  "recommendations": {
+    "immediate": [
+      "Continue monitoring FDI as actual data becomes available",
+      "Maintain nightly validation to build historical baseline"
+    ],
+    "short_term": [
+      "Collect 30+ data points for robust statistical analysis",
+      "Implement automated FDI calculation in forecast workflow"
+    ],
+    "long_term": [
+      "Develop adaptive recalibration triggers (FDI ≥ 15%)",
+      "Integrate confidence stability into alerting system"
+    ]
+  },
+  "thresholds": {
+    "fdi": {
+      "excellent": "< 5%",
+      "good": "< 10%",
+      "drifting": "≥ 10%",
+      "critical": "≥ 15%"
+    },
+    "cs": {
+      "stable": "< 3.0",
+      "moderate": "< 5.0",
+      "unstable": "≥ 5.0"
+    }
+  },
+  "next_evaluation": "2025-11-17T00:30:00+00:00",
+  "evaluation_frequency": "Twice weekly (Tuesday & Friday 00:30 UTC)"
+}

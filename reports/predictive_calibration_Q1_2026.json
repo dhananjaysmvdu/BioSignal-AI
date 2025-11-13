@@ -1,0 +1,30 @@
+{
+  "period": "2026-Q1",
+  "generated_at": "2025-11-13T17:15:00+00:00",
+  "model": {
+    "name": "Meta-Forecast 2.0",
+    "algorithm": "GRLM_MPI_Ensemble",
+    "horizon_days": 30
+  },
+  "sources": {
+    "predicted": "forecast/predictive_metrics_Q1_2026.json",
+    "actual": "exports/integrity_metrics_registry.csv"
+  },
+  "data": {
+    "predicted_mean_integrity": 98.0,
+    "actual_integrity_latest": 97.5,
+    "samples_compared": 1
+  },
+  "metrics": {
+    "calibration_error": 0.5,
+    "forecast_bias": 0.5,
+    "definitions": {
+      "calibration_error": "mean(|predicted − actual|)",
+      "forecast_bias": "mean(predicted − actual)"
+    }
+  },
+  "notes": [
+    "Baseline comparison uses latest available actual integrity vs. predicted mean.",
+    "Metrics will auto-update as more Q1 2026 actuals accumulate."
+  ]
+}

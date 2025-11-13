@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Publications & Datasets — BioSignal-AI Governance</title>
+  <style>
+    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial; background: #f9fafb; margin: 0; padding: 20px; }
+    .container { max-width: 1000px; margin: 0 auto; }
+    header { background: white; padding: 24px; border-radius: 12px; box-shadow: 0 6px 20px rgba(0,0,0,0.12); margin-bottom: 20px; }
+    h1 { color: #374151; margin: 0 0 6px; }
+    .section { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 6px 20px rgba(0,0,0,0.12); margin-bottom: 16px; }
+    .label { color: #6b7280; font-size: 0.9em; }
+    .item { padding: 10px 0; border-bottom: 1px solid #f3f4f6; }
+    .item:last-child { border-bottom: none; }
+    .search { width: 100%; padding: 10px 12px; border: 1px solid #e5e7eb; border-radius: 8px; margin-bottom: 10px; font-size: 1em; }
+    a { color: #2563eb; text-decoration: none; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>Publications & Datasets</h1>
+      <div class="label">Explore research artifacts and filter datasets</div>
+    </header>
+
+    <div class="section">
+      <h2>Publications</h2>
+      <div id="pub-list" class="label">Loading publications...</div>
+    </div>
+
+    <div class="section">
+      <h2>Datasets</h2>
+      <input class="search" id="search" placeholder="Search datasets by name or tag..." />
+      <div id="ds-list" class="label">Loading datasets...</div>
+    </div>
+
+    <div class="section">
+      <a href="index.html">← Back to Governance Portal</a>
+    </div>
+  </div>
+
+  <script>
+    let datasets = [];
+
+    function renderPublications(data) {
+      const pub = (data.publications && data.publications.packages) || [];
+      const dois = (data.publications && data.publications.dois) || [];
+      const el = document.getElementById('pub-list');
+      if (pub.length === 0 && dois.length === 0) { el.textContent = 'No publications available.'; return; }
+      el.innerHTML = '';
+      pub.forEach(p => {
+        const zip = p.zip ? `<a href="../${p.zip}">ZIP</a>` : '';
+        el.innerHTML += `<div class="item"><strong>${p.title}</strong> — ${p.status || 'n/a'} ${zip}</div>`;
+      });
+      if (dois.length) {
+        el.innerHTML += `<div class="item"><strong>DOIs:</strong> ${dois.map(d => `<a href="https://doi.org/${d}" target="_blank" rel="noopener">${d}</a>`).join(', ')}</div>`;
+      }
+    }
+
+    function renderDatasets(list) {
+      const el = document.getElementById('ds-list');
+      if (!list.length) { el.textContent = 'No datasets match your search.'; return; }
+      el.innerHTML = '';
+      list.forEach(d => {
+        el.innerHTML += `<div class="item"><strong>${d.name}</strong> — <code>${d.path}</code><br><span class="label">${d.category} · ${d.tags.join(', ')}</span></div>`;
+      });
+    }
+
+    async function load() {
+      const res = await fetch('metrics.json');
+      const data = await res.json();
+      datasets = data.datasets || [];
+      renderPublications(data);
+      renderDatasets(datasets);
+    }
+
+    document.getElementById('search').addEventListener('input', (e) => {
+      const q = e.target.value.toLowerCase();
+      const filtered = datasets.filter(d => d.name.toLowerCase().includes(q) || d.tags.join(' ').toLowerCase().includes(q));
+      renderDatasets(filtered);
+    });
+
+    load();
+  </script>
+</body>
+</html>

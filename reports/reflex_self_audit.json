@@ -1,0 +1,38 @@
+{
+  "status": "ok",
+  "health_score": 69.31,
+  "classification": "Stable",
+  "emoji": "\ud83d\udfe1",
+  "interpretation": "Normal adaptive oscillation",
+  "components": {
+    "rei": {
+      "value": 0.0,
+      "normalized_score": 50.0,
+      "classification": "Neutral",
+      "weight": 0.4
+    },
+    "mpi": {
+      "value": 86.0,
+      "classification": "Stable learning",
+      "weight": 0.3
+    },
+    "confidence": {
+      "value": 0.85,
+      "status": "Moderate trust",
+      "weight": 0.2
+    },
+    "rri": {
+      "value": 15.1,
+      "normalized_score": 65.1,
+      "classification": "Reinforcing",
+      "weight": 0.1
+    }
+  },
+  "trend": {
+    "direction": "initial",
+    "emoji": "\ud83c\udd95",
+    "rolling_mean_10": 69.31,
+    "samples": 1
+  },
+  "timestamp": "2025-11-11T13:59:23Z"
+}

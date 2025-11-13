@@ -1486,6 +1486,260 @@ jobs:
       - name: Append run summary
         run: echo "🔍 Forecast consistency monitored — see FORECAST_CONSISTENCY block in audit summary." >> $GITHUB_STEP_SUMMARY
 
+  governance-forecast-confidence-synthesizer:
+    needs: [governance-forecast-consistency-monitor]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+      - name: Synthesize forecast confidence metrics
+        run: |
+          python scripts/workflow_utils/governance_forecast_confidence_synthesizer.py || true
+      - name: Commit forecast confidence results
+        run: |
+          git config user.name "github-actions"
+          git config user.email "actions@github.com"
+          git add reports/forecast_confidence.json reports/audit_summary.md || true
+          git commit -m "ci: synthesize forecast confidence from consistency and alignment data" || echo "No changes"
+      - name: Append run summary
+        run: echo "🎯 Forecast confidence synthesized — confidence index and trajectory published." >> $GITHUB_STEP_SUMMARY
+
+  governance-confidence-adaptation-controller:
+    needs: [governance-forecast-confidence-synthesizer]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+      - name: Apply confidence-weighted adaptation
+        run: |
+          python scripts/workflow_utils/governance_confidence_adaptation_controller.py || true
+      - name: Commit confidence adaptation outputs
+        run: |
+          git config user.name "governance-bot"
+          git config user.email "actions@github.com"
+          git add reports/confidence_adaptation.json reports/governance_policy.json reports/audit_summary.md || true
+          git commit -m "ci: apply confidence-weighted adaptation to learning parameters" || echo "No changes to commit"
+      - name: Append run summary
+        run: echo "🧭 Confidence-weighted adaptation executed." >> $GITHUB_STEP_SUMMARY
+
+  governance-reflex-reinforcement-evaluator:
+    needs: [governance-confidence-adaptation-controller]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+      - name: Evaluate reflex reinforcement
+        run: |
+          python scripts/workflow_utils/governance_reflex_reinforcement_evaluator.py || true
+      - name: Commit reinforcement metrics
+        run: |
+          git config user.name "governance-bot"
+          git config user.email "actions@github.com"
+          git add reports/reflex_reinforcement.json reports/audit_summary.md || true
+          git commit -m "ci: evaluate reflex reinforcement after confidence-weighted adaptation" || echo "No changes to commit"
+      - name: Append run summary
+        run: echo "🧩 Reflex reinforcement evaluation complete." >> $GITHUB_STEP_SUMMARY
+
+  governance-reflex-self-audit:
+    needs: [governance-reflex-reinforcement-evaluator]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+      - name: Perform comprehensive reflex self-audit
+        id: self_audit
+        run: |
+          python scripts/workflow_utils/governance_reflex_self_audit.py || true
+          # Extract health score and classification
+          if [ -f reports/reflex_self_audit.json ]; then
+            health=$(jq -r '.health_score' reports/reflex_self_audit.json)
+            class=$(jq -r '.classification' reports/reflex_self_audit.json)
+            emoji=$(jq -r '.emoji' reports/reflex_self_audit.json)
+            echo "health_score=$health" >> $GITHUB_OUTPUT
+            echo "classification=$class" >> $GITHUB_OUTPUT
+            echo "emoji=$emoji" >> $GITHUB_OUTPUT
+          fi
+      - name: Commit reflex self-audit results
+        run: |
+          git config user.name "governance-bot"
+          git config user.email "actions@github.com"
+          git add reports/reflex_self_audit.json reports/audit_summary.md logs/reflex_self_audit_history.json || true
+          git commit -m "ci: perform comprehensive reflex self-audit and health classification" || echo "No changes to commit"
+      - name: Append run summary
+        run: |
+          echo "🔍 Reflex self-audit complete — ${{ steps.self_audit.outputs.emoji }} ${{ steps.self_audit.outputs.classification }} (Health: ${{ steps.self_audit.outputs.health_score }}%)." >> $GITHUB_STEP_SUMMARY
+
+  generate-reflex-health-dashboard:
+    needs: [governance-reflex-self-audit]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+      - name: Generate Reflex Health Dashboard
+        id: dashboard
+        run: |
+          python scripts/workflow_utils/generate_reflex_health_dashboard.py || true
+          # Extract metrics if available
+          if [ -f reports/reflex_self_audit.json ]; then
+            health=$(jq -r '.health_score' reports/reflex_self_audit.json 2>/dev/null || echo "0")
+            trend=$(jq -r '.trend.direction // "stable"' reports/reflex_self_audit.json 2>/dev/null || echo "stable")
+            echo "health_score=$health" >> $GITHUB_OUTPUT
+            echo "trend=$trend" >> $GITHUB_OUTPUT
+          fi
+      - name: Commit Reflex Health Dashboard
+        run: |
+          git config user.name "governance-bot"
+          git config user.email "actions@github.com"
+          git add reports/reflex_health_dashboard.html exports/reflex_health_timeline.csv reports/audit_summary.md || true
+          git commit -m "ci: generate reflex health timeline dashboard and compliance export" || echo "No changes to commit"
+      - name: Append dashboard summary
+        run: |
+          echo "🧭 Reflex health timeline dashboard generated — Health: ${{ steps.dashboard.outputs.health_score }}%, Trend: ${{ steps.dashboard.outputs.trend }}." >> $GITHUB_STEP_SUMMARY
+
+  governance-reflex-integrity-sentinel:
+    needs: [generate-reflex-health-dashboard]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    outputs:
+      integrity_score: ${{ steps.integrity.outputs.integrity_score }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+      - name: Run Reflex Integrity Sentinel
+        id: integrity
+        run: |
+          python scripts/workflow_utils/governance_reflex_integrity_sentinel.py || true
+          # Extract integrity score for gating next job
+          if [ -f reports/reflex_integrity.json ]; then
+            score=$(jq -r '.integrity_score' reports/reflex_integrity.json 2>/dev/null || echo "0")
+            echo "integrity_score=$score" >> $GITHUB_OUTPUT
+          else
+            echo "integrity_score=0" >> $GITHUB_OUTPUT
+          fi
+      - name: Commit integrity report
+        run: |
+          git config user.name "governance-bot"
+          git config user.email "actions@github.com"
+          git add reports/reflex_integrity.json reports/audit_summary.md || true
+          git commit -m "ci: validate reflex integrity and data coherence" || echo "No changes to commit"
+          echo "🧩 Reflex integrity validation complete." >> $GITHUB_STEP_SUMMARY
+
+  generate-integrity-metrics-registry:
+    needs: [governance-reflex-integrity-sentinel]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+      - name: Generate Integrity Metrics Registry
+        run: |
+          python scripts/workflow_utils/generate_integrity_metrics_registry.py || true
+      - name: Commit Integrity Registry
+        run: |
+          git config user.name "governance-bot"
+          git config user.email "actions@github.com"
+          git add exports/integrity_metrics_registry.csv reports/audit_summary.md || true
+          git commit -m "ci: update integrity metrics registry for compliance analytics" || echo "No changes to commit"
+      - name: Append registry summary
+        run: |
+          echo "🗃️ Integrity registry updated — metrics exported for compliance analytics." >> $GITHUB_STEP_SUMMARY
+
+  validate-integrity-registry-schema:
+    needs: [generate-integrity-metrics-registry]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+      - name: Validate Integrity Registry Schema
+        id: validate
+        run: |
+          set +e
+          python scripts/workflow_utils/validate_integrity_registry_schema.py
+          STATUS=$?
+          echo "status=$STATUS" >> $GITHUB_OUTPUT
+          exit 0
+      - name: Commit schema footer and audit marker
+        run: |
+          git config user.name "governance-bot"
+          git config user.email "actions@github.com"
+          git add exports/integrity_metrics_registry.csv reports/audit_summary.md || true
+          git commit -m "ci: validate integrity registry schema and append schema hash footer" || echo "No changes to commit"
+      - name: Append validation summary
+        run: |
+          echo "📏 Integrity registry schema validation executed." >> $GITHUB_STEP_SUMMARY
+
+  schema-provenance-ledger:
+    needs: [validate-integrity-registry-schema]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+      - name: Update schema provenance ledger
+        run: |
+          python scripts/workflow_utils/schema_provenance_ledger.py || true
+      - name: Commit schema ledger and audit marker
+        run: |
+          git config user.name "governance-bot"
+          git config user.email "actions@github.com"
+          git add exports/schema_provenance_ledger.jsonl reports/audit_summary.md || true
+          git commit -m "ci: update schema provenance ledger" || echo "No changes to commit"
+      - name: Append ledger summary
+        run: |
+          echo "🧾 Schema provenance ledger verified/updated." >> $GITHUB_STEP_SUMMARY
+
   generate-reflex-feedback-dashboard:
     needs: [governance-reflex-learning-model, governance-reflex-meta-evaluator, governance-reflex-forecast-evaluator, governance-forecast-consistency-monitor]
     runs-on: ubuntu-latest
@@ -1634,7 +1888,8 @@ jobs:
           echo "🪶 Adaptive meta-feedback applied — status $emoji ${{ steps.feedback.outputs.status }}." >> $GITHUB_STEP_SUMMARY
 
   adaptive-learning-rate:
-    needs: [governance-meta-feedback-controller]
+    needs: [governance-reflex-integrity-sentinel, generate-integrity-metrics-registry, validate-integrity-registry-schema, schema-provenance-ledger]
+    if: ${{ fromJSON(needs.governance-reflex-integrity-sentinel.outputs.integrity_score) >= 70 }}
     runs-on: ubuntu-latest
     permissions:
       contents: write

@@ -1,0 +1,48 @@
+name: Research Network Sync
+
+on:
+  schedule:
+    - cron: '30 4 * * 1'  # Mondays 04:30 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  sync-network:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Sync research network data
+        run: |
+          python scripts/workflow_utils/sync_research_network.py
+
+      - name: Append NETWORK_SYNC marker
+        shell: bash
+        run: |
+          ts=$(date -u +"%Y-%m-%dT%H:%M:%S+00:00")
+          file="audit_summary.md"
+          if ! grep -q "<!-- NETWORK_SYNC:" "$file"; then
+            printf '\n<!-- NETWORK_SYNC: UPDATED %s -->\n' "$ts" >> "$file"
+          else
+            sed -i "s/<!-- NETWORK_SYNC: UPDATED .\+ -->/<!-- NETWORK_SYNC: UPDATED ${ts} -->/" "$file"
+          fi
+
+      - name: Commit network sync artifacts
+        run: |
+          git config user.name "github-actions"
+          git config user.email "github-actions@github.com"
+          git add integration/ audit_summary.md
+          if git diff --cached --quiet; then
+            echo "No changes to commit"
+          else
+            git commit -m "sync: add cross-instance governance network synchronization and drift reporting"
+            git push
+          fi

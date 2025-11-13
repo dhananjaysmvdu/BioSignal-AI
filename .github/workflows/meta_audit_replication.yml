@@ -1,0 +1,53 @@
+name: Meta Audit Replication
+
+on:
+  schedule:
+    - cron: '0 3 * * 5'  # Fridays 03:00 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  replicate-and-log:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install minimal deps
+        run: |
+          python -V
+
+      - name: Run meta-audit replication
+        run: |
+          python scripts/meta_audit/run_meta_audit.py
+
+      - name: Append META_AUDIT marker in audit_summary.md
+        shell: bash
+        run: |
+          ts=$(date -u +"%Y-%m-%dT%H:%M:%S+00:00")
+          file="audit_summary.md"
+          if ! grep -q "<!-- META_AUDIT:" "$file"; then
+            printf '\n<!-- META_AUDIT: UPDATED %s -->\n' "$ts" >> "$file"
+          else
+            # replace existing marker line
+            sed -i "s/<!-- META_AUDIT: UPDATED .\+ -->/<!-- META_AUDIT: UPDATED ${ts} -->/" "$file"
+          fi
+
+      - name: Commit meta-audit artifacts
+        run: |
+          git config user.name "github-actions"
+          git config user.email "github-actions@github.com"
+          git add meta_audit/ audit_summary.md
+          if git diff --cached --quiet; then
+            echo "No changes to commit"
+          else
+            git commit -m "audit: enable autonomous meta-audit replication and drift detection"
+            git push
+          fi

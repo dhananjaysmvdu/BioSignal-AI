@@ -1,0 +1,19 @@
+{
+  "status": "ok",
+  "rri": 15.1,
+  "classification": "Reinforcing",
+  "emoji": "\ud83d\udfe2",
+  "interpretation": "Adaptation improved learning outcomes",
+  "components": {
+    "delta_r2": 0.15,
+    "delta_mpi": 12.0,
+    "delta_lr": 0.2
+  },
+  "weights": {
+    "r2_weight": 0.5,
+    "mpi_weight": 0.3,
+    "lr_weight": 0.2
+  },
+  "history_samples": 2,
+  "timestamp": "2025-11-11T10:26:37.539754+00:00"
+}

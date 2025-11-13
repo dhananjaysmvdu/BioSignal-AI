@@ -1,0 +1,68 @@
+name: Release Utilities
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+
+jobs:
+  update-doi-reference:
+    name: Update DOI Reference
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: main
+      - name: Configure Git identity
+        run: |
+          git config user.name "release-bot"
+          git config user.email "actions@github.com"
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Propagate Zenodo DOI
+        run: |
+          python scripts/workflow_utils/update_doi_reference.py || true
+      - name: Push DOI updates
+        run: |
+          git status --short
+          AHEAD=$(git rev-list --count origin/main..HEAD)
+          if [ "$AHEAD" -gt 0 ]; then
+            git push
+            echo "Pushed DOI updates to origin/main"
+          else
+            echo "No new commits to push"
+      - name: Tag reproducibility capsule
+        run: |
+          DATE=$(date +'%Y-%m-%d')
+          TAG="capsule-${DATE}"
+          if git rev-parse "${TAG}" >/dev/null 2>&1; then
+            echo "Tag ${TAG} already exists; skipping creation"
+          else
+            git tag -a "${TAG}" -m "Governance reproducibility capsule ${DATE}"
+            git push origin "${TAG}"
+            echo "Created reproducibility capsule tag ${TAG}"
+          fi
+      - name: Generate reproducibility badge
+        run: |
+          python scripts/workflow_utils/generate_integrity_status_badge.py || true
+          python scripts/workflow_utils/generate_integrity_status_badge.py --output badges/reproducibility_status.json || true
+          git add badges/integrity_status.json badges/reproducibility_status.json || true
+          if git diff --cached --quiet; then
+            echo "No badge changes to commit"
+          else
+            git commit -m "docs: update governance health badges"
+            git push
+            echo "Governance badges updated"
+          fi
+      - name: Verify release integrity
+        run: |
+          python scripts/workflow_utils/verify_release_integrity.py || true
+      - name: Validate full reproducibility chain
+        run: |
+          python scripts/workflow_utils/validate_full_reproducibility.py || exit 0

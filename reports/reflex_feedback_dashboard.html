@@ -9,18 +9,48 @@
     h1 { margin-bottom: 8px; }
     .status { background: #f5f5f5; padding: 12px 16px; border-radius: 8px; margin-bottom: 16px; }
     .grid { display: grid; grid-template-columns: 1fr; gap: 24px; }
-    canvas { width: 100%; max-width: 900px; height: 300px; border: 1px solid #eee; background: #fff; }
+    canvas { width: 100%; max-width: 900px; height: 300px; border: 1px solid #eee; background: #fff; cursor: crosshair; }
     table { border-collapse: collapse; width: 100%; max-width: 900px; }
     th, td { border: 1px solid #ddd; padding: 8px; }
     th { background: #fafafa; text-align: left; }
     .foot { margin-top: 16px; color: #666; font-size: 13px; }
+    #mpiTooltip { position: absolute; display: none; background: #222; color: #fff; padding: 4px 8px; border-radius: 4px; font-size: 12px; pointer-events: none; z-index: 1000; }
   </style>
 </head>
 <body>
+  <div id="mpiTooltip"></div>
   <h1>Reflex Feedback Dashboard</h1>
   <div class="status">
-    <strong>Current Status:</strong> REI +0.00 ➡️ Neutral | RSI 100.0% | GHS 0.0%
+    <strong>Current Status:</strong> REI +0.00 Γ₧í∩╕Å Neutral | RSI 100.0% | GHS 0.0%
   </div>
+  
+  
+    <section id="meta_performance" style="background: #2cbe4e22; padding: 16px; border-radius: 8px; border-left: 4px solid #2cbe4e; margin-bottom: 24px;">
+      <h3 style="margin-top: 0;">≡ƒºá Reflex Meta-Performance</h3>
+      <div style="display: flex; align-items: center; gap: 16px;">
+        <canvas id="metaGauge" width="200" height="120"></canvas>
+        <div>
+          <p style="font-size: 18px; margin: 4px 0;"><strong>Status:</strong> <span id="metaStatus">≡ƒƒó Stable learning</span></p>
+          <p style="margin: 4px 0;"><strong>MPI:</strong> 86.0%</p>
+          <p style="margin: 4px 0; font-size: 12px; color: #666;">╬öR┬▓: +0.120 | Drift: +0.000</p>
+        </div>
+      </div>
+      
+      
+      <div style="margin-top: 16px;">
+        <h4 style="margin: 8px 0;">Meta-Performance Trend ΓÇö Last 2 Runs (MPI %) Γåæ improving</h4>
+        <canvas id="mpiTrendChart" width="600" height="150"></canvas>
+        <p style="font-size: 12px; color: #666; margin-top: 4px;">
+          Green = stable (ΓëÑ80%), yellow = mild drift (60-79%), red = degradation (<60%). Rolling mean (dotted gray) shows short-term stability. <strong>Forecast (dashed blue)</strong> projects 5 cycles ahead assuming current trend continues (slope: +0.00% per cycle).
+        </p>
+      </div>
+
+    </section>
+    
+  
+  
+  
+  
   
   <div class="grid">
     <div>
@@ -52,7 +82,7 @@
           <td>2025-11-10 22:36</td>
           <td>Normal Operation</td>
           <td style="text-align:right;">+0.00</td>
-          <td>➡️ Neutral</td>
+          <td>Γ₧í∩╕Å Neutral</td>
         </tr>
         
         <tr>
@@ -60,7 +90,7 @@
           <td>2025-11-10 22:50</td>
           <td>Normal Operation</td>
           <td style="text-align:right;">+0.00</td>
-          <td>➡️ Neutral</td>
+          <td>Γ₧í∩╕Å Neutral</td>
         </tr>
         
         </tbody>
@@ -68,7 +98,7 @@
     </div>
   </div>
   
-  <div class="foot">Generated: 2025-11-10 23:01:52 UTC</div>
+  <div class="foot">Generated: 2025-11-11 14:00:04 UTC</div>
   
   <script>
   (function() {
@@ -221,11 +251,444 @@
       ctx.fillText('RSI', pad + 16, pad - 10);
       
       ctx.fillStyle = '#f39c12'; ctx.fillRect(pad + 60, pad - 20, 12, 12);
-      ctx.fillText('GHS', pad + 76, pad - 10);
+      ctx.fillText('GHS', c.clientWidth - pad + 25, pad + 12);
+    }
+    
+    function drawMetaGauge(id, mpi, color) {
+      const c = document.getElementById(id);
+      if (!c) return;
+      const ctx = c.getContext('2d');
+      const w = c.width;
+      const h = c.height;
+      const cx = w / 2;
+      const cy = h - 10;
+      const radius = Math.min(w, h * 2) / 2 - 20;
+      
+      // Background arc (gray)
+      ctx.lineWidth = 12;
+      ctx.strokeStyle = '#e0e0e0';
+      ctx.beginPath();
+      ctx.arc(cx, cy, radius, Math.PI, 0, false);
+      ctx.stroke();
+      
+      // MPI arc (colored based on status)
+      const mpiAngle = Math.PI + (mpi / 100) * Math.PI;
+      ctx.strokeStyle = color;
+      ctx.beginPath();
+      ctx.arc(cx, cy, radius, Math.PI, mpiAngle, false);
+      ctx.stroke();
+      
+      // Needle
+      const needleAngle = Math.PI + (mpi / 100) * Math.PI;
+      const needleLen = radius - 10;
+      ctx.strokeStyle = '#333';
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.moveTo(cx, cy);
+      ctx.lineTo(cx + needleLen * Math.cos(needleAngle), cy + needleLen * Math.sin(needleAngle));
+      ctx.stroke();
+      
+      // Center dot
+      ctx.fillStyle = '#333';
+      ctx.beginPath();
+      ctx.arc(cx, cy, 5, 0, 2 * Math.PI);
+      ctx.fill();
+      
+      // Labels
+      ctx.fillStyle = '#666';
+      ctx.font = '12px Arial';
+      ctx.textAlign = 'left';
+      ctx.fillText('0%', cx - radius - 5, cy + 5);
+      ctx.textAlign = 'right';
+      ctx.fillText('100%', cx + radius + 5, cy + 5);
+    }
+
+    function drawConsistencyGauge(id, score, accentColor) {
+      const c = document.getElementById(id);
+      if (!c) return;
+      const ctx = c.getContext('2d');
+      const w = c.width;
+      const h = c.height;
+      const cx = w / 2;
+      const cy = h - 10;
+      const radius = Math.min(w, h * 2) / 2 - 20;
+
+      const segments = [
+        { start: 0.0, end: 0.5, color: '#d73a49' },
+        { start: 0.5, end: 0.75, color: '#dfb317' },
+        { start: 0.75, end: 1.0, color: '#2cbe4e' },
+      ];
+
+      ctx.lineWidth = 12;
+      ctx.lineCap = 'round';
+      segments.forEach(seg => {
+        const startAngle = Math.PI + seg.start * Math.PI;
+        const endAngle = Math.PI + seg.end * Math.PI;
+        ctx.strokeStyle = seg.color;
+        ctx.beginPath();
+        ctx.arc(cx, cy, radius, startAngle, endAngle, false);
+        ctx.stroke();
+      });
+
+      const normalized = Math.max(0, Math.min(score / 100, 1));
+      const gaugeAngle = Math.PI + normalized * Math.PI;
+
+      ctx.lineWidth = 6;
+      ctx.strokeStyle = accentColor;
+      ctx.beginPath();
+      ctx.arc(cx, cy, radius - 8, Math.PI, gaugeAngle, false);
+      ctx.stroke();
+
+      const needleLen = radius - 10;
+      ctx.strokeStyle = '#333';
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.moveTo(cx, cy);
+      ctx.lineTo(cx + needleLen * Math.cos(gaugeAngle), cy + needleLen * Math.sin(gaugeAngle));
+      ctx.stroke();
+
+      ctx.fillStyle = '#333';
+      ctx.beginPath();
+      ctx.arc(cx, cy, 5, 0, 2 * Math.PI);
+      ctx.fill();
+
+      const tickValues = [0, 50, 75, 100];
+      ctx.lineWidth = 2;
+      ctx.strokeStyle = '#bbb';
+      tickValues.forEach(val => {
+        const angle = Math.PI + (val / 100) * Math.PI;
+        const outer = radius + 2;
+        const inner = radius - 10;
+        ctx.beginPath();
+        ctx.moveTo(cx + inner * Math.cos(angle), cy + inner * Math.sin(angle));
+        ctx.lineTo(cx + outer * Math.cos(angle), cy + outer * Math.sin(angle));
+        ctx.stroke();
+      });
+
+      ctx.fillStyle = '#666';
+      ctx.font = '10px Arial';
+      ctx.textAlign = 'center';
+      tickValues.forEach(val => {
+        const angle = Math.PI + (val / 100) * Math.PI;
+        const labelRadius = radius + 14;
+        const tx = cx + labelRadius * Math.cos(angle);
+        const ty = cy + labelRadius * Math.sin(angle);
+        ctx.fillText(`${val}%`, tx, ty + 4);
+      });
+    }
+    
+    function drawMPITrend(id, data, labels, forecast) {
+      const c = document.getElementById(id);
+      if (!c || data.length === 0) return;
+      
+      const ctx = c.getContext('2d');
+      const W = c.width = c.clientWidth * devicePixelRatio;
+      const H = c.height = c.clientHeight * devicePixelRatio;
+      ctx.scale(devicePixelRatio, devicePixelRatio);
+      
+      const pad = 40;
+      const w = c.clientWidth - pad * 2;
+      const h = c.clientHeight - pad * 2;
+      
+      // Gridlines (horizontal at 0%, 20%, 40%, 60%, 80%, 100%)
+      ctx.strokeStyle = '#f0f0f0';
+      ctx.lineWidth = 1;
+      for (let pct = 0; pct <= 100; pct += 20) {
+        const y = c.clientHeight - pad - (pct / 100) * h;
+        ctx.beginPath();
+        ctx.moveTo(pad, y);
+        ctx.lineTo(c.clientWidth - pad, y);
+        ctx.stroke();
+      }
+      
+      // Axes
+      ctx.strokeStyle = '#ddd';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(pad, pad);
+      ctx.lineTo(pad, c.clientHeight - pad);
+      ctx.lineTo(c.clientWidth - pad, c.clientHeight - pad);
+      ctx.stroke();
+      
+      // Calculate trend direction
+      let trendDir = 'ΓåÆ';
+      if (data.length >= 2) {
+        const firstHalf = data.slice(0, Math.floor(data.length / 2));
+        const secondHalf = data.slice(Math.floor(data.length / 2));
+        const avgFirst = firstHalf.reduce((a, b) => a + b, 0) / firstHalf.length;
+        const avgSecond = secondHalf.reduce((a, b) => a + b, 0) / secondHalf.length;
+        const delta = avgSecond - avgFirst;
+        if (delta > 5) trendDir = 'Γåæ';
+        else if (delta < -5) trendDir = 'Γåô';
+      }
+      
+      // Draw line
+      const latest = data[data.length - 1];
+      const lineColor = latest >= 80 ? '#2cbe4e' : latest >= 60 ? '#dfb317' : '#d73a49';
+      
+      ctx.strokeStyle = lineColor;
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      
+      for (let i = 0; i < data.length; i++) {
+        const x = pad + (i / (data.length - 1 || 1)) * w;
+        const y = c.clientHeight - pad - (data[i] / 100) * h;
+        
+        if (i === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+        
+        // Draw point
+        ctx.fillStyle = lineColor;
+        ctx.beginPath();
+        ctx.arc(x, y, 3, 0, 2 * Math.PI);
+        ctx.fill();
+      }
+      
+      ctx.stroke();
+      
+      // Compute and draw rolling mean (5-point window)
+      const rolling = [];
+      for (let i = 0; i < data.length; i++) {
+        const start = Math.max(0, i - 4);
+        const subset = data.slice(start, i + 1);
+        const mean = subset.reduce((a, b) => a + b, 0) / subset.length;
+        rolling.push(mean);
+      }
+      
+      ctx.beginPath();
+      ctx.setLineDash([5, 5]);
+      ctx.strokeStyle = '#999';
+      ctx.lineWidth = 1.5;
+      for (let i = 0; i < rolling.length; i++) {
+        const x = pad + (i / (data.length - 1 || 1)) * w;
+        const y = c.clientHeight - pad - (rolling[i] / 100) * h;
+        if (i === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+      }
+      ctx.stroke();
+      ctx.setLineDash([]);
+      
+      // Draw forecast projection (dashed blue line extending 5 cycles ahead)
+      if (forecast && forecast.length > 0) {
+        ctx.beginPath();
+        ctx.setLineDash([8, 4]);
+        ctx.strokeStyle = '#2196F3';  // Blue to distinguish from historical
+        ctx.lineWidth = 2;
+        
+        // Start from last historical data point
+        const lastX = pad + ((data.length - 1) / (data.length - 1 || 1)) * w;
+        const lastY = c.clientHeight - pad - (data[data.length - 1] / 100) * h;
+        ctx.moveTo(lastX, lastY);
+        
+        // Draw forecast points
+        const forecastExtension = w * 0.4;  // Extend 40% of chart width
+        for (let i = 0; i < forecast.length; i++) {
+          const x = lastX + ((i + 1) / forecast.length) * forecastExtension;
+          const y = c.clientHeight - pad - (forecast[i] / 100) * h;
+          ctx.lineTo(x, y);
+          
+          // Draw forecast point
+          ctx.fillStyle = '#2196F3';
+          ctx.save();
+          ctx.setLineDash([]);
+          ctx.beginPath();
+          ctx.arc(x, y, 2, 0, 2 * Math.PI);
+          ctx.fill();
+          ctx.restore();
+        }
+        ctx.stroke();
+        ctx.setLineDash([]);
+      }
+      
+      // Labels
+      ctx.fillStyle = '#666';
+      ctx.font = '11px Arial';
+      ctx.textAlign = 'center';
+      for (let i = 0; i < labels.length; i++) {
+        const x = pad + (i / (data.length - 1 || 1)) * w;
+        ctx.fillText(labels[i], x, c.clientHeight - pad + 15);
+      }
+      
+      // Y-axis labels
+      ctx.textAlign = 'right';
+      ctx.fillText('0%', pad - 5, c.clientHeight - pad);
+      ctx.fillText('50%', pad - 5, c.clientHeight - pad - h / 2);
+      ctx.fillText('100%', pad - 5, pad + 5);
+      
+      // Add tooltip interactivity
+      const tooltip = document.getElementById('mpiTooltip');
+      c.addEventListener('mousemove', (e) => {
+        const rect = c.getBoundingClientRect();
+        const mouseX = e.clientX - rect.left - pad;
+        const pointSpacing = w / (data.length - 1 || 1);
+        const idx = Math.round(mouseX / pointSpacing);
+        
+        if (idx >= 0 && idx < data.length) {
+          tooltip.style.left = (e.clientX + 10) + 'px';
+          tooltip.style.top = (e.clientY - 30) + 'px';
+          tooltip.innerHTML = `<strong>Run ${idx + 1}</strong><br>MPI: ${data[idx].toFixed(1)}%<br>${labels[idx]}`;
+          tooltip.style.display = 'block';
+        } else {
+          tooltip.style.display = 'none';
+        }
+      });
+      
+      c.addEventListener('mouseleave', () => {
+        tooltip.style.display = 'none';
+      });
+    }
+    
+    function drawAlignmentScatter(id, reiData, mpiData, correlation, classification) {
+      const c = document.getElementById(id);
+      if (!c || reiData.length === 0 || mpiData.length === 0) return;
+      
+      const ctx = c.getContext('2d');
+      const W = c.width = c.clientWidth * devicePixelRatio;
+      const H = c.height = c.clientHeight * devicePixelRatio;
+      ctx.scale(devicePixelRatio, devicePixelRatio);
+      
+      const pad = 50;
+      const w = c.clientWidth - pad * 2;
+      const h = c.clientHeight - pad * 2;
+      
+      // Find data ranges
+      const reiMin = Math.min(...reiData);
+      const reiMax = Math.max(...reiData);
+      const mpiMin = Math.min(...mpiData);
+      const mpiMax = Math.max(...mpiData);
+      
+      // Expand ranges slightly for padding
+      const reiRange = reiMax - reiMin || 1;
+      const mpiRange = mpiMax - mpiMin || 1;
+      const reiPad = reiRange * 0.1;
+      const mpiPad = mpiRange * 0.1;
+      
+      const xMin = reiMin - reiPad;
+      const xMax = reiMax + reiPad;
+      const yMin = mpiMin - mpiPad;
+      const yMax = mpiMax + mpiPad;
+      
+      // Mapping functions
+      const xMap = (rei) => pad + ((rei - xMin) / (xMax - xMin)) * w;
+      const yMap = (mpi) => c.clientHeight - pad - ((mpi - yMin) / (yMax - yMin)) * h;
+      
+      // Draw axes
+      ctx.strokeStyle = '#999';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(pad, pad);
+      ctx.lineTo(pad, c.clientHeight - pad);
+      ctx.lineTo(c.clientWidth - pad, c.clientHeight - pad);
+      ctx.stroke();
+      
+      // Grid lines
+      ctx.strokeStyle = '#f0f0f0';
+      ctx.lineWidth = 1;
+      for (let i = 0; i <= 4; i++) {
+        // Vertical
+        const x = pad + (i / 4) * w;
+        ctx.beginPath();
+        ctx.moveTo(x, pad);
+        ctx.lineTo(x, c.clientHeight - pad);
+        ctx.stroke();
+        
+        // Horizontal
+        const y = c.clientHeight - pad - (i / 4) * h;
+        ctx.beginPath();
+        ctx.moveTo(pad, y);
+        ctx.lineTo(c.clientWidth - pad, y);
+        ctx.stroke();
+      }
+      
+      // Best-fit line (linear regression)
+      if (reiData.length >= 2) {
+        const n = reiData.length;
+        let sumX = 0, sumY = 0, sumXY = 0, sumX2 = 0;
+        for (let i = 0; i < n; i++) {
+          sumX += reiData[i];
+          sumY += mpiData[i];
+          sumXY += reiData[i] * mpiData[i];
+          sumX2 += reiData[i] * reiData[i];
+        }
+        
+        const slope = (n * sumXY - sumX * sumY) / (n * sumX2 - sumX * sumX);
+        const intercept = (sumY - slope * sumX) / n;
+        
+        // Draw line
+        ctx.strokeStyle = '#999';
+        ctx.lineWidth = 2;
+        ctx.setLineDash([5, 5]);
+        ctx.beginPath();
+        const x1 = xMin;
+        const y1 = slope * x1 + intercept;
+        const x2 = xMax;
+        const y2 = slope * x2 + intercept;
+        ctx.moveTo(xMap(x1), yMap(y1));
+        ctx.lineTo(xMap(x2), yMap(y2));
+        ctx.stroke();
+        ctx.setLineDash([]);
+      }
+      
+      // Draw points (color by classification)
+      let pointColor = '#2cbe4e';  // green
+      if (classification === 'Diverging signals') {
+        pointColor = '#d73a49';  // red
+      } else if (classification === 'Neutral coupling') {
+        pointColor = '#dfb317';  // yellow
+      }
+      
+      ctx.fillStyle = pointColor;
+      for (let i = 0; i < reiData.length; i++) {
+        const x = xMap(reiData[i]);
+        const y = yMap(mpiData[i]);
+        ctx.beginPath();
+        ctx.arc(x, y, 5, 0, 2 * Math.PI);
+        ctx.fill();
+      }
+      
+      // Axis labels
+      ctx.fillStyle = '#666';
+      ctx.font = '12px Arial';
+      ctx.textAlign = 'center';
+      ctx.fillText('REI', c.clientWidth / 2, c.clientHeight - 10);
+      
+      ctx.save();
+      ctx.translate(15, c.clientHeight / 2);
+      ctx.rotate(-Math.PI / 2);
+      ctx.fillText('MPI (%)', 0, 0);
+      ctx.restore();
+      
+      // Axis tick labels
+      ctx.textAlign = 'center';
+      ctx.fillText(xMin.toFixed(2), pad, c.clientHeight - pad + 15);
+      ctx.fillText(xMax.toFixed(2), c.clientWidth - pad, c.clientHeight - pad + 15);
+      
+      ctx.textAlign = 'right';
+      ctx.fillText(yMin.toFixed(0), pad - 5, c.clientHeight - pad);
+      ctx.fillText(yMax.toFixed(0), pad - 5, pad + 5);
     }
     
     drawREI('reiChart');
     drawRSIGHS('rsiGhsChart');
+    if (document.getElementById('metaGauge')) {
+      drawMetaGauge('metaGauge', 86.0, '#2cbe4e');
+    }
+    if (document.getElementById('consistencyGauge')) {
+      drawConsistencyGauge('consistencyGauge', 0.0, '#2cbe4e');
+    }
+    if (document.getElementById('mpiTrendChart')) {
+      const mpiTrendData = [70.0, 85.0];
+      const mpiTrendLabels = ["N/A", "N/A"];
+      const mpiForecast = [];
+      drawMPITrend('mpiTrendChart', mpiTrendData, mpiTrendLabels, mpiForecast);
+    }
+    if (document.getElementById('alignmentScatter')) {
+      const reiAlign = [];
+      const mpiAlign = [];
+      const alignCorr = 0.0;
+      const alignClass = "Unknown";
+      drawAlignmentScatter('alignmentScatter', reiAlign, mpiAlign, alignCorr, alignClass);
+    }
   })();
   </script>
 </body>

@@ -128,6 +128,10 @@ Quarterly summaries of governance health, integrity trends, and reproducibility 
 Real-time transparency dashboard with live integrity, reproducibility, and provenance metrics:
 - **[🔬 Governance Portal](portal/index.html)** — Interactive dashboard with automated metrics updates
 
+- **Explore Calibration & Research Portal:**
+  - Calibration: `portal/calibration.html` — CE/FB metrics and forecast vs actual analysis
+  - Publications & Datasets: `portal/publications.html` — DOIs and searchable datasets
+
 ### Forecast Risk Scoring
 Predictive governance intelligence with automated risk evaluation:
 - **Forecast Deviation Index (FDI)**: Measures prediction accuracy as `|predicted - actual| / predicted × 100`

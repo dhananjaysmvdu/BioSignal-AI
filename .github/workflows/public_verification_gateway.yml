@@ -1,0 +1,37 @@
+name: Public Verification Gateway
+
+on:
+  schedule:
+    - cron: '15 2 * * *'  # 02:15 UTC daily
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  update-pvg:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Generate Public Verification Gateway API
+        run: |
+          python scripts/workflow_utils/generate_public_verification_api.py
+
+      - name: Commit PVG API
+        run: |
+          git config user.name "github-actions"
+          git config user.email "github-actions@github.com"
+          git add verification_gateway/public_verification_api.json
+          if git diff --cached --quiet; then
+            echo "No changes to commit"
+          else
+            git commit -m "web: deploy public verification gateway for external reproducibility validation"
+            git push
+          fi

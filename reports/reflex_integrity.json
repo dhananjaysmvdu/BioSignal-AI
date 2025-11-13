@@ -1,0 +1,9 @@
+{
+  "status": "ok",
+  "integrity_score": 97.5,
+  "violations": 0,
+  "warnings": [
+    "Insufficient history for coherence check"
+  ],
+  "timestamp": "2025-11-11T14:00:33Z"
+}
