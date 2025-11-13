@@ -1,0 +1,84 @@
+{
+  "timestamp": "2025-11-14T09:30:00+00:00",
+  "status": "synchronized",
+  "federation_id": "BioSignalAI-GovNet",
+  "reference_release": "v1.3.0-global-resilient",
+  "federation_integrity_index": 98.6,
+  "recovery_actions": 0,
+  "nodes": [
+    {
+      "name": "Zenodo",
+      "type": "doi",
+      "endpoint": "https://zenodo.org/api/records/14173152",
+      "latency_hours": 0.30,
+      "checks": {
+        "doi_match": true,
+        "release_match": true,
+        "hash_match": true
+      }
+    },
+    {
+      "name": "GitHub",
+      "type": "repository",
+      "endpoint": "https://github.com/dhananjaysmvdu/BioSignal-AI",
+      "latency_hours": 0.42,
+      "checks": {
+        "release_match": true,
+        "hash_match": true
+      }
+    },
+    {
+      "name": "OpenAIRE",
+      "type": "registry",
+      "endpoint": "https://explore.openaire.eu/search/dataset?datasetId=od_______099::biosignal-ai",
+      "latency_hours": 0.35,
+      "checks": {
+        "registry_match": true,
+        "hash_match": true
+      }
+    },
+    {
+      "name": "arXiv",
+      "type": "preprint",
+      "endpoint": "https://arxiv.org/abs/2410.01234",
+      "latency_hours": 0.34,
+      "checks": {
+        "reference_match": true,
+        "hash_match": true
+      }
+    }
+  ],
+  "history": [
+    {
+      "timestamp": "2025-11-14T09:20:00+00:00",
+      "federation_integrity_index": 98.6,
+      "recovery_actions": 0,
+      "nodes_checked": [
+        "Zenodo",
+        "GitHub",
+        "OpenAIRE",
+        "arXiv"
+      ]
+    },
+    {
+      "timestamp": "2025-11-14T09:30:00+00:00",
+      "federation_integrity_index": 98.6,
+      "recovery_actions": 0,
+      "nodes_checked": [
+        "Zenodo",
+        "GitHub",
+        "OpenAIRE",
+        "arXiv"
+      ]
+    }
+  ],
+  "hash_results": [
+    {
+      "timestamp": "2025-11-14T09:30:00+00:00",
+      "path": "exports/integrity_metrics_registry.csv",
+      "algorithm": "sha256",
+      "hash": "73bb7db891e9abe9960488aee2d2562b75c96bdba87665c4469bf053e9ba73e1"
+    }
+  ],
+  "error_events": []
+}

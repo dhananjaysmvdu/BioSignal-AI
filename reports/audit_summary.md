@@ -2,6 +2,31 @@
 
 This file tracks audit history and governance adjustments.
 
+<!-- FEDERATION_RECOVERY:BEGIN -->
+**Federation Resilience Log**
+
+- Updated: 2025-11-14T09:20:00+00:00
+- Status: ✅ Auto-recovered configuration and status manifests
+- Corrections: federation_config.json regenerated from template; federation_status.json validated
+- Notes: Logged repairs to `federation_error_log.jsonl` for traceability
+<!-- FEDERATION_RECOVERY:END -->
+
+<!-- AUTO_RECOVERY: SUCCESS -->
+
+<!-- HASH_GUARDRAIL:BEGIN -->
+- Updated: 2025-11-14T09:30:00+00:00
+- Action: Guardrail hashing executed with PowerShell fallback
+- Result: SHA-256 logged to federation_status.json (exports/integrity_metrics_registry.csv)
+- Notes: Header schema validated against integrity registry template
+<!-- HASH_GUARDRAIL:END -->
+
+<!-- WORKFLOW_RECOVERY:BEGIN -->
+- Updated: 2025-11-14T09:32:00+00:00
+- Resilient workflows enabled (max_attempts=3, backoff=5/15/45 seconds)
+- Dependency auto-install triggered before final retries
+- Failures logged to `logs/workflow_failures.jsonl`
+<!-- WORKFLOW_RECOVERY:END -->
+
 <!-- TRUST_CORRELATION:BEGIN -->
 **Trust–Health Correlation Analysis**
 

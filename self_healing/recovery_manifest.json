@@ -1,0 +1,25 @@
+{
+  "generated_at": "2025-11-13T18:08:40.213573+00:00",
+  "entries": [
+    {
+      "path": "GOVERNANCE_TRANSPARENCY.md",
+      "ref": "ea39b15fd0168e3507df11a742e006febae67999",
+      "expected_hash": "ad04dd40c50449db01a61dca6882acfd556949c0d63808982b5a5dd23b3d8d61"
+    },
+    {
+      "path": "audit_summary.md",
+      "ref": "ea39b15fd0168e3507df11a742e006febae67999",
+      "expected_hash": "75c081f617d0143d406a7784d72dc5dc03dd75ac128d8417f44da40ebd9ecfcb"
+    },
+    {
+      "path": "verification_gateway/public_verification_api.json",
+      "ref": "ea39b15fd0168e3507df11a742e006febae67999",
+      "expected_hash": "a23cafa8ae9e954affb103b05282e9209de14e8bc0001f4eb883658295aad6b8"
+    },
+    {
+      "path": "PHASE_VIII_COMPLETION_REPORT.md",
+      "ref": "ea39b15fd0168e3507df11a742e006febae67999",
+      "expected_hash": "c2389679b0c1cf83dbc406ba82c0c162947dc09b2aa1ebc6015d43a2919ce2de"
+    }
+  ]
+}

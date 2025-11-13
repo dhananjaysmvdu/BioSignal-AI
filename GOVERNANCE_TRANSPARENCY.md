@@ -180,6 +180,14 @@ The Public Verification Gateway harmonizes governance, ethics, and reproducibili
 - Predicted Integrity: Q1 2026 forecasts with confidence intervals
 - Auto-refresh: Metrics reload every 5 minutes from JSON API
 - Forecast updates: Twice weekly (Tuesday/Friday 00:30 UTC via Meta-Forecast 2.0)
+- Error Monitoring Dashboard (portal/errors.html): Federation recoveries, workflow retries, self-healing interventions, and schema hash recalculations with live JSONL sourcing
+
+## Resilience & Recovery Automation
+- **Fault-Tolerant Federation Sync**: `scripts/federation/run_federation_sync.ps1` wraps Python execution with interpreter discovery, inline escaping, and template regeneration. Recovery events logged to `federation/federation_error_log.jsonl`.
+- **Self-Healing Kernel**: `scripts/self_healing/self_healing_kernel.py` restores files from git history after repeated hash mismatches, generates `self_healing_status.json`, and appends `<!-- AUTO_RECOVERY: SUCCESS -->` markers to audit reports.
+- **Schema Hash Guardrail**: `scripts/tools/hash_guardrail.ps1` enforces canonical headers from `templates/integrity_registry_schema.json`, retries inline hashing with temp `_hash_eval.py`, and appends hash results to `federation_status.json`.
+- **Workflow Smart Retry**: `.github/workflows/federation_sync.yml` and `.github/workflows/self_healing_monitor.yml` implement `MAX_ATTEMPTS=3` with exponential backoff (5s → 15s → 45s), auto-install dependencies before final retry, and log persistent failures to `logs/workflow_failures.jsonl`.
+- **Error Observatory**: `portal/errors.html` visualizes recovery telemetry sourced from federation logs, workflow retries, self-healing status, and schema hash events; summary metrics published via `portal/errors.json`.
 
 ## Citation & Research Export
 

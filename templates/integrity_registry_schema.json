@@ -1,0 +1,13 @@
+{
+  "headers": [
+    "timestamp",
+    "integrity_score",
+    "violations",
+    "warnings",
+    "health_score",
+    "rri",
+    "mpi",
+    "confidence",
+    "status"
+  ]
+}

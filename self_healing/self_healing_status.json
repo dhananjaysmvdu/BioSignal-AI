@@ -1,0 +1,20 @@
+{
+  "status": "auto-recovered",
+  "last_issue": null,
+  "timestamp": "2025-11-14T09:25:00+00:00",
+  "baseline_hashes": {
+    "federation/federation_config.json": "a3e9d1afb8bd4f0d043fb7da9ea746d0a5fe78c4db4802d5ec825c1cf3ce9b26",
+    "GOVERNANCE_TRANSPARENCY.md": "6415651da6b6272f01a56f3b9f1c4c83d36b4d7328dc82a20b74293816d0e733"
+  },
+  "attempts": {
+    "federation/federation_config.json": 0,
+    "GOVERNANCE_TRANSPARENCY.md": 0
+  },
+  "events": [
+    {
+      "timestamp": "2025-11-14T09:24:12+00:00",
+      "event": "kernel_bootstrap",
+      "message": "Self-healing kernel initialised with resilient hash validation"
+    }
+  ]
+}

@@ -1,0 +1,51 @@
+{
+  "federation_id": "BioSignalAI-GovNet",
+  "reference_release": "v1.3.0-global-resilient",
+  "sync": {
+    "max_attempts": 3,
+    "backoff_seconds": [5, 15, 45],
+    "checksum_algorithm": "sha256",
+    "auto_heal": true
+  },
+  "nodes": [
+    {
+      "name": "Zenodo",
+      "type": "doi",
+      "endpoint": "https://zenodo.org/api/records/14173152",
+      "artifacts": [
+        "zenodo.json",
+        "exports/governance_reproducibility_capsule_2025-11-11.zip"
+      ]
+    },
+    {
+      "name": "GitHub",
+      "type": "repository",
+      "endpoint": "https://github.com/dhananjaysmvdu/BioSignal-AI",
+      "artifacts": [
+        "PHASE_VIII_COMPLETION_REPORT.md",
+        "PHASE_IX_COMPLETION_REPORT.md"
+      ]
+    },
+    {
+      "name": "OpenAIRE",
+      "type": "registry",
+      "endpoint": "https://explore.openaire.eu/search/dataset?datasetId=od_______099::biosignal-ai",
+      "artifacts": [
+        "docs/compliance_guidelines.md"
+      ]
+    },
+    {
+      "name": "arXiv",
+      "type": "preprint",
+      "endpoint": "https://arxiv.org/abs/2410.01234",
+      "artifacts": [
+        "docs/literature_summary.md"
+      ]
+    }
+  ],
+  "integrity_checks": {
+    "hash": true,
+    "timestamp": true,
+    "schema": true
+  }
+}
