@@ -1,0 +1,13 @@
+{
+  "federation_id": "BioSignalAI-GovNet",
+  "trusted_nodes": [
+    "Zenodo",
+    "GitHub",
+    "OpenAIRE",
+    "arXiv"
+  ],
+  "sync_interval_hours": 24,
+  "expected_release": "v1.2.0-ethics",
+  "expected_doi": "10.5281/zenodo.14173152",
+  "expected_capsule_hash": "e8cf3e3fd735ce0f7bda3a46b4a0a13f0800372138ef6721940f9848ebb9329e"
+}

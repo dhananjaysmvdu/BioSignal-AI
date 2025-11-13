@@ -1,0 +1,2 @@
+{"timestamp": "2025-11-13T18:06:30.984717+00:00", "node": "OpenAIRE", "federation_id": "BioSignalAI-GovNet", "status": "drift_detected", "fields": ["capsule_hash"]}
+{"summary": {"timestamp": "2025-11-13T18:06:30.984717+00:00", "federation_id": "BioSignalAI-GovNet", "trusted_nodes": ["Zenodo", "GitHub", "OpenAIRE", "arXiv"], "fii": 98.6, "drift_events": 1}}
