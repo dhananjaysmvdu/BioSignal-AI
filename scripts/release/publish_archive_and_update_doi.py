@@ -16,7 +16,7 @@ import urllib.request
 import zipfile
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import List
+from typing import List, Optional
 
 ROOT = Path(__file__).resolve().parents[2]
 EXPORTS = ROOT / "exports"
@@ -57,34 +57,60 @@ def build_zip() -> Path:
     return ZIPNAME
 
 
-def zenodo_upload(zip_path: Path) -> str | None:
+def zenodo_upload(zip_path: Path, *, dry_run: bool = False, timeouts: Optional[dict] = None) -> Optional[str]:
+    """Upload archive to Zenodo and publish, returning DOI or None.
+
+    Hardened with timeouts and graceful fallbacks. Set dry_run=True to skip network.
+    Timeouts can be overridden via dict keys: meta, upload, publish (seconds).
+    """
+    if timeouts is None:
+        timeouts = {}
+    to_meta = float(timeouts.get('meta', os.environ.get('ZENODO_TIMEOUT_META', 20)))
+    to_upload = float(timeouts.get('upload', os.environ.get('ZENODO_TIMEOUT_UPLOAD', 60)))
+    to_publish = float(timeouts.get('publish', os.environ.get('ZENODO_TIMEOUT_PUBLISH', 20)))
+
+    if dry_run or os.environ.get('ZENODO_DRY_RUN') == '1':
+        return None
+
     token = os.environ.get('ZENODO_TOKEN')
     deposition_id = os.environ.get('ZENODO_DEPOSITION_ID')
     if not token or not deposition_id:
         return None
-    # Upload file to deposition bucket
-    bucket_url = os.environ.get('ZENODO_BUCKET_URL')
-    if not bucket_url:
-        # Try to fetch deposition to obtain bucket
-        req = urllib.request.Request(f'https://zenodo.org/api/deposit/depositions/{deposition_id}')
+    try:
+        # Upload file to deposition bucket
+        bucket_url = os.environ.get('ZENODO_BUCKET_URL')
+        if not bucket_url:
+            # Try to fetch deposition to obtain bucket
+            req = urllib.request.Request(f'https://zenodo.org/api/deposit/depositions/{deposition_id}')
+            req.add_header('Authorization', f'Bearer {token}')
+            with urllib.request.urlopen(req, timeout=to_meta) as resp:
+                info = json.loads(resp.read().decode('utf-8'))
+                bucket_url = info['links']['bucket']
+
+        # PUT file (read into memory; archive is relatively small). Add headers.
+        put = urllib.request.Request(f"{bucket_url}/{zip_path.name}", method='PUT')
+        put.add_header('Authorization', f'Bearer {token}')
+        put.add_header('Content-Type', 'application/zip')
+        size = zip_path.stat().st_size
+        put.add_header('Content-Length', str(size))
+        with zip_path.open('rb') as fh:
+            data = fh.read()
+        with urllib.request.urlopen(put, data=data, timeout=to_upload) as up:
+            _ = up.read()
+
+        # Publish deposition
+        req = urllib.request.Request(
+            f'https://zenodo.org/api/deposit/depositions/{deposition_id}/actions/publish', method='POST'
+        )
         req.add_header('Authorization', f'Bearer {token}')
-        with urllib.request.urlopen(req, timeout=30) as resp:
-            info = json.loads(resp.read().decode('utf-8'))
-            bucket_url = info['links']['bucket']
-    # PUT file
-    put = urllib.request.Request(f"{bucket_url}/{zip_path.name}", method='PUT')
-    put.add_header('Authorization', f'Bearer {token}')
-    with zip_path.open('rb') as fh:
-        data = fh.read()
-    with urllib.request.urlopen(put, data=data, timeout=60) as up:
-        _ = up.read()
-    # Publish deposition
-    req = urllib.request.Request(f'https://zenodo.org/api/deposit/depositions/{deposition_id}/actions/publish', method='POST')
-    req.add_header('Authorization', f'Bearer {token}')
-    with urllib.request.urlopen(req, data=b'', timeout=30) as pub:
-        rec = json.loads(pub.read().decode('utf-8'))
-        doi = rec.get('doi') or rec.get('metadata', {}).get('doi')
-        return doi
+        with urllib.request.urlopen(req, data=b'', timeout=to_publish) as pub:
+            rec = json.loads(pub.read().decode('utf-8'))
+            doi = rec.get('doi') or rec.get('metadata', {}).get('doi')
+            return doi
+    except Exception as e:
+        # Graceful fallback on any network or API error
+        print(json.dumps({'status': 'zenodo_error', 'error': str(e)}))
+        return None
 
 
 def update_doi_in_file(path: Path, new_doi: str) -> None:
@@ -100,8 +126,12 @@ def update_doi_in_file(path: Path, new_doi: str) -> None:
 
 
 def main() -> int:
+    # Simple CLI flags via env or argv for CI convenience
+    dry_run = ('--dry-run' in sys.argv) or (os.environ.get('ARCHIVE_DRY_RUN') == '1')
+    skip_zenodo = ('--skip-zenodo' in sys.argv) or (os.environ.get('SKIP_ZENODO') == '1')
+
     zip_path = build_zip()
-    doi = zenodo_upload(zip_path)
+    doi = None if skip_zenodo else zenodo_upload(zip_path, dry_run=dry_run)
     if doi:
         update_doi_in_file(README, doi)
         update_doi_in_file(TRANSPARENCY, doi)
