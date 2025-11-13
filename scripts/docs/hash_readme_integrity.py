@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Phase XV - Instruction 81 & 82
+Phase XV - Instruction 81 & 82 (transparency extension)
 
 README Provenance Hashing and Transparency Consistency Sweep (extended for transparency docs).
 
