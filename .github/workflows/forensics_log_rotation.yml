@@ -1,0 +1,32 @@
+name: Forensics Log Rotation
+
+on:
+  schedule:
+    - cron: '40 3 * * 0'  # Sundays 03:40 UTC
+  workflow_dispatch:
+
+jobs:
+  rotate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+
+      - name: Run log rotation
+        run: |
+          python scripts/forensics/rotate_forensics_logs.py
+
+      - name: Upload compressed logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: forensics_rotated_logs
+          path: forensics_error_log_*.gz
+          if-no-files-found: ignore
