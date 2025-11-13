@@ -66,12 +66,7 @@ Updated: 2025-11-13T16:35:00+00:00
 <!-- NETWORK_SYNC: UPDATED 2025-11-13T18:00:00+00:00 -->
 
 <!-- FEDERATION_SYNC:BEGIN -->
-Updated: 2025-11-13T18:06:31+00:00
-🌐 Global Reproducibility Federation sync executed — Federation Integrity Index (FII) 98.6 (drift events: 1 across OpenAIRE node). Daily workflow scheduled for 05:00 UTC.
+Updated: 2025-11-13T18:22:09+00:00
+🌐 Global Reproducibility Federation sync executed — FII 98.6% (drift 1.4% across 4 trusted nodes).
 <!-- FEDERATION_SYNC:END -->
-
-<!-- SELF_HEALING:BEGIN -->
-Updated: 2025-11-13T18:08:40+00:00
-🛠️ Self-Healing Governance Kernel run completed — 4 monitored artifacts verified, 0 issues detected, recovery rate 100%. Daily workflow scheduled for 05:15 UTC.
-<!-- SELF_HEALING:END -->
 

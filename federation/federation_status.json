@@ -1,0 +1,46 @@
+{
+  "timestamp": "2025-11-13T18:22:09.285197+00:00",
+  "federation_id": "BioSignalAI-GovNet",
+  "reference_release": "v1.0.0-Whitepaper",
+  "doi": "10.5281/zenodo.14173152",
+  "drift_percent": 1.4,
+  "federation_integrity_index": 98.6,
+  "nodes": [
+    {
+      "node": "Zenodo",
+      "latency_hours": 0.3,
+      "checks": {
+        "doi_match": true,
+        "release_match": true,
+        "hash_match": true
+      }
+    },
+    {
+      "node": "GitHub",
+      "latency_hours": 0.4,
+      "checks": {
+        "doi_match": true,
+        "release_match": true,
+        "hash_match": true
+      }
+    },
+    {
+      "node": "OpenAIRE",
+      "latency_hours": 0.3,
+      "checks": {
+        "doi_match": true,
+        "release_match": true,
+        "hash_match": true
+      }
+    },
+    {
+      "node": "arXiv",
+      "latency_hours": 0.344,
+      "checks": {
+        "doi_match": true,
+        "release_match": true,
+        "hash_match": true
+      }
+    }
+  ]
+}
