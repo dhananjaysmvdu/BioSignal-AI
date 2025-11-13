@@ -308,6 +308,67 @@
             <p><strong>Integrity Score</strong>: Calculated as 100 minus weighted penalties for violations (15 points each) and warnings (2.5 points each). Scores ≥90% indicate high integrity.</p>
             <p><strong>Reproducibility Status</strong>: Certified when all validation checks pass, including DOI verification, capsule integrity, documentation completeness, and artifact consistency.</p>
             <p><strong>Provenance Tracking</strong>: All governance artifacts are versioned, checksummed (SHA-256), and tracked in an immutable append-only ledger.</p>
+            <p><strong>Forecast Accuracy</strong>: FDI (Forecast Deviation Index) measures prediction accuracy as |predicted - actual| / predicted × 100. CS (Confidence Stability) tracks confidence variance over rolling 10-window. Updated twice weekly (Tue/Fri 00:30 UTC).</p>
+        </div>
+        
+        <div class="info-section">
+            <h2>🔮 Forecast Risk Meter</h2>
+            <div style="display: flex; gap: 30px; align-items: center; flex-wrap: wrap;">
+                <div style="flex: 1; min-width: 300px;">
+                    <div style="background: #f3f4f6; padding: 20px; border-radius: 8px;">
+                        <h3 style="margin-bottom: 15px; color: #667eea;">Risk Assessment</h3>
+                        <div style="margin-bottom: 15px;">
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                                <span style="font-weight: 600;">FDI (Prediction Accuracy)</span>
+                                <span id="risk-fdi-value" style="font-weight: 700; color: #10b981;">0.0%</span>
+                            </div>
+                            <div style="background: #e5e7eb; height: 12px; border-radius: 6px; overflow: hidden;">
+                                <div id="risk-fdi-bar" style="background: linear-gradient(90deg, #10b981, #3b82f6); height: 100%; width: 0%; transition: width 0.5s ease;"></div>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; font-size: 0.75em; color: #6b7280; margin-top: 3px;">
+                                <span>0%</span>
+                                <span>Excellent < 5%</span>
+                                <span>Good < 10%</span>
+                                <span>Drifting ≥ 10%</span>
+                            </div>
+                        </div>
+                        <div>
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                                <span style="font-weight: 600;">CS (Confidence Stability)</span>
+                                <span id="risk-cs-value" style="font-weight: 700; color: #10b981;">2.1</span>
+                            </div>
+                            <div style="background: #e5e7eb; height: 12px; border-radius: 6px; overflow: hidden;">
+                                <div id="risk-cs-bar" style="background: linear-gradient(90deg, #10b981, #f59e0b); height: 100%; width: 30%; transition: width 0.5s ease;"></div>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; font-size: 0.75em; color: #6b7280; margin-top: 3px;">
+                                <span>0</span>
+                                <span>Stable < 3.0</span>
+                                <span>Moderate < 5.0</span>
+                                <span>Unstable ≥ 5.0</span>
+                            </div>
+                        </div>
+                        <div style="margin-top: 20px; padding: 15px; background: white; border-radius: 6px; border-left: 4px solid #10b981;">
+                            <div style="font-weight: 600; color: #10b981; margin-bottom: 5px;">✅ Overall Risk: <span id="risk-overall">LOW</span></div>
+                            <div style="font-size: 0.9em; color: #6b7280;">Learning Rate Factor: <span id="risk-lr-factor">1.2</span></div>
+                        </div>
+                    </div>
+                </div>
+                <div style="flex: 1; min-width: 300px;">
+                    <div style="background: #f3f4f6; padding: 20px; border-radius: 8px;">
+                        <h3 style="margin-bottom: 15px; color: #667eea;">Predicted Integrity (Q1 2026)</h3>
+                        <div style="text-align: center; margin: 20px 0;">
+                            <div style="font-size: 3em; font-weight: 700; color: #667eea;" id="predicted-integrity">98.0%</div>
+                            <div style="color: #6b7280; margin-top: 5px;">Range: <span id="predicted-range">95.5% - 99.5%</span></div>
+                            <div style="color: #6b7280; margin-top: 5px;">Confidence: <span id="predicted-confidence">85%</span></div>
+                        </div>
+                        <div style="padding: 10px; background: white; border-radius: 6px; font-size: 0.9em; color: #6b7280;">
+                            <strong>Model:</strong> GRLM_MPI_Ensemble v2.0.0<br>
+                            <strong>Next Update:</strong> Tue/Fri 00:30 UTC<br>
+                            <strong>Historical Data:</strong> 7 entries (90-day window)
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
         
         <div class="info-section">
@@ -365,6 +426,64 @@
                 // Update provenance
                 if (data.provenance) {
                     document.getElementById('release-version').textContent = data.provenance.release;
+                }
+                
+                // Update forecast metrics
+                if (data.forecast_metrics) {
+                    // Update FDI value and card
+                    if (data.forecast_metrics.fdi) {
+                        const fdiValue = data.forecast_metrics.fdi.value;
+                        const fdiStatus = data.forecast_metrics.fdi.status.toUpperCase();
+                        document.getElementById('fdi-value').textContent = fdiValue + '%';
+                        document.getElementById('forecast-status').textContent = fdiStatus;
+                        document.getElementById('risk-fdi-value').textContent = fdiValue + '%';
+                        
+                        // Update FDI risk bar (scale: 0% = 0, 15% = 100%)
+                        const fdiPercent = Math.min((fdiValue / 15) * 100, 100);
+                        document.getElementById('risk-fdi-bar').style.width = fdiPercent + '%';
+                        
+                        // Update FDI color based on threshold
+                        const fdiBar = document.getElementById('risk-fdi-bar');
+                        if (fdiValue < 5) {
+                            fdiBar.style.background = 'linear-gradient(90deg, #10b981, #3b82f6)';
+                        } else if (fdiValue < 10) {
+                            fdiBar.style.background = 'linear-gradient(90deg, #3b82f6, #f59e0b)';
+                        } else {
+                            fdiBar.style.background = 'linear-gradient(90deg, #f59e0b, #ef4444)';
+                        }
+                    }
+                    
+                    // Update CS value and card
+                    if (data.forecast_metrics.cs) {
+                        const csValue = data.forecast_metrics.cs.value;
+                        const csStatus = data.forecast_metrics.cs.status;
+                        document.getElementById('cs-value').textContent = csValue + ' (' + csStatus.charAt(0).toUpperCase() + csStatus.slice(1) + ')';
+                        document.getElementById('risk-cs-value').textContent = csValue;
+                        
+                        // Update CS risk bar (scale: 0 = 0%, 7 = 100%)
+                        const csPercent = Math.min((csValue / 7) * 100, 100);
+                        document.getElementById('risk-cs-bar').style.width = csPercent + '%';
+                        
+                        // Update CS color based on threshold
+                        const csBar = document.getElementById('risk-cs-bar');
+                        if (csValue < 3.0) {
+                            csBar.style.background = 'linear-gradient(90deg, #10b981, #3b82f6)';
+                        } else if (csValue < 5.0) {
+                            csBar.style.background = 'linear-gradient(90deg, #3b82f6, #f59e0b)';
+                        } else {
+                            csBar.style.background = 'linear-gradient(90deg, #f59e0b, #ef4444)';
+                        }
+                    }
+                    
+                    // Update predicted integrity
+                    if (data.forecast_metrics.predicted_integrity) {
+                        const predIntegrity = data.forecast_metrics.predicted_integrity;
+                        document.getElementById('predicted-integrity').textContent = predIntegrity.mean + '%';
+                        document.getElementById('predicted-range').textContent = 
+                            predIntegrity.range[0] + '% - ' + predIntegrity.range[1] + '%';
+                        document.getElementById('predicted-confidence').textContent = 
+                            Math.round(predIntegrity.confidence * 100) + '%';
+                    }
                 }
                 
                 // Update timestamp

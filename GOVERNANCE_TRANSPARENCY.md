@@ -141,6 +141,20 @@ Schema hash: 6eb446f7cca747bf7bc4c3473c6b1d2a0bfb61a338740b521a74159aa82f5cfb
 ## API Endpoints
 - badges/integrity_status.json — current mean integrity score (for external dashboards)
 - exports/schema_provenance_ledger.jsonl — schema history (immutable ledger)
+- portal/metrics.json — live governance metrics API with forecast analytics
+  - integrity: score, violations, warnings, health, status
+  - reproducibility: status, checks_passed, checks_total, doi, capsule_sha256
+  - provenance: release, release_date, maintenance_branch, baseline_tag
+  - forecast_metrics: fdi (value, status, thresholds), cs (value, status, thresholds), predicted_integrity (mean, range, confidence), last_prediction, next_update
+  - last_updated: ISO 8601 timestamp
+
+## Portal Features
+**Live Dashboard** (portal/index.html):
+- Real-time metrics: Integrity, Reproducibility, Provenance, Forecast Accuracy
+- Interactive Risk Meter: Visual FDI/CS gauges with color-coded thresholds
+- Predicted Integrity: Q1 2026 forecasts with confidence intervals
+- Auto-refresh: Metrics reload every 5 minutes from JSON API
+- Forecast updates: Twice weekly (Tuesday/Friday 00:30 UTC via Meta-Forecast 2.0)
 
 ## Citation & Research Export
 
