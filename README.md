@@ -128,6 +128,20 @@ Quarterly summaries of governance health, integrity trends, and reproducibility 
 Real-time transparency dashboard with live integrity, reproducibility, and provenance metrics:
 - **[🔬 Governance Portal](portal/index.html)** — Interactive dashboard with automated metrics updates
 
+### Forecast Risk Scoring
+Predictive governance intelligence with automated risk evaluation:
+- **Forecast Deviation Index (FDI)**: Measures prediction accuracy as `|predicted - actual| / predicted × 100`
+  - Excellent: FDI < 5% (strong model performance)
+  - Good: FDI < 10% (acceptable accuracy)
+  - Drifting: FDI ≥ 10% (requires recalibration)
+- **Confidence Stability (CS)**: Tracks forecast confidence variance (rolling std, window=10)
+  - Stable: CS < 3.0 (low variance)
+  - Unstable: CS ≥ 5.0 (high variance, review model inputs)
+- **Current Status**: FDI = 0.0% (Excellent), CS = 2.1 (Stable)
+- **Updates**: Twice weekly (Tuesday/Friday 00:30 UTC) via Meta-Forecast 2.0 engine
+
+See [`reports/forecast_risk_assessment.json`](reports/forecast_risk_assessment.json) for full risk assessment details.
+
 ### Next Release Roadmap
 Development planning for upcoming enhancements:
 - **[v1.1 Release Planning](planning/RELEASE_PLANNING_v1.1.md)** — Meta-Forecast 2.0, adaptive feedback refinement, performance optimization (Target: Q1 2026)

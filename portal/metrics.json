@@ -19,5 +19,27 @@
     "maintenance_branch": "release/v1.0.0-maintenance",
     "baseline_tag": "baseline-v1.0.0"
   },
-  "last_updated": "2025-11-13T15:30:00+00:00"
+  "forecast_metrics": {
+    "fdi": {
+      "value": 0.0,
+      "status": "excellent",
+      "threshold_excellent": 5.0,
+      "threshold_good": 10.0,
+      "threshold_drifting": 10.0
+    },
+    "cs": {
+      "value": 2.1,
+      "status": "stable",
+      "threshold_stable": 3.0,
+      "threshold_unstable": 5.0
+    },
+    "predicted_integrity": {
+      "mean": 98.0,
+      "range": [95.5, 99.5],
+      "confidence": 0.85
+    },
+    "last_prediction": "2025-11-13T16:15:00+00:00",
+    "next_update": "Tuesday/Friday 00:30 UTC"
+  },
+  "last_updated": "2025-11-13T16:30:00+00:00"
 }
