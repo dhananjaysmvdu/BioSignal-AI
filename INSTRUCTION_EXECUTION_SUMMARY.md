@@ -1,3 +1,22 @@
+## Phase XV — Documentation Provenance & Integrity Verification
+
+Instructions executed:
+- 81: README Provenance Hashing (nightly hash, audit marker, provenance log, workflow)
+- 82: Transparency File Consistency Sweep (hash GOV/IES/audit files, drift marker)
+- 83: Automated Documentation Provenance Bundle (zip + hash, weekly workflow)
+- 84: Portal Provenance Panel (live hashes with auto-refresh)
+- 85: Phase XV Certification & Tag (v1.9.0-provenance)
+
+Artifacts:
+- docs/readme_integrity.json
+- docs/transparency_integrity.json
+- docs/documentation_provenance_hash.json
+- exports/documentation_provenance_bundle.zip
+
+Workflows:
+- .github/workflows/readme_integrity.yml
+- .github/workflows/documentation_provenance.yml
+
 # Instruction Execution Summary
 **Date**: 2025-11-11
 **Session**: ISO 8601 Normalization & Release Preparation
