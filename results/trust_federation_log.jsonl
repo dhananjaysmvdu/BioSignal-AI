@@ -1,0 +1,2 @@
+{"timestamp": "2025-11-13T21:05:09.882785+00:00", "event": "trust_drift", "metadata": {"peer": "local-self", "issues": ["ledger_anchor_mismatch", "timestamp_drift"]}}
+{"timestamp": "2025-11-13T21:06:25.141244+00:00", "event": "trust_drift", "metadata": {"peer": "local-self", "issues": ["timestamp_drift"]}}

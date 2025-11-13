@@ -1,0 +1,28 @@
+name: Autonomous DOI Steward
+
+on:
+  schedule:
+    - cron: '0 5 * * 1'
+  workflow_dispatch:
+
+jobs:
+  doi-steward:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Run DOI steward
+        env:
+          ZENODO_TOKEN: ${{ secrets.ZENODO_TOKEN }}
+          ZENODO_DEPOSITION_ID: ${{ secrets.ZENODO_DEPOSITION_ID }}
+        run: |
+          python scripts/doi/autonomous_doi_steward.py
+      - name: Upload steward log
+        uses: actions/upload-artifact@v4
+        with:
+          name: doi_steward_log
+          path: results/doi_steward_log.jsonl

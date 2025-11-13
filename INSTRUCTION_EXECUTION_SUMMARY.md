@@ -422,6 +422,23 @@ Validation:
 
 Certification: Phase XIII PASSED — Ready to tag v1.7.0-ledger.
 
+---
+
+## Phase XIV — Trust Ledger Federation, Autonomous DOI Governance & Public Compliance Validation (2025-11-14)
+
+Implemented Instructions 76–80:
+- CI Auto-Trust Routine: Added --trust-mode to archive publisher; computes hashes/ledger signatures even without network; writes logs/trust_validation_report.json; appends TRUST_MODE_RUN audit marker; weekly CI workflow trust_validation.yml.
+- Distributed Trust Federation: Implemented scripts/trust/federated_trust_exchange.py to validate peer ledger hashes vs integrity anchors and timestamp tolerance ±60s; emits results/trust_federation_report.json and logs/trust_federation_log.jsonl; weekly CI trust_federation.yml.
+- Autonomous DOI Stewardship: scripts/doi/autonomous_doi_steward.py reconciles Zenodo version metadata with latest Phase tag; logs to results/doi_steward_log.jsonl; weekly CI autonomous_doi_steward.yml.
+- Public Compliance Validation API: scripts/api/public_compliance_validator.py verifies ledger hash, UTC timestamps, DOI presence, and certification linkage; writes portal/public_compliance_status.json; portal/index.html shows “Compliance Status: Verified ✅”; nightly CI public_compliance_validator.yml.
+
+Validation:
+- Trust federation report — status: verified
+- Public compliance status — compliance: true
+- DOI steward — dry-run corrections logged when tokens absent
+
+Certification: Phase XIV PASSED — Ready to tag v1.8.0-trust-ledger.
+
 ## Phase II Update: DOI Integration & Release Certification Complete
 
 **Session Date**: 2025-11-11 (Phase II)

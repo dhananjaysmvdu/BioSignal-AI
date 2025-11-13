@@ -1,0 +1,25 @@
+name: Public Compliance Validator
+
+on:
+  schedule:
+    - cron: '15 2 * * *'
+  workflow_dispatch:
+
+jobs:
+  compliance-validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Run Public Compliance Validator
+        run: |
+          python scripts/api/public_compliance_validator.py
+      - name: Upload public compliance status
+        uses: actions/upload-artifact@v4
+        with:
+          name: public_compliance_status
+          path: portal/public_compliance_status.json

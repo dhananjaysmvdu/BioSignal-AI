@@ -1,0 +1,35 @@
+name: Trust Validation (Autonomous)
+
+on:
+  schedule:
+    - cron: '30 7 * * 0'
+  workflow_dispatch:
+
+jobs:
+  trust-validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install minimal deps
+        run: |
+          python -m pip install --upgrade pip
+      - name: Run trust-mode archive publisher
+        env:
+          ZENODO_TOKEN: ${{ secrets.ZENODO_TOKEN }}
+          ZENODO_DEPOSITION_ID: ${{ secrets.ZENODO_DEPOSITION_ID }}
+        run: |
+          if [ -z "${{ secrets.ZENODO_TOKEN }}" ]; then
+            python scripts/release/publish_archive_and_update_doi.py --trust-mode
+          else
+            python scripts/release/publish_archive_and_update_doi.py --trust-mode
+          fi
+      - name: Upload trust report artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: trust_validation_report
+          path: logs/trust_validation_report.json

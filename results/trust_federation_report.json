@@ -1,0 +1,16 @@
+{
+  "timestamp": "2025-11-13T21:07:40.624538+00:00",
+  "status": "verified",
+  "peers": [
+    {
+      "peer": "local-self",
+      "base": ".",
+      "ok": true,
+      "issues": [],
+      "ledger_sha256": "613d80cbc730c332617b7ac5fb0dfc9153256c64cf7147462e843f244a7d3b92",
+      "anchor_ledger_component_sha256": "613d80cbc730c332617b7ac5fb0dfc9153256c64cf7147462e843f244a7d3b92",
+      "ledger_timestamp": "2025-11-13T21:06:41.974394+00:00",
+      "anchor_timestamp": "2025-11-13T21:06:55.505532+00:00"
+    }
+  ]
+}

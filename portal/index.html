@@ -202,6 +202,7 @@
         <header>
             <h1>🔬 BioSignal-AI Governance Portal</h1>
             <p class="subtitle">Live transparency dashboard for the Reflex Governance Architecture</p>
+            <p class="subtitle" id="compliance-status-text">Compliance Status: Checking…</p>
         </header>
         
         <div class="metrics-grid">
@@ -353,6 +354,21 @@
                             </div>
                         </div>
                         <div>
+                            <script>
+                                async function updateCompliance(){
+                                    try{
+                                        const resp = await fetch('public_compliance_status.json', {cache:'no-store'});
+                                        if(resp.ok){
+                                            const j = await resp.json();
+                                            const ok = !!j.compliance;
+                                            document.getElementById('compliance-status-text').textContent = ok ? 'Compliance Status: Verified ✅' : 'Compliance Status: Not Verified ❌';
+                                        }
+                                    }catch(e){
+                                        console.warn('Compliance status load failed', e);
+                                    }
+                                }
+                                updateCompliance();
+                            </script>
                             <script>
                                 (async function(){
                                     try {
