@@ -41,5 +41,42 @@
     "last_prediction": "2025-11-13T16:15:00+00:00",
     "next_update": "Tuesday/Friday 00:30 UTC"
   },
+  "calibration": {
+    "period": "2026-Q1",
+    "calibration_error": 0.5,
+    "forecast_bias": 0.5,
+    "source": "reports/predictive_calibration_Q1_2026.json"
+  },
+  "publications": {
+    "packages": [
+      {
+        "title": "Reflex Governance Architecture v1.1 Research Package",
+        "type": "publication",
+        "zip": "exports/research_publication_package_v1.1.zip",
+        "doi": null,
+        "status": "draft"
+      }
+    ],
+    "dois": [
+      "10.5281/zenodo.14173152",
+      "10.5281/zenodo.14173151"
+    ]
+  },
+  "datasets": [
+    {
+      "id": "integrity-registry",
+      "name": "Integrity Metrics Registry",
+      "path": "exports/integrity_metrics_registry.csv",
+      "category": "governance",
+      "tags": ["integrity", "metrics", "registry"]
+    },
+    {
+      "id": "predictive-metrics-q1-2026",
+      "name": "Predictive Metrics Q1 2026",
+      "path": "forecast/predictive_metrics_Q1_2026.json",
+      "category": "forecast",
+      "tags": ["forecast", "integrity", "confidence"]
+    }
+  ],
   "last_updated": "2025-11-13T16:30:00+00:00"
 }
