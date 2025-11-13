@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BioSignal-AI Governance Error & Recovery Monitor</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      background: linear-gradient(135deg, #1f2937 0%, #111827 100%);
+      color: #f9fafb;
+      margin: 0;
+      padding: 20px;
+      min-height: 100vh;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    header {
+      background: rgba(17, 24, 39, 0.8);
+      border-radius: 12px;
+      padding: 30px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.35);
+      margin-bottom: 30px;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 2.4em;
+      color: #60a5fa;
+    }
+
+    .subtitle {
+      color: #9ca3af;
+      margin-top: 10px;
+      font-size: 1.05em;
+    }
+
+    .metrics-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 20px;
+      margin-bottom: 30px;
+    }
+
+    .metric-card {
+      background: rgba(17, 24, 39, 0.75);
+      border-radius: 12px;
+      padding: 24px;
+      border: 1px solid rgba(96, 165, 250, 0.2);
+      box-shadow: 0 10px 24px rgba(15, 23, 42, 0.45);
+    }
+
+    .metric-label {
+      color: #93c5fd;
+      font-size: 0.9em;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+
+    .metric-value {
+      font-size: 2.6em;
+      font-weight: 700;
+      margin-top: 12px;
+      color: #bfdbfe;
+    }
+
+    .sections {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 20px;
+    }
+
+    .section {
+      background: rgba(17, 24, 39, 0.8);
+      border-radius: 12px;
+      padding: 24px;
+      border: 1px solid rgba(59, 130, 246, 0.2);
+      box-shadow: 0 20px 30px rgba(15, 23, 42, 0.35);
+      display: flex;
+      flex-direction: column;
+      min-height: 320px;
+    }
+
+    .section h2 {
+      margin-top: 0;
+      margin-bottom: 15px;
+      color: #60a5fa;
+      font-size: 1.3em;
+    }
+
+    .event-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      flex: 1;
+      overflow-y: auto;
+    }
+
+    .event-item {
+      padding: 14px;
+      border-radius: 10px;
+      background: rgba(30, 64, 175, 0.18);
+      border: 1px solid rgba(147, 197, 253, 0.15);
+      margin-bottom: 12px;
+    }
+
+    .event-item:last-child {
+      margin-bottom: 0;
+    }
+
+    .event-timestamp {
+      font-size: 0.8em;
+      color: #c4c9d4;
+      margin-bottom: 6px;
+    }
+
+    .event-summary {
+      font-weight: 600;
+      color: #e7ecff;
+    }
+
+    .event-source {
+      font-size: 0.8em;
+      color: #9ca3af;
+      margin-top: 4px;
+    }
+
+    footer {
+      text-align: center;
+      margin-top: 40px;
+      color: #6b7280;
+      font-size: 0.85em;
+    }
+
+    @media (max-width: 768px) {
+      .metrics-grid {
+        grid-template-columns: 1fr 1fr;
+      }
+
+      .sections {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>🛡️ Error Monitoring & Recovery</h1>
+      <p class="subtitle">Live resilience telemetry for the Reflex Governance Architecture</p>
+      <p class="subtitle" id="last-updated">Last Updated: --</p>
+    </header>
+
+    <div class="metrics-grid">
+      <div class="metric-card">
+        <div class="metric-label">Federation Recoveries</div>
+        <div class="metric-value" id="federation-count">0</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-label">Self-Healing Interventions</div>
+        <div class="metric-value" id="self-healing-count">0</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-label">Schema Hash Recalculations</div>
+        <div class="metric-value" id="hash-count">0</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-label">Workflow Failures Logged</div>
+        <div class="metric-value" id="workflow-failures">0</div>
+      </div>
+    </div>
+
+    <div class="sections">
+      <div class="section">
+        <h2>Recent Recovery Actions</h2>
+        <ul class="event-list" id="recent-recoveries"></ul>
+      </div>
+      <div class="section">
+        <h2>Federation Retry Events</h2>
+        <ul class="event-list" id="federation-retries"></ul>
+      </div>
+      <div class="section">
+        <h2>Self-Healing Interventions</h2>
+        <ul class="event-list" id="self-healing-events"></ul>
+      </div>
+      <div class="section">
+        <h2>Schema Hash Recalculations</h2>
+        <ul class="event-list" id="schema-hash-events"></ul>
+      </div>
+    </div>
+
+    <footer>
+      <p>BioSignal-AI Reflex Governance Architecture — error resilience observatory</p>
+    </footer>
+  </div>
+
+  <script>
+    async function fetchJson(url) {
+      try {
+        const response = await fetch(url);
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        return await response.json();
+      } catch (error) {
+        console.warn(`Unable to fetch ${url}:`, error.message);
+        return null;
+      }
+    }
+
+    async function fetchJsonLines(url) {
+      try {
+        const response = await fetch(url);
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        const text = await response.text();
+        return text
+          .split('\n')
+          .map(line => line.trim())
+          .filter(Boolean)
+          .map(line => {
+            try { return JSON.parse(line); } catch { return null; }
+          })
+          .filter(Boolean);
+      } catch (error) {
+        console.warn(`Unable to fetch JSONL ${url}:`, error.message);
+        return [];
+      }
+    }
+
+    function renderEvents(elementId, events, formatter) {
+      const element = document.getElementById(elementId);
+      element.innerHTML = '';
+      if (!events || events.length === 0) {
+        const empty = document.createElement('li');
+        empty.className = 'event-item';
+        empty.innerHTML = '<div class="event-summary">No events recorded.</div>';
+        element.appendChild(empty);
+        return;
+      }
+
+      events.slice(0, 8).forEach(evt => {
+        const item = document.createElement('li');
+        item.className = 'event-item';
+        const content = formatter(evt);
+        item.innerHTML = `
+          <div class="event-timestamp">${content.timestamp}</div>
+          <div class="event-summary">${content.summary}</div>
+          <div class="event-source">${content.source}</div>`;
+        element.appendChild(item);
+      });
+    }
+
+    (async function loadDashboard() {
+      const [errorsData, federationLog, workflowLog, selfHealing, federationStatus] = await Promise.all([
+        fetchJson('errors.json'),
+        fetchJsonLines('../federation/federation_error_log.jsonl'),
+        fetchJsonLines('../logs/workflow_failures.jsonl'),
+        fetchJson('../self_healing/self_healing_status.json'),
+        fetchJson('../federation/federation_status.json')
+      ]);
+
+      const recentRecoveries = [];
+      if (errorsData?.recent_recoveries) {
+        recentRecoveries.push(...errorsData.recent_recoveries.map(entry => ({
+          timestamp: entry.timestamp,
+          summary: entry.summary,
+          source: entry.source || 'errors.json'
+        })));
+      }
+      federationLog.forEach(entry => {
+        recentRecoveries.push({
+          timestamp: entry.timestamp || '--',
+          summary: `${entry.event}: ${entry.message}`,
+          source: 'federation_error_log.jsonl'
+        });
+      });
+      recentRecoveries.sort((a, b) => (b.timestamp || '').localeCompare(a.timestamp || ''));
+
+      const federationRetries = workflowLog
+        .filter(entry => entry.workflow === 'federation_sync')
+        .sort((a, b) => (b.timestamp || '').localeCompare(a.timestamp || ''))
+        .map(entry => ({
+          timestamp: entry.timestamp || '--',
+          summary: `Attempt ${entry.attempt} → exit ${entry.exit_code}`,
+          source: entry.message || 'Logged by smart retry framework'
+        }));
+
+      const selfHealingEvents = [];
+      if (selfHealing?.events) {
+        selfHealing.events.forEach(entry => {
+          selfHealingEvents.push({
+            timestamp: entry.timestamp || '--',
+            summary: entry.event ? `${entry.event}: ${entry.message || ''}` : (entry.message || 'Self-healing update'),
+            source: 'self_healing_status.json'
+          });
+        });
+      }
+      workflowLog
+        .filter(entry => entry.workflow === 'self_healing_monitor')
+        .forEach(entry => {
+          selfHealingEvents.push({
+            timestamp: entry.timestamp || '--',
+            summary: `Workflow attempt ${entry.attempt} → exit ${entry.exit_code}`,
+            source: entry.message || 'Workflow monitor'
+          });
+        });
+      selfHealingEvents.sort((a, b) => (b.timestamp || '').localeCompare(a.timestamp || ''));
+
+      const hashEvents = (federationStatus?.hash_results || [])
+        .slice()
+        .sort((a, b) => (b.timestamp || '').localeCompare(a.timestamp || ''))
+        .map(entry => ({
+          timestamp: entry.timestamp || '--',
+          summary: `${entry.algorithm?.toUpperCase() || 'SHA256'} → ${entry.hash?.slice(0, 12) || 'n/a'}…`,
+          source: entry.path || 'federation_status.json'
+        }));
+
+      document.getElementById('federation-count').textContent = errorsData?.federation_recoveries ?? federationLog.length;
+      document.getElementById('self-healing-count').textContent = errorsData?.self_healing_events ?? selfHealingEvents.length;
+      document.getElementById('hash-count').textContent = errorsData?.schema_hash_checks ?? hashEvents.length;
+      document.getElementById('workflow-failures').textContent = errorsData?.workflow_failures_logged ?? workflowLog.length;
+      document.getElementById('last-updated').textContent = `Last Updated: ${errorsData?.last_updated || new Date().toISOString()}`;
+
+      renderEvents('recent-recoveries', recentRecoveries, evt => evt);
+      renderEvents('federation-retries', federationRetries, evt => ({
+        timestamp: evt.timestamp,
+        summary: evt.summary,
+        source: evt.source
+      }));
+      renderEvents('self-healing-events', selfHealingEvents, evt => evt);
+      renderEvents('schema-hash-events', hashEvents, evt => evt);
+    })();
+  </script>
+</body>
+</html>

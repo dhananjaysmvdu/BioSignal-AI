@@ -1,0 +1,3 @@
+{"timestamp":"2025-11-14T09:20:00+00:00","event":"config_regenerated","severity":"recovery","message":"federation_config.json regenerated from template","metadata":{"attempt":1}}
+{"timestamp":"2025-11-14T09:25:30+00:00","event":"hashlib_recovered","severity":"info","message":"hashlib import recovered after adjusting PYTHONPATH"}
+{"timestamp":"2025-11-14T09:30:00+00:00","event":"hash_computed","severity":"info","message":"Computed SHA256 for exports/integrity_metrics_registry.csv","metadata":{"hash":"73bb7db891e9abe9960488aee2d2562b75c96bdba87665c4469bf053e9ba73e1"}}

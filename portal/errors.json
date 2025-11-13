@@ -1,0 +1,19 @@
+{
+  "last_updated": "2025-11-14T09:32:00+00:00",
+  "federation_recoveries": 2,
+  "self_healing_events": 1,
+  "schema_hash_checks": 1,
+  "workflow_failures_logged": 1,
+  "recent_recoveries": [
+    {
+      "timestamp": "2025-11-14T09:20:00+00:00",
+      "summary": "Regenerated federation configuration from template",
+      "source": "federation_error_log.jsonl"
+    },
+    {
+      "timestamp": "2025-11-14T09:25:00+00:00",
+      "summary": "Self-healing kernel baseline hashes restored",
+      "source": "self_healing_status.json"
+    }
+  ]
+}
