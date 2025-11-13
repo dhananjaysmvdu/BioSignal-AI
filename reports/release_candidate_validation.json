@@ -1,0 +1,23 @@
+{
+  "generated_at": "2025-11-13T17:20:16.939172+00:00",
+  "checks": {
+    "doi": {
+      "status": "warning",
+      "readme_doi": "10.5281/zenodo.14173152",
+      "whitepaper_doi": "10.5281/zenodo.14173151",
+      "reason": "DOI mismatch (README=10.5281/zenodo.14173152, WHITEPAPER=10.5281/zenodo.14173151)"
+    },
+    "capsule_hash": {
+      "status": "warning",
+      "manifest_present": true,
+      "zip_present": true,
+      "manifest_sha256": null,
+      "zip_sha256": null,
+      "reason": "manifest present but missing sha256"
+    },
+    "audit_markers": {
+      "status": "pass",
+      "missing": []
+    }
+  }
+}
