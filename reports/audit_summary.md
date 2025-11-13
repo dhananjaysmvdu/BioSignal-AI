@@ -20,6 +20,13 @@ This file tracks audit history and governance adjustments.
 - Notes: Header schema validated against integrity registry template
 <!-- HASH_GUARDRAIL:END -->
 
+<!-- WORKFLOW_RECOVERY:BEGIN -->
+- Updated: 2025-11-14T09:32:00+00:00
+- Resilient workflows enabled (max_attempts=3, backoff=5/15/45 seconds)
+- Dependency auto-install triggered before final retries
+- Failures logged to `logs/workflow_failures.jsonl`
+<!-- WORKFLOW_RECOVERY:END -->
+
 <!-- TRUST_CORRELATION:BEGIN -->
 **Trust–Health Correlation Analysis**
 
