@@ -384,6 +384,29 @@
                     </div>
                 </div>
             </div>
+
+            <!-- Forensic Intelligence Card -->
+            <div class="metric-card">
+                <div class="metric-header">
+                    <span class="metric-title">Forensic Intelligence</span>
+                    <span class="status-badge status-green" id="forensics-status">OK</span>
+                </div>
+                <div class="metric-value" style="font-size: 2em;" id="forensics-anomalies">—</div>
+                <div class="metric-label">Total Anomalies Detected</div>
+                <div style="margin-top: 20px;">
+                    <div class="metric-detail">
+                        <span class="detail-label">Daily Frequency</span>
+                        <span class="detail-value" id="forensics-frequency">—</span>
+                    </div>
+                    <div class="metric-detail">
+                        <span class="detail-label">Records Analyzed</span>
+                        <span class="detail-value" id="forensics-records">—</span>
+                    </div>
+                    <div style="margin-top: 15px; text-align: center;">
+                        <a href="forensics_insights.html" style="color: #667eea; text-decoration: none; font-weight: 600;">→ View Detailed Analysis</a>
+                    </div>
+                </div>
+            </div>
         </div>
         
         <div class="info-section">
@@ -677,6 +700,28 @@
         }
         loadFederatedConfidence();
         setInterval(loadFederatedConfidence, 600000);
+
+        async function loadForensicsInsights(){
+            try{
+                const fi = await fetch('../forensics/forensics_insights_report.json', {cache:'no-store'});
+                if(fi.ok){
+                    const j = await fi.json();
+                    if(j.status === 'success'){
+                        const anomalies = Object.values(j.anomaly_classification || {}).reduce((a,b)=>a+b, 0);
+                        document.getElementById('forensics-anomalies').textContent = anomalies.toLocaleString();
+                        document.getElementById('forensics-frequency').textContent = (j.summary?.daily_error_frequency ?? 0).toFixed(2) + '/day';
+                        document.getElementById('forensics-records').textContent = (j.summary?.total_records_analyzed ?? 0).toLocaleString();
+                        const status = document.getElementById('forensics-status');
+                        if(anomalies > 10){ status.className='status-badge'; status.style.background='#ef4444'; status.textContent='HIGH'; }
+                        else if(anomalies > 5){ status.className='status-badge status-certified'; status.textContent='MED'; }
+                        else { status.className='status-badge status-green'; status.textContent='OK'; }
+                    }
+                }
+            }catch(e){}
+        }
+        loadForensicsInsights();
+        setInterval(loadForensicsInsights, 600000);
+
                 if(prov.ok){
                     const j = await prov.json();
                     const pct = j.agreement_pct ?? 0;

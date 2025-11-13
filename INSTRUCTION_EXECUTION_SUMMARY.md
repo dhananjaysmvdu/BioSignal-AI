@@ -1,3 +1,31 @@
+## Phase XXII — Forensic Observability & Intelligent Log Analytics
+
+Instructions executed:
+- 116: Forensics Insights Engine (pattern detection, anomaly classification [Type A-D], forensics_insights_report.json generation; audit marker)
+- 117: Portal Visualization (forensics_insights.html with Chart.js, auto-refresh, search/filter; Forensic Intelligence card in index.html; lint notes recorded)
+- 118: CI Workflow & Tests (Tuesdays 04:00 UTC analysis; anomaly spike issue creation >10; 6 unit tests validating classification and markers)
+- 119: Phase XXII Documentation & Tag (PHASE_XXII_COMPLETION_REPORT.md; v2.6.0-forensics-insights)
+- 120: Validation & Safeguards (all 107 tests passing; audit marker verified; portal rendering confirmed)
+
+Artifacts/Directories:
+- forensics/forensics_insights_report.json (aggregated analytics report)
+- portal/forensics_insights.html (interactive dashboard with Chart.js)
+- logs/portal_lint_notes.txt (inline-style warnings logged for future cleanup)
+
+Workflows:
+- .github/workflows/forensics_insights.yml (Tuesdays 04:00 UTC; issue creation on spike)
+
+Tests:
+- tests/forensics/test_forensics_insights_engine.py (6 tests: classification, patterns, structure, markers, frequency, empty logs)
+- All 107 tests passing
+
+Analytics:
+- Type A: IO Latency (timeout, slow, latency keywords)
+- Type B: Missing File (filenotfound, missing keywords)
+- Type C: Schema Mismatch (schema, validation, decode keywords)
+- Type D: Unknown (catch-all)
+- Alerts: >10 anomalies (high), >3/day frequency (medium)
+
 ## Phase XXI — Forensics Consolidation & Log Governance
 
 Instructions executed:

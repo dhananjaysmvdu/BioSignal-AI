@@ -1,0 +1,78 @@
+name: Forensics Insights Analysis
+
+on:
+  schedule:
+    # Tuesdays at 04:00 UTC
+    - cron: '0 4 * * 2'
+  workflow_dispatch:
+
+jobs:
+  analyze-forensics:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      issues: write
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      
+      - name: Run forensics insights engine
+        run: |
+          python scripts/forensics/forensics_insights_engine.py
+      
+      - name: Upload insights report
+        uses: actions/upload-artifact@v4
+        with:
+          name: forensics-insights-${{ github.run_number }}
+          path: forensics/forensics_insights_report.json
+          retention-days: 90
+      
+      - name: Check for anomaly spike
+        id: check_anomalies
+        run: |
+          if [ -f forensics/forensics_insights_report.json ]; then
+            ANOMALY_COUNT=$(python -c "import json; j=json.load(open('forensics/forensics_insights_report.json')); print(sum(j.get('anomaly_classification', {}).values()))")
+            echo "anomalies=$ANOMALY_COUNT" >> $GITHUB_OUTPUT
+            if [ "$ANOMALY_COUNT" -gt 10 ]; then
+              echo "spike=true" >> $GITHUB_OUTPUT
+            else
+              echo "spike=false" >> $GITHUB_OUTPUT
+            fi
+          else
+            echo "anomalies=0" >> $GITHUB_OUTPUT
+            echo "spike=false" >> $GITHUB_OUTPUT
+          fi
+      
+      - name: Create anomaly spike issue
+        if: steps.check_anomalies.outputs.spike == 'true'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const report = JSON.parse(fs.readFileSync('forensics/forensics_insights_report.json', 'utf8'));
+            const anomalyCount = Object.values(report.anomaly_classification || {}).reduce((a,b) => a+b, 0);
+            const anomalyBreakdown = Object.entries(report.anomaly_classification || {}).map(([type, count]) => `- ${type}: ${count}`).join('\\n');
+            const topErrors = Object.entries(report.error_types || {}).sort((a, b) => b[1] - a[1]).slice(0, 5).map(([error, count]) => `- ${error}: ${count} occurrences`).join('\\n');
+            const body = `Forensic Anomaly Spike Detected\\n\\nTotal Anomalies: ${anomalyCount}\\nDaily Frequency: ${report.summary?.daily_error_frequency ?? 0} errors/day\\nRecords Analyzed: ${report.summary?.total_records_analyzed ?? 0}\\n\\nAnomaly Breakdown:\\n${anomalyBreakdown}\\n\\nTop Error Types:\\n${topErrors}\\n\\nReview portal/forensics_insights.html for detailed analysis.`;
+            await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: `forensics: anomaly spike - ${anomalyCount} anomalies detected`,
+              body: body,
+              labels: ['forensics', 'alert', 'automated']
+            });
+      
+      - name: Commit updated report
+        if: success()
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add forensics/forensics_insights_report.json audit_summary.md
+          git diff --staged --quiet || git commit -m "chore(forensics): automated insights analysis"
+          git push
