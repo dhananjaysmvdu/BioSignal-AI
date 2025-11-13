@@ -59,3 +59,5 @@ Updated: 2025-11-13T16:35:00+00:00
 🎯 Adaptive Governance Controller v2 deployed — Risk-aware learning rate adjustments based on FDI/CS metrics. Current LR factor: 1.2 (FDI=excellent, CS=stable). Alert count: 0. Status: nominal.
 <!-- ADAPTIVE_V2:END -->
 
+<!-- PREDICTIVE_CALIBRATION: UPDATED 2025-11-13T17:15:00+00:00 -->
+
