@@ -1,7 +1,7 @@
 {
   "returncode": 0,
-  "duration_sec": 0.2912411689758301,
+  "duration_sec": 0.21038484573364258,
   "restored": true,
   "auto_marker_present": false,
-  "status_excerpt": "{\"status\": \"auto-recovered\", \"last_issue\": \"GOVERNANCE_TRANSPARENCY.md\", \"timestamp\": \"2025-11-13T22:46:24.417371+00:00\", \"attempts\": {\"federation/federation_config.json\": 0, \"GOVERNANCE_TRANSPARENCY.md\": 0}, \"baseline_hashes\": {\"federation/federation_config.json\": \"815a914a575cd393afaa062ab7bb97413ebd499799d36e9b38d33b8a37f414f9\", \"GOVERNANCE_TRANSPARENCY.md\": \"4e095e99511e6ee0d70d444423f3488d485"
+  "status_excerpt": "{\"status\": \"auto-recovered\", \"last_issue\": \"GOVERNANCE_TRANSPARENCY.md\", \"timestamp\": \"2025-11-13T23:17:21.193406+00:00\", \"attempts\": {\"federation/federation_config.json\": 0, \"GOVERNANCE_TRANSPARENCY.md\": 0}, \"baseline_hashes\": {\"federation/federation_config.json\": \"815a914a575cd393afaa062ab7bb97413ebd499799d36e9b38d33b8a37f414f9\", \"GOVERNANCE_TRANSPARENCY.md\": \"4e095e99511e6ee0d70d444423f3488d485"
 }

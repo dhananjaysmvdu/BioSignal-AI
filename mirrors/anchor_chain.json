@@ -1,0 +1,50 @@
+[
+  {
+    "timestamp": "20250101T000000+0000",
+    "file": "anchor_20250101T000000+0000.json",
+    "sha256": "d3a1d33abc3b6172356faff03aab52ad847cb320c400e58a67fa40c2207e5010",
+    "chain_hash": "225536969dd4b587d8ff79e371c4c9a6485b47e111156d4e4c889ff47222e5e9"
+  },
+  {
+    "timestamp": "20250101T000001+0000",
+    "file": "anchor_20250101T000001+0000.json",
+    "sha256": "d3a1d33abc3b6172356faff03aab52ad847cb320c400e58a67fa40c2207e5010",
+    "chain_hash": "8a697aed0361845e67cd860626e548c9e9dae64c9342664a528f640254aa5fdd"
+  },
+  {
+    "timestamp": "20250101T000000+0000",
+    "file": "anchor_20250101T000000+0000.json",
+    "sha256": "d3a1d33abc3b6172356faff03aab52ad847cb320c400e58a67fa40c2207e5010",
+    "chain_hash": "062834eda3ff0a133fd3ca65d68bbd3e36a7241a8bf6ebea1267659081673a20"
+  },
+  {
+    "timestamp": "20250101T000001+0000",
+    "file": "anchor_20250101T000001+0000.json",
+    "sha256": "d3a1d33abc3b6172356faff03aab52ad847cb320c400e58a67fa40c2207e5010",
+    "chain_hash": "423d945543ff2e78c6f73d7cf33401d5a46eb6e2de8e601061f77015f269661c"
+  },
+  {
+    "timestamp": "20250101T000000+0000",
+    "file": "anchor_20250101T000000+0000.json",
+    "sha256": "d3a1d33abc3b6172356faff03aab52ad847cb320c400e58a67fa40c2207e5010",
+    "chain_hash": "1f02567e11a00025837bef638a4e48ed376a5fd0b8572ab4697697440533c4b4"
+  },
+  {
+    "timestamp": "20250101T000001+0000",
+    "file": "anchor_20250101T000001+0000.json",
+    "sha256": "d3a1d33abc3b6172356faff03aab52ad847cb320c400e58a67fa40c2207e5010",
+    "chain_hash": "2a80dfcfd8ebce8849c76e787866b226410ebd84331821c3cf5fda786ddb440f"
+  },
+  {
+    "timestamp": "20250101T000000+0000",
+    "file": "anchor_20250101T000000+0000.json",
+    "sha256": "d3a1d33abc3b6172356faff03aab52ad847cb320c400e58a67fa40c2207e5010",
+    "chain_hash": "59fb4000a03c44b3b29f6c90ce886bfcd836c409417212767509a47958b8c82e"
+  },
+  {
+    "timestamp": "20250101T000001+0000",
+    "file": "anchor_20250101T000001+0000.json",
+    "sha256": "d3a1d33abc3b6172356faff03aab52ad847cb320c400e58a67fa40c2207e5010",
+    "chain_hash": "19c406f2189d1d6e6354c46e30164c82abcde073803fca554c36f975aff5075a"
+  }
+]

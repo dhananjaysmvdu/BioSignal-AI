@@ -1,7 +1,7 @@
 {
   "status": "auto-recovered",
   "last_issue": "GOVERNANCE_TRANSPARENCY.md",
-  "timestamp": "2025-11-13T22:46:24.417371+00:00",
+  "timestamp": "2025-11-13T23:17:21.193406+00:00",
   "attempts": {
     "federation/federation_config.json": 0,
     "GOVERNANCE_TRANSPARENCY.md": 0
@@ -305,6 +305,132 @@
     },
     {
       "timestamp": "2025-11-13T22:46:24.348444+00:00",
+      "event": "file_restored",
+      "file": "GOVERNANCE_TRANSPARENCY.md",
+      "attempt": 1,
+      "message": "Recovered file from latest commit"
+    },
+    {
+      "timestamp": "2025-11-13T23:06:22.193203+00:00",
+      "event": "hash_mismatch",
+      "file": "federation/federation_config.json",
+      "baseline": "815a914a575cd393afaa062ab7bb97413ebd499799d36e9b38d33b8a37f414f9",
+      "observed": "ec74f77e07284ae374b41e99a762e196d29cf107af9175cac7e7c3ffd056e23c"
+    },
+    {
+      "timestamp": "2025-11-13T23:06:22.193575+00:00",
+      "event": "hash_mismatch",
+      "file": "GOVERNANCE_TRANSPARENCY.md",
+      "baseline": "4e095e99511e6ee0d70d444423f3488d48547454be8180f3bc2929199d9d41b4",
+      "observed": "17ab1b902e8480dc5f20c51397f34a4ebb375d50f1a724c1a778de2a09247daf"
+    },
+    {
+      "timestamp": "2025-11-13T23:06:36.057603+00:00",
+      "event": "hash_mismatch",
+      "file": "federation/federation_config.json",
+      "baseline": "815a914a575cd393afaa062ab7bb97413ebd499799d36e9b38d33b8a37f414f9",
+      "observed": "ec74f77e07284ae374b41e99a762e196d29cf107af9175cac7e7c3ffd056e23c"
+    },
+    {
+      "timestamp": "2025-11-13T23:06:36.093438+00:00",
+      "event": "file_restored",
+      "file": "federation/federation_config.json",
+      "attempt": 1,
+      "message": "Recovered file from latest commit"
+    },
+    {
+      "timestamp": "2025-11-13T23:06:36.114898+00:00",
+      "event": "hash_mismatch",
+      "file": "GOVERNANCE_TRANSPARENCY.md",
+      "baseline": "4e095e99511e6ee0d70d444423f3488d48547454be8180f3bc2929199d9d41b4",
+      "observed": "17ab1b902e8480dc5f20c51397f34a4ebb375d50f1a724c1a778de2a09247daf"
+    },
+    {
+      "timestamp": "2025-11-13T23:06:36.151188+00:00",
+      "event": "file_restored",
+      "file": "GOVERNANCE_TRANSPARENCY.md",
+      "attempt": 1,
+      "message": "Recovered file from latest commit"
+    },
+    {
+      "timestamp": "2025-11-13T23:07:25.137244+00:00",
+      "event": "hash_mismatch",
+      "file": "federation/federation_config.json",
+      "baseline": "815a914a575cd393afaa062ab7bb97413ebd499799d36e9b38d33b8a37f414f9",
+      "observed": "ec74f77e07284ae374b41e99a762e196d29cf107af9175cac7e7c3ffd056e23c"
+    },
+    {
+      "timestamp": "2025-11-13T23:07:25.137406+00:00",
+      "event": "hash_mismatch",
+      "file": "GOVERNANCE_TRANSPARENCY.md",
+      "baseline": "4e095e99511e6ee0d70d444423f3488d48547454be8180f3bc2929199d9d41b4",
+      "observed": "244a4a47151d6e412829ec68cef358ceff800ff047267627bbd2f778561c3822"
+    },
+    {
+      "timestamp": "2025-11-13T23:07:37.739313+00:00",
+      "event": "hash_mismatch",
+      "file": "federation/federation_config.json",
+      "baseline": "815a914a575cd393afaa062ab7bb97413ebd499799d36e9b38d33b8a37f414f9",
+      "observed": "ec74f77e07284ae374b41e99a762e196d29cf107af9175cac7e7c3ffd056e23c"
+    },
+    {
+      "timestamp": "2025-11-13T23:07:37.767840+00:00",
+      "event": "file_restored",
+      "file": "federation/federation_config.json",
+      "attempt": 1,
+      "message": "Recovered file from latest commit"
+    },
+    {
+      "timestamp": "2025-11-13T23:07:37.788804+00:00",
+      "event": "hash_mismatch",
+      "file": "GOVERNANCE_TRANSPARENCY.md",
+      "baseline": "4e095e99511e6ee0d70d444423f3488d48547454be8180f3bc2929199d9d41b4",
+      "observed": "244a4a47151d6e412829ec68cef358ceff800ff047267627bbd2f778561c3822"
+    },
+    {
+      "timestamp": "2025-11-13T23:07:37.816703+00:00",
+      "event": "file_restored",
+      "file": "GOVERNANCE_TRANSPARENCY.md",
+      "attempt": 1,
+      "message": "Recovered file from latest commit"
+    },
+    {
+      "timestamp": "2025-11-13T23:17:09.174856+00:00",
+      "event": "hash_mismatch",
+      "file": "federation/federation_config.json",
+      "baseline": "815a914a575cd393afaa062ab7bb97413ebd499799d36e9b38d33b8a37f414f9",
+      "observed": "ec74f77e07284ae374b41e99a762e196d29cf107af9175cac7e7c3ffd056e23c"
+    },
+    {
+      "timestamp": "2025-11-13T23:17:09.175045+00:00",
+      "event": "hash_mismatch",
+      "file": "GOVERNANCE_TRANSPARENCY.md",
+      "baseline": "4e095e99511e6ee0d70d444423f3488d48547454be8180f3bc2929199d9d41b4",
+      "observed": "083c5e5b5671e919282d506bc7e5719728287db6b7af452af70520e64f316bd2"
+    },
+    {
+      "timestamp": "2025-11-13T23:17:21.078543+00:00",
+      "event": "hash_mismatch",
+      "file": "federation/federation_config.json",
+      "baseline": "815a914a575cd393afaa062ab7bb97413ebd499799d36e9b38d33b8a37f414f9",
+      "observed": "ec74f77e07284ae374b41e99a762e196d29cf107af9175cac7e7c3ffd056e23c"
+    },
+    {
+      "timestamp": "2025-11-13T23:17:21.105113+00:00",
+      "event": "file_restored",
+      "file": "federation/federation_config.json",
+      "attempt": 1,
+      "message": "Recovered file from latest commit"
+    },
+    {
+      "timestamp": "2025-11-13T23:17:21.113317+00:00",
+      "event": "hash_mismatch",
+      "file": "GOVERNANCE_TRANSPARENCY.md",
+      "baseline": "4e095e99511e6ee0d70d444423f3488d48547454be8180f3bc2929199d9d41b4",
+      "observed": "083c5e5b5671e919282d506bc7e5719728287db6b7af452af70520e64f316bd2"
+    },
+    {
+      "timestamp": "2025-11-13T23:17:21.141650+00:00",
       "event": "file_restored",
       "file": "GOVERNANCE_TRANSPARENCY.md",
       "attempt": 1,

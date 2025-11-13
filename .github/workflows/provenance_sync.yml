@@ -1,0 +1,30 @@
+name: Federated Provenance Sync
+
+on:
+  schedule:
+    - cron: '0 5 * * 3'  # Wednesdays 05:00 UTC
+  workflow_dispatch:
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+
+      - name: Run provenance sync engine
+        run: |
+          python scripts/federation/provenance_sync_engine.py
+
+      - name: Upload consensus artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: provenance_consensus
+          path: federation/provenance_consensus.json

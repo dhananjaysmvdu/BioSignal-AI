@@ -407,6 +407,29 @@
                     </div>
                 </div>
             </div>
+
+            <!-- Predictive Forensics Card -->
+            <div class="metric-card">
+                <div class="metric-header">
+                    <span class="metric-title">Predictive Forensics</span>
+                    <span class="status-badge status-certified" id="forecast-risk-badge">LOW</span>
+                </div>
+                <div class="metric-value" style="font-size: 2em;" id="forecast-avg">—</div>
+                <div class="metric-label">Avg. Daily Forecast (7d)</div>
+                <div style="margin-top: 20px;">
+                    <div class="metric-detail">
+                        <span class="detail-label">Risk Level</span>
+                        <span class="detail-value" id="forecast-risk-level">—</span>
+                    </div>
+                    <div class="metric-detail">
+                        <span class="detail-label">Forecast Status</span>
+                        <span class="detail-value" id="forecast-status">—</span>
+                    </div>
+                    <div style="margin-top: 15px; text-align: center;">
+                        <a href="forensics_forecast.html" style="color: #667eea; text-decoration: none; font-weight: 600;">→ View 7-Day Forecast</a>
+                    </div>
+                </div>
+            </div>
         </div>
         
         <div class="info-section">
@@ -715,6 +738,27 @@
                         if(anomalies > 10){ status.className='status-badge'; status.style.background='#ef4444'; status.textContent='HIGH'; }
                         else if(anomalies > 5){ status.className='status-badge status-certified'; status.textContent='MED'; }
                         else { status.className='status-badge status-green'; status.textContent='OK'; }
+                    }
+                }
+            }catch(e){}
+            
+            // Load forecast data
+            try{
+                const ff = await fetch('../forensics/forensics_anomaly_forecast.json', {cache:'no-store'});
+                if(ff.ok){
+                    const f = await ff.json();
+                    const forecast = f.predicted_anomalies_7d || [];
+                    if(forecast.length > 0){
+                        const avg = forecast.reduce((a,b)=>a+b, 0) / forecast.length;
+                        document.getElementById('forecast-avg').textContent = avg.toFixed(2);
+                        document.getElementById('forecast-risk-level').textContent = (f.risk_level || 'unknown').toUpperCase();
+                        document.getElementById('forecast-status').textContent = (f.status || 'unknown').toUpperCase();
+                        const badge = document.getElementById('forecast-risk-badge');
+                        const risk = f.risk_level || 'low';
+                        badge.textContent = risk.toUpperCase();
+                        if(risk === 'high'){ badge.className='status-badge'; badge.style.background='#ef4444'; badge.style.color='white'; }
+                        else if(risk === 'medium'){ badge.className='status-badge'; badge.style.background='#f59e0b'; badge.style.color='white'; }
+                        else { badge.className='status-badge status-green'; }
                     }
                 }
             }catch(e){}

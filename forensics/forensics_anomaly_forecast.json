@@ -1,0 +1,16 @@
+{
+  "status": "insufficient_data",
+  "forecast_generated_at": "2025-11-13T23:25:51.198833+00:00",
+  "days_analyzed": 0,
+  "predicted_anomalies_7d": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+  ],
+  "risk_level": "low",
+  "risk_rationale": "Insufficient historical data (0 days < 3 required). Defaulting to low risk."
+}
