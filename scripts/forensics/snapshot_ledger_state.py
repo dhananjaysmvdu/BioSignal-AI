@@ -8,27 +8,16 @@ Appends audit marker to audit_summary.md.
 """
 from __future__ import annotations
 
-import hashlib
 import json
 import tarfile
-from datetime import datetime, timezone
 from pathlib import Path
+
+# Import shared forensics utilities (Phase XXI - Instruction 111)
+from scripts.forensics.forensics_utils import utc_now_iso, compute_sha256, safe_write_json
 
 ROOT = Path(__file__).resolve().parents[2]
 ARTIFACTS = ROOT / 'artifacts'
 SNAPSHOTS = ROOT / 'snapshots'
-
-
-def utc_now_iso() -> str:
-    return datetime.now(timezone.utc).isoformat()
-
-
-def sha256_path(p: Path) -> str:
-    h = hashlib.sha256()
-    with p.open('rb') as f:
-        for chunk in iter(lambda: f.read(8192), b''):
-            h.update(chunk)
-    return h.hexdigest()
 
 
 def find_ledger_files() -> list[Path]:
@@ -54,8 +43,8 @@ def write_hash_record(bundle: Path, ts: str) -> None:
                 rec = [rec]
         except Exception:
             rec = []
-    rec.append({'timestamp': ts, 'file': bundle.name, 'sha256': sha256_path(bundle)})
-    rec_path.write_text(json.dumps(rec, indent=2), encoding='utf-8')
+    rec.append({'timestamp': ts, 'file': bundle.name, 'sha256': compute_sha256(bundle)})
+    safe_write_json(rec_path, rec)
 
 
 def append_audit_marker(ts: str) -> None:

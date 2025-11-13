@@ -9,25 +9,15 @@ from __future__ import annotations
 
 import hashlib
 import json
-from datetime import datetime, timezone
 from pathlib import Path
+
+# Import shared forensics utilities (Phase XXI - Instruction 111)
+from scripts.forensics.forensics_utils import utc_now_iso, compute_sha256
 
 ROOT = Path(__file__).resolve().parents[2]
 SNAPSHOTS = ROOT / 'snapshots'
 MIRRORS = ROOT / 'mirrors'
 FORENSICS = ROOT / 'forensics'
-
-
-def utc_now_iso() -> str:
-    return datetime.now(timezone.utc).isoformat()
-
-
-def sha256_path(p: Path) -> str:
-    h = hashlib.sha256()
-    with p.open('rb') as f:
-        for chunk in iter(lambda: f.read(8192), b''):
-            h.update(chunk)
-    return h.hexdigest()
 
 
 def append_line(p: Path, line: str) -> None:
@@ -60,7 +50,7 @@ def verify():
         bundle = SNAPSHOTS / fname if fname else None
         ok = False
         if bundle and bundle.exists():
-            ok = (sha256_path(bundle) == expected)
+            ok = (compute_sha256(bundle) == expected)
         append_line(FORENSICS / 'verification_log.jsonl', json.dumps({'timestamp': ts, 'type': 'snapshot', 'file': fname, 'ok': ok, 'verified': ok}))
 
     # Verify mirrors via anchor_chain.json continuity
@@ -75,7 +65,7 @@ def verify():
             file = MIRRORS / entry.get('file', '')
             sha = entry.get('sha256')
             chain_hash = entry.get('chain_hash')
-            ok_file = file.exists() and sha256_path(file) == sha
+            ok_file = file.exists() and compute_sha256(file) == sha
             import hashlib as _h
             ok_chain = _h.sha256((prev_chain_hash + (sha or '')).encode('utf-8')).hexdigest() == chain_hash
             prev_chain_hash = chain_hash or ''

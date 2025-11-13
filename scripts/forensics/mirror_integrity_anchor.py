@@ -9,24 +9,14 @@ from __future__ import annotations
 
 import hashlib
 import json
-from datetime import datetime, timezone
 from pathlib import Path
+
+# Import shared forensics utilities (Phase XXI - Instruction 111)
+from scripts.forensics.forensics_utils import utc_now_iso, compute_sha256, safe_write_json
 
 ROOT = Path(__file__).resolve().parents[2]
 ARTIFACTS = ROOT / 'artifacts'
 MIRRORS = ROOT / 'mirrors'
-
-
-def utc_now_iso() -> str:
-    return datetime.now(timezone.utc).isoformat()
-
-
-def sha256_path(p: Path) -> str:
-    h = hashlib.sha256()
-    with p.open('rb') as f:
-        for chunk in iter(lambda: f.read(8192), b''):
-            h.update(chunk)
-    return h.hexdigest()
 
 
 def sha256_bytes(b: bytes) -> str:
@@ -60,11 +50,11 @@ def update_chain(mirror_file: Path, ts: str) -> None:
             prev = json.loads(chain.read_text(encoding='utf-8'))
         except Exception:
             prev = []
-    current_sha = sha256_path(mirror_file)
+    current_sha = compute_sha256(mirror_file)
     prev_chain_hash = prev[-1]['chain_hash'] if prev else ''
     chain_hash = sha256_bytes((prev_chain_hash + current_sha).encode('utf-8'))
     prev.append({'timestamp': ts, 'file': mirror_file.name, 'sha256': current_sha, 'chain_hash': chain_hash})
-    chain.write_text(json.dumps(prev, indent=2), encoding='utf-8')
+    safe_write_json(chain, prev)
 
 
 def main() -> int:
