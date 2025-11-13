@@ -26,5 +26,7 @@
     "drift_percentage": 0.51,
     "drift_threshold": 0.5,
     "status": "acceptable"
-  }
+  },
+  "section": "general",
+  "message": "auto-filled"
 }

@@ -1,0 +1,46 @@
+name: Phase X Integration Validation
+
+on:
+  schedule:
+    - cron: '0 6 * * 5' # Fridays 06:00 UTC weekly integration validation
+  workflow_dispatch:
+
+jobs:
+  integration-validation:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          if [ -f requirements.txt ]; then python -m pip install -r requirements.txt; fi
+          python -m pip install pytest
+
+      - name: Run Global Resilience Integration Harness
+        run: |
+          pytest -q tests/integration/test_global_resilience_cycle.py || echo "Integration harness failed" > integration_failure.flag
+
+      - name: Run Federation Drift Simulation
+        run: python simulation/federation_drift_test.py
+
+      - name: Run Self-Healing Regression Suite
+        run: pytest -q tests/test_self_healing_regression.py || echo "Self-healing regression failed" > self_healing_failure.flag
+
+      - name: Validate Hash Guardrail Consistency
+        run: python scripts/validate_hash_guardrail.py || echo "Guardrail validation failed" > guardrail_failure.flag
+
+      - name: Aggregate Phase X Validation Status
+        run: python scripts/phase_x_aggregate.py
+
+      - name: Upload Validation Snapshot Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: phase-x-validation-snapshot
+          path: results/phase_x_validation_snapshot.json

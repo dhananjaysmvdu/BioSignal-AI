@@ -35,7 +35,10 @@
     },
     "predicted_integrity": {
       "mean": 98.0,
-      "range": [95.5, 99.5],
+      "range": [
+        95.5,
+        99.5
+      ],
       "confidence": 0.85
     },
     "last_prediction": "2025-11-13T16:15:00+00:00",
@@ -68,15 +71,26 @@
       "name": "Integrity Metrics Registry",
       "path": "exports/integrity_metrics_registry.csv",
       "category": "governance",
-      "tags": ["integrity", "metrics", "registry"]
+      "tags": [
+        "integrity",
+        "metrics",
+        "registry"
+      ]
     },
     {
       "id": "predictive-metrics-q1-2026",
       "name": "Predictive Metrics Q1 2026",
       "path": "forecast/predictive_metrics_Q1_2026.json",
       "category": "forecast",
-      "tags": ["forecast", "integrity", "confidence"]
+      "tags": [
+        "forecast",
+        "integrity",
+        "confidence"
+      ]
     }
   ],
-  "last_updated": "2025-11-13T16:30:00+00:00"
+  "last_updated": "2025-11-13T16:30:00+00:00",
+  "timestamp": null,
+  "section": "general",
+  "message": "auto-filled"
 }

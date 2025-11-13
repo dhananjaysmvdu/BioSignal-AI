@@ -1,0 +1,7 @@
+{
+  "returncode": 0,
+  "duration_sec": 0.14133262634277344,
+  "restored": true,
+  "auto_marker_present": false,
+  "status_excerpt": "{\"status\": \"auto-recovered\", \"last_issue\": \"federation/federation_config.json\", \"timestamp\": \"2025-11-13T19:25:39.638175+00:00\", \"attempts\": {\"federation/federation_config.json\": 0, \"GOVERNANCE_TRANSPARENCY.md\": 0}, \"baseline_hashes\": {\"federation/federation_config.json\": \"815a914a575cd393afaa062ab7bb97413ebd499799d36e9b38d33b8a37f414f9\", \"GOVERNANCE_TRANSPARENCY.md\": \"deef28f55a1e785bcbc5369a42de"
+}

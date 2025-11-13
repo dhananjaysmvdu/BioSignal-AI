@@ -2,7 +2,8 @@ name: Federation Sync Resilience
 
 on:
   schedule:
-    - cron: '30 3 * * 2'
+    - cron: '30 3 * * *' # Nightly federation sync
+    - cron: '30 3 * * 2' # Preserve original Tuesday slot
   workflow_dispatch:
 
 jobs:
@@ -84,3 +85,7 @@ jobs:
               Write-Host "Waiting $sleepFor seconds before next attempt."
               Start-Sleep -Seconds $sleepFor
           }
+
+          - name: Append resilience metrics (federation-only snapshot)
+            run: python scripts/federation/append_resilience_history.py
+

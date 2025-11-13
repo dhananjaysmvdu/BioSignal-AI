@@ -3,7 +3,11 @@
   "reference_release": "v1.3.0-global-resilient",
   "sync": {
     "max_attempts": 3,
-    "backoff_seconds": [5, 15, 45],
+    "backoff_seconds": [
+      5,
+      15,
+      45
+    ],
     "checksum_algorithm": "sha256",
     "auto_heal": true
   },
@@ -47,5 +51,8 @@
     "hash": true,
     "timestamp": true,
     "schema": true
-  }
+  },
+  "timestamp": null,
+  "section": "general",
+  "message": "auto-filled"
 }

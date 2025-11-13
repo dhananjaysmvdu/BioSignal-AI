@@ -15,5 +15,8 @@
       "summary": "Self-healing kernel baseline hashes restored",
       "source": "self_healing_status.json"
     }
-  ]
+  ],
+  "timestamp": null,
+  "section": "general",
+  "message": "auto-filled"
 }

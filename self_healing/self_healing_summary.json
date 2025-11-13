@@ -3,5 +3,7 @@
   "monitored_files": 4,
   "issues_detected": 0,
   "issues_recovered": 0,
-  "recovery_rate": 100.0
+  "recovery_rate": 100.0,
+  "section": "general",
+  "message": "auto-filled"
 }

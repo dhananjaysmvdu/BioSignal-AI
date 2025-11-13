@@ -300,6 +300,26 @@
                     </div>
                 </div>
             </div>
+
+            <!-- Schema Stability Forecast Card -->
+            <div class="metric-card">
+                <div class="metric-header">
+                    <span class="metric-title">Schema Stability Forecast</span>
+                    <span class="status-badge status-green" id="schema-status">STABLE</span>
+                </div>
+                <div class="metric-value" style="font-size: 2em;" id="schema-drift-prob">—</div>
+                <div class="metric-label">Drift Probability (next 7 days)</div>
+                <div style="margin-top: 20px;">
+                    <div class="metric-detail">
+                        <span class="detail-label">30-day Repairs</span>
+                        <span class="detail-value" id="schema-repairs">0</span>
+                    </div>
+                    <div class="metric-detail">
+                        <span class="detail-label">Last Update</span>
+                        <span class="detail-value" id="schema-forecast-updated">—</span>
+                    </div>
+                </div>
+            </div>
         </div>
         
         <div class="info-section">
@@ -333,6 +353,24 @@
                             </div>
                         </div>
                         <div>
+                            <script>
+                                (async function(){
+                                    try {
+                                        const resp = await fetch('../forecast/schema_drift_forecast.json');
+                                        if(resp.ok){
+                                            const data = await resp.json();
+                                            document.getElementById('schema-drift-prob').textContent = (data.drift_prob||0).toFixed(1) + '%';
+                                            document.getElementById('schema-repairs').textContent = data.repairs_count||0;
+                                            document.getElementById('schema-forecast-updated').textContent = data.timestamp||'—';
+                                            const badge = document.getElementById('schema-status');
+                                            const p = data.drift_prob||0;
+                                            if(p < 20){ badge.className = 'status-badge status-green'; badge.textContent='STABLE'; }
+                                            else if(p < 50){ badge.className = 'status-badge status-certified'; badge.textContent='WATCH'; }
+                                            else { badge.className = 'status-badge'; badge.style.background='#ef4444'; badge.textContent='RISK'; }
+                                        }
+                                    } catch(e){ console.warn('Schema forecast not available yet'); }
+                                })();
+                            </script>
                             <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
                                 <span style="font-weight: 600;">CS (Confidence Stability)</span>
                                 <span id="risk-cs-value" style="font-weight: 700; color: #10b981;">2.1</span>
@@ -384,6 +422,7 @@
                 <a href="accountability.html" class="link-button">🔍 Accountability Dashboard</a>
                 <a href="ethics.html" class="link-button">⚖️ Ethical Compliance Portal</a>
                 <a href="errors.html" class="link-button">🛡️ Error Log &amp; Recovery</a>
+                <a href="resilience.html" class="link-button">🌐 Global Resilience Monitor</a>
             </div>
         </div>
         

@@ -2,8 +2,11 @@ name: Self-Healing Kernel Resilience
 
 on:
   schedule:
-    - cron: '0 4 * * *'
+    - cron: '0 4 * * *' # Nightly direct schedule (fallback)
   workflow_dispatch:
+  workflow_run:
+    workflows: ["Federation Sync Resilience"]
+    types: ["completed"]
 
 jobs:
   self-healing-kernel:
@@ -84,3 +87,7 @@ jobs:
             Write-Host "Waiting $sleepFor seconds before next attempt."
             Start-Sleep -Seconds $sleepFor
           }
+
+      - name: Append resilience metrics
+        run: python scripts/federation/append_resilience_history.py
+

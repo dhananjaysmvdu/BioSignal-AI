@@ -1,0 +1,22 @@
+name: Ethics & Compliance Self-Audit Bridge
+
+on:
+  schedule:
+    - cron: '30 3 * * 5'
+  workflow_dispatch:
+
+jobs:
+  ethics-bridge:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+      - name: Run ethics audit bridge
+        run: python scripts/ethics/ethics_audit_bridge.py
+      - name: Upload bridge report
+        uses: actions/upload-artifact@v4
+        with:
+          name: ethics-audit-bridge-report
+          path: results/ethics_audit_bridge_report.json

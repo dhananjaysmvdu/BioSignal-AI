@@ -1,9 +1,13 @@
 ﻿{
-    "status":  "synchronized",
-    "timestamp":  "2025-11-13T19:46:17.3762536Z",
+    "timestamp":  "2025-11-13T20:03:17.1203149Z",
+    "raw":  [
+
+            ],
+    "section":  "general",
+    "message":  "auto-filled",
     "history":  [
                     {
-                        "timestamp":  "2025-11-13T19:46:07.729870+00:00",
+                        "timestamp":  "2025-11-13T20:03:07.376117+00:00",
                         "federation_integrity_index":  98.6,
                         "recovery_actions":  0,
                         "nodes_checked":  [
@@ -14,39 +18,23 @@
                                           ]
                     },
                     {
-                        "timestamp":  "2025-11-13T19:46:17.3758673Z",
+                        "timestamp":  "2025-11-13T20:03:17.1203149Z",
                         "event":  "hash computed",
                         "status":  "ok",
                         "path":  "exports\\integrity_metrics_registry.csv"
                     }
                 ],
+    "status":  "synchronized",
     "federation_integrity_index":  98.6,
     "federation_id":  "BioSignalAI-GovNet",
     "reference_release":  "v1.3.0-global-resilient",
-    "recovery_actions":  2,
+    "recovery_actions":  0,
     "error_events":  [
-                         {
-                             "timestamp":  "2025-11-13T19:46:07.727607+00:00",
-                             "event":  "status_json_error",
-                             "severity":  "warning",
-                             "message":  "Detected JSON syntax issue in federation_status.json; attempting automated repair.",
-                             "metadata":  {
-                                              "error":  "Unexpected UTF-8 BOM (decode using utf-8-sig): line 1 column 1 (char 0)"
-                                          }
-                         },
-                         {
-                             "timestamp":  "2025-11-13T19:46:07.729700+00:00",
-                             "event":  "status_json_fallback",
-                             "severity":  "error",
-                             "message":  "Unable to repair federation_status.json; applied default template.",
-                             "metadata":  {
-                                              "error":  "Unexpected UTF-8 BOM (decode using utf-8-sig): line 1 column 1 (char 0)"
-                                          }
-                         }
+
                      ],
     "hash_results":  [
                          {
-                             "timestamp":  "2025-11-13T19:46:17.3726967Z",
+                             "timestamp":  "2025-11-13T20:03:17.1179283Z",
                              "path":  "exports\\integrity_metrics_registry.csv",
                              "algorithm":  "sha256",
                              "hash":  "73bb7db891e9abe9960488aee2d2562b75c96bdba87665c4469bf053e9ba73e1"
@@ -87,6 +75,12 @@
                                         "docs/literature_summary.md"
                                     ]
                   }
-              ]
+              ],
+    "adaptive_sync_policy":  {
+                                 "timestamp":  "2025-11-13T20:03:07.376117+00:00",
+                                 "frequency":  "daily",
+                                 "decision_reason":  "baseline",
+                                 "drift_prob":  45.0
+                             }
 }
 

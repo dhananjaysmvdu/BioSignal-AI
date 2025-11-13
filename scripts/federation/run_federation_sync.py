@@ -20,6 +20,7 @@ CONFIG_PATH = FEDERATION_DIR / "federation_config.json"
 TEMPLATE_PATH = FEDERATION_DIR / "federation_config.template.json"
 STATUS_PATH = FEDERATION_DIR / "federation_status.json"
 ERROR_LOG_PATH = FEDERATION_DIR / "federation_error_log.jsonl"
+FORECAST_PATH = ROOT_DIR / "forecast" / "schema_drift_forecast.json"
 
 _RECOVERY_COUNTER = 0
 _RECOVERY_EVENTS: list[Dict[str, Any]] = []
@@ -164,6 +165,25 @@ def _update_status(status: Dict[str, Any], config: Dict[str, Any]) -> Dict[str, 
 	status["history"].append(sync_snapshot)
 	if len(status["history"]) > 50:
 		status["history"] = status["history"][-50:]
+
+	# Adaptive policy: adjust sync frequency using schema drift forecast
+	adaptive = status.setdefault("adaptive_sync_policy", {})
+	try:
+		forecast = json.loads(FORECAST_PATH.read_text(encoding="utf-8")) if FORECAST_PATH.exists() else {}
+		drift_prob = float(forecast.get("drift_prob", 0.0))
+		freq = "daily"
+		reason = "baseline"
+		if drift_prob >= 50.0:
+			freq = "hourly"
+			reason = f"elevated schema drift probability {drift_prob:.1f}%"
+		adaptive.update({
+			"timestamp": now,
+			"frequency": freq,
+			"decision_reason": reason,
+			"drift_prob": drift_prob,
+		})
+	except Exception as exc:
+		_log_event("adaptive_policy_error", "Unable to read schema drift forecast.", severity="warning", metadata={"error": str(exc)})
 	return status
 
 

@@ -1,0 +1,28 @@
+{
+  "federation_run": {
+    "returncode": 0,
+    "stdout": "Federation sync completed via C:\\Python313\\python.exe.\n",
+    "stderr": ""
+  },
+  "self_healing_run": {
+    "returncode": 0,
+    "stdout": "self-healing watchdog active\n",
+    "stderr": ""
+  },
+  "hash_guardrail_run": {
+    "invoked": "powershell",
+    "returncode": 0,
+    "stdout": "SHA256(C:\\BioSignal-AI\\exports\\integrity_metrics_registry.csv) = 73bb7db891e9abe9960488aee2d2562b75c96bdba87665c4469bf053e9ba73e1\n",
+    "stderr": ""
+  },
+  "federation_status_ok": true,
+  "self_healing_ok": true,
+  "hash_guardrail_ok": true,
+  "retry_ok": true,
+  "persistent_failures": [],
+  "auto_retried": {
+    "federation": false,
+    "self_healing": false,
+    "hash_guardrail": false
+  }
+}

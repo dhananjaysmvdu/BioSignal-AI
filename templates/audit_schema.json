@@ -1,0 +1,12 @@
+{
+  "required_keys": ["timestamp", "section", "message"],
+  "types": {
+    "timestamp": "iso8601",
+    "section": "string",
+    "message": "string"
+  },
+  "defaults": {
+    "section": "general",
+    "message": "auto-filled"
+  }
+}

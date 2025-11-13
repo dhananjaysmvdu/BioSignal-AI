@@ -8,5 +8,7 @@
     "arXiv"
   ],
   "fii": 98.6,
-  "drift_events": 1
+  "drift_events": 1,
+  "section": "general",
+  "message": "auto-filled"
 }

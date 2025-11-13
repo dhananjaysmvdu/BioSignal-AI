@@ -15,38 +15,109 @@
           "integrity": {
             "type": "object",
             "properties": {
-              "score": {"type": "number", "minimum": 0, "maximum": 100},
-              "violations": {"type": "integer", "minimum": 0},
-              "warnings": {"type": "integer", "minimum": 0},
-              "health": {"type": "number", "minimum": 0, "maximum": 100},
-              "status": {"type": "string", "enum": ["green", "yellow", "red"]}
+              "score": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 100
+              },
+              "violations": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "warnings": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "health": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 100
+              },
+              "status": {
+                "type": "string",
+                "enum": [
+                  "green",
+                  "yellow",
+                  "red"
+                ]
+              }
             },
-            "required": ["score", "violations", "warnings", "health", "status"]
+            "required": [
+              "score",
+              "violations",
+              "warnings",
+              "health",
+              "status"
+            ]
           },
           "reproducibility": {
             "type": "object",
             "properties": {
-              "status": {"type": "string", "enum": ["certified", "partial", "failed"]},
-              "checks_passed": {"type": "integer", "minimum": 0},
-              "checks_total": {"type": "integer", "minimum": 0},
-              "doi": {"type": "string"},
-              "capsule_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"}
+              "status": {
+                "type": "string",
+                "enum": [
+                  "certified",
+                  "partial",
+                  "failed"
+                ]
+              },
+              "checks_passed": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "checks_total": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "doi": {
+                "type": "string"
+              },
+              "capsule_sha256": {
+                "type": "string",
+                "pattern": "^[a-f0-9]{64}$"
+              }
             },
-            "required": ["status", "checks_passed", "checks_total", "doi"]
+            "required": [
+              "status",
+              "checks_passed",
+              "checks_total",
+              "doi"
+            ]
           },
           "provenance": {
             "type": "object",
             "properties": {
-              "release": {"type": "string", "pattern": "^v\\d+\\.\\d+\\.\\d+"},
-              "release_date": {"type": "string", "format": "date"},
-              "maintenance_branch": {"type": "string"},
-              "baseline_tag": {"type": "string"}
+              "release": {
+                "type": "string",
+                "pattern": "^v\\d+\\.\\d+\\.\\d+"
+              },
+              "release_date": {
+                "type": "string",
+                "format": "date"
+              },
+              "maintenance_branch": {
+                "type": "string"
+              },
+              "baseline_tag": {
+                "type": "string"
+              }
             },
-            "required": ["release", "release_date"]
+            "required": [
+              "release",
+              "release_date"
+            ]
           },
-          "last_updated": {"type": "string", "format": "date-time"}
+          "last_updated": {
+            "type": "string",
+            "format": "date-time"
+          }
         },
-        "required": ["integrity", "reproducibility", "provenance", "last_updated"]
+        "required": [
+          "integrity",
+          "reproducibility",
+          "provenance",
+          "last_updated"
+        ]
       },
       "example": {
         "integrity": {
@@ -79,15 +150,43 @@
       "format": "text/csv",
       "schema": {
         "columns": [
-          {"name": "timestamp", "type": "string", "format": "ISO8601"},
-          {"name": "integrity_score", "type": "number"},
-          {"name": "violations", "type": "integer"},
-          {"name": "warnings", "type": "integer"},
-          {"name": "health_score", "type": "number"},
-          {"name": "rri", "type": "number"},
-          {"name": "mpi", "type": "number"},
-          {"name": "confidence", "type": "number"},
-          {"name": "status", "type": "string"}
+          {
+            "name": "timestamp",
+            "type": "string",
+            "format": "ISO8601"
+          },
+          {
+            "name": "integrity_score",
+            "type": "number"
+          },
+          {
+            "name": "violations",
+            "type": "integer"
+          },
+          {
+            "name": "warnings",
+            "type": "integer"
+          },
+          {
+            "name": "health_score",
+            "type": "number"
+          },
+          {
+            "name": "rri",
+            "type": "number"
+          },
+          {
+            "name": "mpi",
+            "type": "number"
+          },
+          {
+            "name": "confidence",
+            "type": "number"
+          },
+          {
+            "name": "status",
+            "type": "string"
+          }
         ]
       }
     },
@@ -106,13 +205,31 @@
       "schema": {
         "type": "object",
         "properties": {
-          "timestamp": {"type": "string", "format": "date-time"},
-          "event": {"type": "string"},
-          "description": {"type": "string"},
-          "files_affected": {"type": "array", "items": {"type": "string"}},
-          "schema_version": {"type": "string"}
+          "timestamp": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "event": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "files_affected": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "schema_version": {
+            "type": "string"
+          }
         },
-        "required": ["timestamp", "event", "schema_version"]
+        "required": [
+          "timestamp",
+          "event",
+          "schema_version"
+        ]
       }
     },
     "observatory_trends": {
@@ -133,7 +250,11 @@
       "doi": "10.5281/zenodo.14173152",
       "concept_doi": "10.5281/zenodo.14173151",
       "sync_frequency": "weekly",
-      "artifacts": ["reproducibility_capsule", "documentation", "code"]
+      "artifacts": [
+        "reproducibility_capsule",
+        "documentation",
+        "code"
+      ]
     },
     "github_data": {
       "repository": "https://github.com/dhananjaysmvdu/BioSignal-AI",
@@ -163,5 +284,8 @@
     "maintainer": "Mrityunjay Dhananjay",
     "repository": "https://github.com/dhananjaysmvdu/BioSignal-AI",
     "issues": "https://github.com/dhananjaysmvdu/BioSignal-AI/issues"
-  }
+  },
+  "timestamp": null,
+  "section": "general",
+  "message": "auto-filled"
 }

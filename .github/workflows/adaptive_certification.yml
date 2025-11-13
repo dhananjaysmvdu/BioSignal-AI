@@ -1,0 +1,26 @@
+name: Adaptive Certification Intelligence
+
+on:
+  schedule:
+    - cron: '0 5 * * 5'
+  workflow_dispatch:
+
+jobs:
+  adaptive-cert:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+      - name: Run adaptive certification engine
+        run: python scripts/ai/adaptive_certification_engine.py
+      - name: Commit policy update
+        run: |
+          git config user.name "github-actions"
+          git config user.email "actions@users.noreply.github.com"
+          if [ -n "$(git status --porcelain)" ]; then
+            git add -A
+            git commit -m "ai: update certification policy thresholds"
+            git push
+          fi

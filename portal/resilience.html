@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Global Resilience Monitor</title>
+  <style>
+    body { font-family: 'Segoe UI', Roboto, Arial, sans-serif; background:#0f172a; color:#f1f5f9; margin:0; padding:20px; }
+  h1 { margin:0 0 10px; font-size:2.2em; background: linear-gradient(90deg,#6366f1,#10b981); -webkit-background-clip:text; background-clip:text; color:transparent; }
+    .panel { background:#1e293b; padding:20px; border-radius:12px; margin-bottom:20px; box-shadow:0 8px 24px rgba(0,0,0,0.4); }
+    table { width:100%; border-collapse:collapse; margin-top:10px; }
+    th,td { padding:8px 10px; text-align:left; }
+    th { background:#334155; }
+    tr:nth-child(even) td { background:#0f253d; }
+    .metric-badge { display:inline-block; padding:4px 10px; border-radius:16px; font-size:0.75em; font-weight:600; }
+    .ok { background:#10b981; color:#fff; }
+    .warn { background:#f59e0b; color:#fff; }
+    .fail { background:#ef4444; color:#fff; }
+    canvas { width:100%; max-width:100%; height:300px; }
+    a { color:#60a5fa; text-decoration:none; }
+    a:hover { text-decoration:underline; }
+  </style>
+</head>
+<body>
+  <h1>🛡️ Global Resilience Monitor</h1>
+  <p>Continuous assurance view aggregating nightly federation & self-healing runs. Metrics update after each chained cycle.</p>
+  <div class="panel">
+    <h2>📈 Resilience History</h2>
+    <canvas id="resilienceChart"></canvas>
+    <table id="historyTable">
+      <thead>
+        <tr><th>Timestamp (UTC)</th><th>FII</th><th>Recovery %</th><th>Retry %</th><th>Status</th></tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
+  <script>
+    async function loadCSV() {
+      try {
+        const resp = await fetch('../results/federation_resilience_history.csv');
+        if(!resp.ok) return [];
+        const text = await resp.text();
+        const lines = text.trim().split(/\r?\n/);
+        const header = lines.shift().split(',');
+        return lines.map(l=>{const parts=l.split(','); return {timestamp:parts[0], fii:parseFloat(parts[1]), recovery:parseFloat(parts[2]), retry:parseFloat(parts[3])};});
+      } catch(e){ console.error('Failed to load CSV', e); return []; }
+    }
+    function statusBadge(row){
+      let cls='ok', label='OK';
+      if(row.fii < 98 || row.recovery < 99) { cls='warn'; label='WATCH'; }
+      if(row.fii < 95 || row.recovery < 95) { cls='fail'; label='ATTN'; }
+      return `<span class="metric-badge ${cls}">${label}</span>`;
+    }
+    async function render(){
+      const data = await loadCSV();
+      const tbody = document.querySelector('#historyTable tbody');
+      tbody.innerHTML = data.map(d=>`<tr><td>${d.timestamp}</td><td>${d.fii.toFixed(2)}</td><td>${d.recovery.toFixed(2)}</td><td>${d.retry.toFixed(2)}</td><td>${statusBadge(d)}</td></tr>`).join('');
+      // Basic canvas chart (no external libs for portability)
+      const ctx = document.getElementById('resilienceChart').getContext('2d');
+      const W = ctx.canvas.width = ctx.canvas.clientWidth; const H = ctx.canvas.height = 300;
+      ctx.clearRect(0,0,W,H);
+      ctx.font='12px Segoe UI'; ctx.fillStyle='#f1f5f9'; ctx.fillText('FII / Recovery / Retry (%)', 10, 15);
+      const maxFII = 100; const maxRecovery = 100; const maxRetry = 100;
+      function scale(v){ return H - (v/100)*(H-40) - 20; }
+      const step = (W-40)/Math.max(data.length-1,1);
+      const colors = {fii:'#6366f1', recovery:'#10b981', retry:'#f59e0b'};
+      ['fii','recovery','retry'].forEach((key,i)=>{
+        ctx.beginPath(); ctx.strokeStyle = colors[key];
+        data.forEach((d,idx)=>{ const x = 20 + idx*step; const y = scale(d[key]); idx?ctx.lineTo(x,y):ctx.moveTo(x,y); });
+        ctx.stroke();
+      });
+    }
+    render();
+  </script>
+</body>
+</html>
