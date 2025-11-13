@@ -9,29 +9,20 @@ from __future__ import annotations
 
 import argparse
 import json
+import sys
 import tarfile
 from pathlib import Path
 from typing import Optional
-import hashlib
-from datetime import datetime, timezone
 
+# Add forensics directory to path for forensics_utils import
 ROOT = Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+
+from forensics_utils import utc_now_iso, compute_sha256
+
 SNAPSHOTS = ROOT / 'snapshots'
 MIRRORS = ROOT / 'mirrors'
 FORENSICS = ROOT / 'forensics'
-
-
-def utc_now_iso() -> str:
-    from datetime import datetime, timezone
-    return datetime.now(timezone.utc).isoformat()
-
-
-def sha256_path(p: Path) -> str:
-    h = hashlib.sha256()
-    with p.open('rb') as f:
-        for chunk in iter(lambda: f.read(8192), b''):
-            h.update(chunk)
-    return h.hexdigest()
 
 
 def load_snapshot_hashes() -> list[dict]:
@@ -111,7 +102,7 @@ def main():
             if args.verify-hash:
                 rec = next((r for r in hashes if r.get('file') == bundle.name), None)
                 if rec:
-                    result['snapshot_hash_match'] = (rec.get('sha256') == sha256_path(bundle))
+                    result['snapshot_hash_match'] = (rec.get('sha256') == compute_sha256(bundle))
             break
 
     print(json.dumps(result, indent=2))

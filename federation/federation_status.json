@@ -1,9 +1,9 @@
 ﻿{
     "status":  "synchronized",
-    "timestamp":  "2025-11-13T20:18:26.4781072Z",
+    "timestamp":  "2025-11-13T22:46:21.2064045Z",
     "history":  [
                     {
-                        "timestamp":  "2025-11-13T20:18:16.879066+00:00",
+                        "timestamp":  "2025-11-13T22:46:11.443235+00:00",
                         "federation_integrity_index":  98.6,
                         "recovery_actions":  0,
                         "nodes_checked":  [
@@ -14,7 +14,7 @@
                                           ]
                     },
                     {
-                        "timestamp":  "2025-11-13T20:18:26.4771059Z",
+                        "timestamp":  "2025-11-13T22:46:21.2043876Z",
                         "event":  "hash computed",
                         "status":  "ok",
                         "path":  "exports\\integrity_metrics_registry.csv"
@@ -26,7 +26,7 @@
     "recovery_actions":  2,
     "error_events":  [
                          {
-                             "timestamp":  "2025-11-13T20:18:16.878352+00:00",
+                             "timestamp":  "2025-11-13T22:46:11.442283+00:00",
                              "event":  "status_json_error",
                              "severity":  "warning",
                              "message":  "Detected JSON syntax issue in federation_status.json; attempting automated repair.",
@@ -35,7 +35,7 @@
                                           }
                          },
                          {
-                             "timestamp":  "2025-11-13T20:18:16.878902+00:00",
+                             "timestamp":  "2025-11-13T22:46:11.443071+00:00",
                              "event":  "status_json_fallback",
                              "severity":  "error",
                              "message":  "Unable to repair federation_status.json; applied default template.",
@@ -46,7 +46,7 @@
                      ],
     "hash_results":  [
                          {
-                             "timestamp":  "2025-11-13T20:18:26.4750662Z",
+                             "timestamp":  "2025-11-13T22:46:21.2023867Z",
                              "path":  "exports\\integrity_metrics_registry.csv",
                              "algorithm":  "sha256",
                              "hash":  "73bb7db891e9abe9960488aee2d2562b75c96bdba87665c4469bf053e9ba73e1"
@@ -89,7 +89,7 @@
                   }
               ],
     "adaptive_sync_policy":  {
-                                 "timestamp":  "2025-11-13T20:18:16.879066+00:00",
+                                 "timestamp":  "2025-11-13T22:46:11.443235+00:00",
                                  "frequency":  "daily",
                                  "decision_reason":  "baseline",
                                  "drift_prob":  45.0
