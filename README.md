@@ -124,6 +124,10 @@ If you use BioSignal-X in your research, please cite using the included `CITATIO
 Quarterly summaries of governance health, integrity trends, and reproducibility certification status:
 - **[Q4 2025 Bulletin](docs/quarterly/GOVERNANCE_SUMMARY_Q4_2025.md)** — v1.0.0-Whitepaper release metrics, DOI integration, and operational continuity
 
+### Next Release Roadmap
+Development planning for upcoming enhancements:
+- **[v1.1 Release Planning](planning/RELEASE_PLANNING_v1.1.md)** — Meta-Forecast 2.0, adaptive feedback refinement, performance optimization (Target: Q1 2026)
+
 ## Project Overview
 - **Title:** BioSignal-X
 - **Description:** AI-driven biosignal analysis platform integrating deep learning with biomedical data visualization and explainability (Grad-CAM).
