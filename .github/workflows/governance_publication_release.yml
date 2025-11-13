@@ -1,0 +1,73 @@
+name: Governance Publication Release (v1.1)
+
+on:
+  push:
+    tags:
+      - v1.1.0
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Prepare export directory
+        run: |
+          mkdir -p exports
+          echo "Preparing research publication package..."
+
+      - name: Ensure documents exist
+        run: |
+          if [ ! -f docs/GOVERNANCE_WHITEPAPER_v1.1.md ]; then echo "# Placeholder Whitepaper v1.1" > docs/GOVERNANCE_WHITEPAPER_v1.1.md; fi
+          if [ ! -f docs/RESEARCH_EXTENSIONS.md ]; then echo "# Placeholder Research Extensions" > docs/RESEARCH_EXTENSIONS.md; fi
+          if [ ! -f PHASE_V_COMPLETION_REPORT.md ]; then echo "# Phase V Completion Report (missing in repo)" > PHASE_V_COMPLETION_REPORT.md; fi
+
+      - name: Build ZIP package
+        run: |
+          zip -j exports/research_publication_package_v1.1.zip \
+            docs/GOVERNANCE_WHITEPAPER_v1.1.md \
+            docs/RESEARCH_EXTENSIONS.md \
+            PHASE_V_COMPLETION_REPORT.md
+          ls -la exports
+
+      - name: Upload to Zenodo (draft deposition)
+        id: zenodo
+        env:
+          ZENODO_TOKEN: ${{ secrets.ZENODO_TOKEN }}
+        run: |
+          if [ -z "$ZENODO_TOKEN" ]; then
+            echo "No ZENODO_TOKEN provided; skipping Zenodo deposition."
+            echo '{"status":"skipped","reason":"missing_token"}' > zenodo_publication_log.json
+          else
+            echo "Creating Zenodo deposition draft..."
+            RESP=$(curl -s -H "Content-Type: application/json" \
+              -H "Authorization: Bearer $ZENODO_TOKEN" \
+              -X POST https://zenodo.org/api/deposit/depositions \
+              -d '{"metadata": {"title": "BioSignal-AI Reflex Governance v1.1 Research Package", "upload_type": "publication", "publication_type": "other", "description": "Whitepaper v1.1 + Research Extensions + Phase V Completion Report"}}')
+            echo "$RESP" | jq . > zenodo_response.json || true
+            DEP_ID=$(cat zenodo_response.json | jq -r .id 2>/dev/null || echo "")
+            if [ -z "$DEP_ID" ] || [ "$DEP_ID" = "null" ]; then
+              echo "Zenodo deposition creation failed";
+              echo '{"status":"error","reason":"creation_failed"}' > zenodo_publication_log.json
+            else
+              echo "Deposition ID: $DEP_ID"
+              echo "{\"status\":\"created\",\"deposition_id\":\"$DEP_ID\"}" > zenodo_publication_log.json
+            fi
+          fi
+
+      - name: Commit publication log and manifest note
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+          echo "\n- Research publication package v1.1 generated: exports/research_publication_package_v1.1.zip" >> GOVERNANCE_TRANSPARENCY.md
+          git add zenodo_publication_log.json GOVERNANCE_TRANSPARENCY.md exports/research_publication_package_v1.1.zip || true
+          git diff --staged --quiet || git commit -m "ci: record v1.1 research publication package and Zenodo deposition log"
+
+      - name: Push changes
+        uses: ad-m/github-push-action@master
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          branch: ${{ github.ref }}
