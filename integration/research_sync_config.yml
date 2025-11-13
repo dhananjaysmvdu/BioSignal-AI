@@ -1,0 +1,143 @@
+# Research Data Sync Configuration
+# Defines endpoints and schedules for pushing governance data to external mirrors
+
+version: "1.0"
+sync_enabled: true
+dry_run: false  # Set to true for testing without actual uploads
+
+# Zenodo Integration
+zenodo:
+  enabled: true
+  sync_frequency: weekly  # weekly, daily, or manual
+  api_endpoint: "https://zenodo.org/api/deposit/depositions"
+  concept_doi: "10.5281/zenodo.14173151"
+  record_doi: "10.5281/zenodo.14173152"
+  access_token_env: "ZENODO_ACCESS_TOKEN"  # Store token in GitHub Secrets
+  
+  sync_artifacts:
+    - path: "exports/governance_reproducibility_capsule_*.zip"
+      type: "dataset"
+      description: "Weekly reproducibility artifact bundle"
+    - path: "docs/GOVERNANCE_WHITEPAPER.md"
+      type: "publication-technicalnote"
+      description: "Governance architecture whitepaper"
+    - path: "exports/capsule_manifest.json"
+      type: "dataset"
+      description: "Artifact manifest with SHA256 checksums"
+  
+  metadata:
+    creators:
+      - name: "Dhananjay, Mrityunjay"
+        affiliation: "Acharya Narendra Dev College, University of Delhi"
+        orcid: ""  # Optional
+    keywords:
+      - "governance"
+      - "reproducibility"
+      - "ai-transparency"
+      - "self-verification"
+      - "provenance"
+    license: "MIT"
+    access_right: "open"
+    upload_type: "dataset"
+
+# GitHub Data (Archive)
+github_data:
+  enabled: true
+  sync_frequency: continuous  # Updates via git push
+  repository: "dhananjaysmvdu/BioSignal-AI"
+  branches:
+    - name: "main"
+      protected: true
+      auto_merge: false
+    - name: "release/v1.0.0-maintenance"
+      protected: true
+      auto_merge: false
+  
+  artifacts_tracked:
+    - "exports/*.csv"
+    - "exports/*.json"
+    - "exports/*.jsonl"
+    - "observatory/metrics/*.csv"
+    - "long_term_storage/**/*"
+    - "portal/metrics.json"
+
+# OpenAIRE Integration (Planned)
+openaire:
+  enabled: false
+  status: "planned"
+  target_date: "2026-04-01"  # Q2 2026
+  sync_frequency: monthly
+  api_endpoint: "https://api.openaire.eu/broker"
+  
+  planned_features:
+    - description: "Automatic DOI registration with OpenAIRE graph"
+    - description: "Link governance artifacts to EU research projects"
+    - description: "Enable FAIR data discovery across European infrastructure"
+  
+  notes: |
+    OpenAIRE integration will be implemented in v1.1.0 or v1.2.0.
+    Requires institutional authentication and project affiliation setup.
+
+# Institutional Mirrors (Optional)
+institutional_mirrors:
+  enabled: false
+  mirrors: []
+  # Example:
+  # - name: "University Data Repository"
+  #   url: "https://data.university.edu/deposit"
+  #   api_key_env: "UNIV_REPO_API_KEY"
+  #   sync_frequency: monthly
+
+# Sync Schedule
+schedule:
+  zenodo:
+    day: "Monday"
+    time: "05:00 UTC"
+    workflow: "research_data_integration.yml"
+  
+  github_data:
+    trigger: "on_push"
+    branches: ["main", "release/*"]
+  
+  openaire:
+    day: "First Monday of month"
+    time: "06:00 UTC"
+    status: "planned"
+
+# Notification Settings
+notifications:
+  on_sync_success: false
+  on_sync_failure: true
+  methods:
+    - type: "github_issue"
+      labels: ["integration", "sync-failure"]
+    - type: "log_file"
+      path: "logs/integration_sync.log"
+
+# Retry Policy
+retry:
+  max_attempts: 3
+  backoff_seconds: 60
+  on_failure: "log_and_alert"
+
+# Validation
+validation:
+  verify_checksums: true
+  verify_doi_resolution: true
+  verify_metadata_schema: true
+  abort_on_validation_failure: true
+
+# Logging
+logging:
+  level: "INFO"  # DEBUG, INFO, WARNING, ERROR
+  file: "logs/integration_sync.log"
+  format: "json"
+  include_timestamps: true
+  include_sync_metadata: true
+
+# Contact
+contact:
+  maintainer: "Mrityunjay Dhananjay"
+  email: ""  # Optional
+  repository: "https://github.com/dhananjaysmvdu/BioSignal-AI"
+  issues: "https://github.com/dhananjaysmvdu/BioSignal-AI/issues"

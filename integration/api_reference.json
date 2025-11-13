@@ -1,0 +1,167 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "BioSignal-AI Governance API Reference",
+  "version": "1.0.0",
+  "description": "API schema for external access to governance metrics and provenance data",
+  "baseUrl": "https://github.com/dhananjaysmvdu/BioSignal-AI",
+  "endpoints": {
+    "metrics": {
+      "path": "/portal/metrics.json",
+      "method": "GET",
+      "description": "Current governance metrics including integrity, reproducibility, and provenance",
+      "response_schema": {
+        "type": "object",
+        "properties": {
+          "integrity": {
+            "type": "object",
+            "properties": {
+              "score": {"type": "number", "minimum": 0, "maximum": 100},
+              "violations": {"type": "integer", "minimum": 0},
+              "warnings": {"type": "integer", "minimum": 0},
+              "health": {"type": "number", "minimum": 0, "maximum": 100},
+              "status": {"type": "string", "enum": ["green", "yellow", "red"]}
+            },
+            "required": ["score", "violations", "warnings", "health", "status"]
+          },
+          "reproducibility": {
+            "type": "object",
+            "properties": {
+              "status": {"type": "string", "enum": ["certified", "partial", "failed"]},
+              "checks_passed": {"type": "integer", "minimum": 0},
+              "checks_total": {"type": "integer", "minimum": 0},
+              "doi": {"type": "string"},
+              "capsule_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"}
+            },
+            "required": ["status", "checks_passed", "checks_total", "doi"]
+          },
+          "provenance": {
+            "type": "object",
+            "properties": {
+              "release": {"type": "string", "pattern": "^v\\d+\\.\\d+\\.\\d+"},
+              "release_date": {"type": "string", "format": "date"},
+              "maintenance_branch": {"type": "string"},
+              "baseline_tag": {"type": "string"}
+            },
+            "required": ["release", "release_date"]
+          },
+          "last_updated": {"type": "string", "format": "date-time"}
+        },
+        "required": ["integrity", "reproducibility", "provenance", "last_updated"]
+      },
+      "example": {
+        "integrity": {
+          "score": 97.5,
+          "violations": 0,
+          "warnings": 1,
+          "health": 69.3,
+          "status": "green"
+        },
+        "reproducibility": {
+          "status": "certified",
+          "checks_passed": 4,
+          "checks_total": 4,
+          "doi": "10.5281/zenodo.14173152",
+          "capsule_sha256": "e8cf3e3fd735ce0f7bda3a46b4a0a13f0800372138ef6721940f9848ebb9329e"
+        },
+        "provenance": {
+          "release": "v1.0.0-Whitepaper",
+          "release_date": "2025-11-11",
+          "maintenance_branch": "release/v1.0.0-maintenance",
+          "baseline_tag": "baseline-v1.0.0"
+        },
+        "last_updated": "2025-11-13T15:30:00+00:00"
+      }
+    },
+    "integrity_registry": {
+      "path": "/exports/integrity_metrics_registry.csv",
+      "method": "GET",
+      "description": "Historical integrity metrics with timestamps",
+      "format": "text/csv",
+      "schema": {
+        "columns": [
+          {"name": "timestamp", "type": "string", "format": "ISO8601"},
+          {"name": "integrity_score", "type": "number"},
+          {"name": "violations", "type": "integer"},
+          {"name": "warnings", "type": "integer"},
+          {"name": "health_score", "type": "number"},
+          {"name": "rri", "type": "number"},
+          {"name": "mpi", "type": "number"},
+          {"name": "confidence", "type": "number"},
+          {"name": "status", "type": "string"}
+        ]
+      }
+    },
+    "reproducibility_capsule": {
+      "path": "/exports/governance_reproducibility_capsule_2025-11-11.zip",
+      "method": "GET",
+      "description": "Complete reproducibility artifact bundle",
+      "format": "application/zip",
+      "manifest": "/exports/capsule_manifest.json"
+    },
+    "schema_provenance": {
+      "path": "/exports/schema_provenance_ledger.jsonl",
+      "method": "GET",
+      "description": "Append-only ledger of governance schema changes",
+      "format": "application/x-ndjson",
+      "schema": {
+        "type": "object",
+        "properties": {
+          "timestamp": {"type": "string", "format": "date-time"},
+          "event": {"type": "string"},
+          "description": {"type": "string"},
+          "files_affected": {"type": "array", "items": {"type": "string"}},
+          "schema_version": {"type": "string"}
+        },
+        "required": ["timestamp", "event", "schema_version"]
+      }
+    },
+    "observatory_trends": {
+      "path": "/observatory/metrics/",
+      "method": "GET",
+      "description": "Rolling 30-day trend data for governance metrics",
+      "files": [
+        "integrity_trend.csv",
+        "reproducibility_trend.csv",
+        "policy_evolution_trend.csv"
+      ],
+      "update_frequency": "daily at 01:00 UTC"
+    }
+  },
+  "external_integrations": {
+    "zenodo": {
+      "url": "https://zenodo.org/record/14173152",
+      "doi": "10.5281/zenodo.14173152",
+      "concept_doi": "10.5281/zenodo.14173151",
+      "sync_frequency": "weekly",
+      "artifacts": ["reproducibility_capsule", "documentation", "code"]
+    },
+    "github_data": {
+      "repository": "https://github.com/dhananjaysmvdu/BioSignal-AI",
+      "releases": "https://github.com/dhananjaysmvdu/BioSignal-AI/releases",
+      "tags": "https://github.com/dhananjaysmvdu/BioSignal-AI/tags"
+    },
+    "openaire": {
+      "status": "planned",
+      "target": "Q2 2026",
+      "description": "European open research infrastructure integration"
+    }
+  },
+  "usage_examples": {
+    "curl_metrics": "curl https://raw.githubusercontent.com/dhananjaysmvdu/BioSignal-AI/main/portal/metrics.json",
+    "python_example": "import requests\ndata = requests.get('https://raw.githubusercontent.com/dhananjaysmvdu/BioSignal-AI/main/portal/metrics.json').json()\nprint(f\"Integrity: {data['integrity']['score']}%\")",
+    "r_example": "library(jsonlite)\ndata <- fromJSON('https://raw.githubusercontent.com/dhananjaysmvdu/BioSignal-AI/main/portal/metrics.json')\nprint(data$integrity$score)"
+  },
+  "authentication": {
+    "required": false,
+    "note": "All endpoints are publicly accessible via GitHub raw content URLs"
+  },
+  "rate_limits": {
+    "github_raw": "5000 requests per hour per IP (GitHub API limits)",
+    "recommendation": "Cache responses locally, use conditional requests with ETag headers"
+  },
+  "contact": {
+    "maintainer": "Mrityunjay Dhananjay",
+    "repository": "https://github.com/dhananjaysmvdu/BioSignal-AI",
+    "issues": "https://github.com/dhananjaysmvdu/BioSignal-AI/issues"
+  }
+}
