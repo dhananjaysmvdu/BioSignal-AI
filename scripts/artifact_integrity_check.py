@@ -1,7 +1,7 @@
 import hashlib
 import json
 from pathlib import Path
-from datetime import datetime
+from datetime import datetime, UTC
 
 ARTIFACTS = {
     'report_pdf': 'reports/BioSignalX_Report.pdf',
@@ -65,7 +65,7 @@ def main():
         data = []
     if data:
         data[-1]['integrity_audit'] = {
-            'timestamp_utc': datetime.utcnow().isoformat() + 'Z',
+            'timestamp_utc': datetime.now(UTC).isoformat(),
             'integrity_ok': integrity_ok,
             'mismatches': mismatches,
             'missing': missing,
