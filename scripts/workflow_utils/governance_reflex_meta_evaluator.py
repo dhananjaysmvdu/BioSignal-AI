@@ -25,7 +25,7 @@ import json
 import re
 import sys
 from pathlib import Path
-from datetime import datetime
+from datetime import datetime, UTC
 from typing import Any, Dict, List
 
 
@@ -120,7 +120,7 @@ def main(argv=None) -> int:
     status = classify_mpi(mpi)
 
     meta_data = {
-        "timestamp": datetime.utcnow().isoformat() + "Z",
+        "timestamp": datetime.now(UTC).isoformat(),
         "mpi": round(mpi, 4),
         "delta_r2": round(delta_r2, 4),
         "error_drift": round(error_drift, 4),

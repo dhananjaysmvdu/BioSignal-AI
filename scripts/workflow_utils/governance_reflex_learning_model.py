@@ -19,7 +19,7 @@ import json
 import os
 import re
 import sys
-from datetime import datetime
+from datetime import datetime, UTC
 from pathlib import Path
 from typing import Any, Dict, List, Tuple
 
@@ -417,7 +417,7 @@ def main(argv: List[str] = None) -> int:
         model_data = train_model_fallback(features, targets)
     
     # Add metadata
-    now_iso = datetime.utcnow().isoformat() + "Z"
+    now_iso = datetime.now(UTC).isoformat()
     model_data["last_train_time"] = now_iso
     model_data["sklearn_available"] = SKLEARN_AVAILABLE
     # Backward/compat key expected by tests

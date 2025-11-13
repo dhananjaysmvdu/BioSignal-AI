@@ -1,14 +1,14 @@
 {
   "status": "auto-recovered",
-  "last_issue": "federation/federation_config.json",
-  "timestamp": "2025-11-13T20:03:07.537915+00:00",
+  "last_issue": "GOVERNANCE_TRANSPARENCY.md",
+  "timestamp": "2025-11-13T20:18:30.356081+00:00",
   "attempts": {
     "federation/federation_config.json": 0,
     "GOVERNANCE_TRANSPARENCY.md": 0
   },
   "baseline_hashes": {
     "federation/federation_config.json": "815a914a575cd393afaa062ab7bb97413ebd499799d36e9b38d33b8a37f414f9",
-    "GOVERNANCE_TRANSPARENCY.md": "deef28f55a1e785bcbc5369a42de8e77b8fee1f3dae0e2fda360ae907c99cfaa"
+    "GOVERNANCE_TRANSPARENCY.md": "4e095e99511e6ee0d70d444423f3488d48547454be8180f3bc2929199d9d41b4"
   },
   "events": [
     {
@@ -97,6 +97,48 @@
       "timestamp": "2025-11-13T20:03:07.500410+00:00",
       "event": "file_restored",
       "file": "federation/federation_config.json",
+      "attempt": 1,
+      "message": "Recovered file from latest commit"
+    },
+    {
+      "timestamp": "2025-11-13T20:18:16.960989+00:00",
+      "event": "hash_mismatch",
+      "file": "federation/federation_config.json",
+      "baseline": "815a914a575cd393afaa062ab7bb97413ebd499799d36e9b38d33b8a37f414f9",
+      "observed": "ec74f77e07284ae374b41e99a762e196d29cf107af9175cac7e7c3ffd056e23c"
+    },
+    {
+      "timestamp": "2025-11-13T20:18:16.961145+00:00",
+      "event": "hash_mismatch",
+      "file": "GOVERNANCE_TRANSPARENCY.md",
+      "baseline": "deef28f55a1e785bcbc5369a42de8e77b8fee1f3dae0e2fda360ae907c99cfaa",
+      "observed": "0da19277ef179b6c3b4a42689d3782da557542b122a4c4de230d6cde1d5877e9"
+    },
+    {
+      "timestamp": "2025-11-13T20:18:30.252158+00:00",
+      "event": "hash_mismatch",
+      "file": "federation/federation_config.json",
+      "baseline": "815a914a575cd393afaa062ab7bb97413ebd499799d36e9b38d33b8a37f414f9",
+      "observed": "ec74f77e07284ae374b41e99a762e196d29cf107af9175cac7e7c3ffd056e23c"
+    },
+    {
+      "timestamp": "2025-11-13T20:18:30.279299+00:00",
+      "event": "file_restored",
+      "file": "federation/federation_config.json",
+      "attempt": 1,
+      "message": "Recovered file from latest commit"
+    },
+    {
+      "timestamp": "2025-11-13T20:18:30.299692+00:00",
+      "event": "hash_mismatch",
+      "file": "GOVERNANCE_TRANSPARENCY.md",
+      "baseline": "deef28f55a1e785bcbc5369a42de8e77b8fee1f3dae0e2fda360ae907c99cfaa",
+      "observed": "0da19277ef179b6c3b4a42689d3782da557542b122a4c4de230d6cde1d5877e9"
+    },
+    {
+      "timestamp": "2025-11-13T20:18:30.325762+00:00",
+      "event": "file_restored",
+      "file": "GOVERNANCE_TRANSPARENCY.md",
       "attempt": 1,
       "message": "Recovered file from latest commit"
     }

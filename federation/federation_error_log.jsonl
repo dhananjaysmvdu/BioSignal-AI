@@ -17,3 +17,8 @@
 {"timestamp": "2025-11-13T20:03:07.382219+00:00", "event": "sync_completed", "severity": "info", "message": "Federation synchronization completed with resilience checks."}
 {"timestamp":"2025-11-13T20:03:16.0213497Z","event":"hash_temp_script","severity":"warning","message":"Fallback to temporary _hash_eval.py"}
 {"timestamp":"2025-11-13T20:03:17.0993411Z","event":"hash_computed","severity":"info","message":"Computed SHA256 for C:\\BioSignal-AI\\exports\\integrity_metrics_registry.csv","metadata":{"hash":"73bb7db891e9abe9960488aee2d2562b75c96bdba87665c4469bf053e9ba73e1"}}
+{"timestamp": "2025-11-13T20:18:16.878352+00:00", "event": "status_json_error", "severity": "warning", "message": "Detected JSON syntax issue in federation_status.json; attempting automated repair.", "metadata": {"error": "Unexpected UTF-8 BOM (decode using utf-8-sig): line 1 column 1 (char 0)"}}
+{"timestamp": "2025-11-13T20:18:16.878902+00:00", "event": "status_json_fallback", "severity": "error", "message": "Unable to repair federation_status.json; applied default template.", "metadata": {"error": "Unexpected UTF-8 BOM (decode using utf-8-sig): line 1 column 1 (char 0)"}}
+{"timestamp": "2025-11-13T20:18:16.879435+00:00", "event": "sync_completed", "severity": "info", "message": "Federation synchronization completed with resilience checks."}
+{"timestamp":"2025-11-13T20:18:25.4224214Z","event":"hash_temp_script","severity":"warning","message":"Fallback to temporary _hash_eval.py"}
+{"timestamp":"2025-11-13T20:18:26.4640507Z","event":"hash_computed","severity":"info","message":"Computed SHA256 for C:\\BioSignal-AI\\exports\\integrity_metrics_registry.csv","metadata":{"hash":"73bb7db891e9abe9960488aee2d2562b75c96bdba87665c4469bf053e9ba73e1"}}
