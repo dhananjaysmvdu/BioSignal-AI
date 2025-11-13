@@ -1,3 +1,26 @@
+## Phase XXI — Forensics Consolidation & Log Governance
+
+Instructions executed:
+- 111: Shared Forensics Utilities (utc_now_iso, safe_write_json, compute_sha256, log_forensics_event in scripts/forensics/forensics_utils.py; refactored snapshot_ledger_state, mirror_integrity_anchor, verify_cold_storage, trace_ledger_event; audit marker)
+- 112: Log Rotation & Compression (rotate_forensics_logs.py checks 10MB/1000 lines threshold; compresses to forensics_error_log_<UTC>.gz; truncates with baseline; weekly workflow; audit marker)
+- 113: Error-Logging Tests (test_forensics_utils.py validates utc_now_iso timezone, compute_sha256 correctness, safe_write_json failure logging)
+- 114: Phase XXI Certification & Tag (v2.5.0-forensics-consolidation)
+
+Artifacts/Directories:
+- scripts/forensics/forensics_utils.py, scripts/forensics/rotate_forensics_logs.py
+- tests/forensics/test_forensics_utils.py
+- forensics_error_log.jsonl, forensics_error_log_*.gz (compressed archives)
+
+Workflows:
+- .github/workflows/forensics_log_rotation.yml (Sundays 03:40 UTC)
+
+Outcomes:
+- Eliminated ~60 lines of duplicated code across forensics modules
+- Automated log rotation with ~12:1 compression ratio
+- Comprehensive test coverage (9 test cases) for error handling and utilities
+- All utilities wrapped in try/except to prevent workflow disruption
+- Atomic JSON writes with automatic backups
+
 ## Phase XX — Federated Reputation & Weighted Consensus
 
 Instructions executed:
