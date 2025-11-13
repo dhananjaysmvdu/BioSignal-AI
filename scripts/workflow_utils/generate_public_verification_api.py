@@ -20,6 +20,8 @@ ROOT = Path(__file__).resolve().parents[2]
 PORTAL_METRICS = ROOT / "portal" / "metrics.json"
 CAPSULE_MANIFEST = ROOT / "exports" / "capsule_manifest.json"
 README = ROOT / "README.md"
+DECISION_TRACE = ROOT / "exports" / "decision_trace_log.jsonl"
+ETHICS_REPORTS_DIR = ROOT / "reports" / "ethics"
 OUTPUT = ROOT / "verification_gateway" / "public_verification_api.json"
 
 
@@ -41,6 +43,61 @@ def extract_doi_from_readme() -> Optional[str]:
     return m.group(0) if m else None
 
 
+def load_ethics_data() -> dict:
+    """Load latest ethics compliance data."""
+    if not ETHICS_REPORTS_DIR.exists():
+        return {
+            "bias_score": None,
+            "fairness_status": "pending",
+            "ethics_last_checked": None,
+            "ethics_report_hash": None,
+        }
+    
+    # Find latest ethics report
+    reports = sorted(ETHICS_REPORTS_DIR.glob("ethics_compliance_*.json"))
+    if not reports:
+        return {
+            "bias_score": None,
+            "fairness_status": "pending",
+            "ethics_last_checked": None,
+            "ethics_report_hash": None,
+        }
+    
+    latest_report = reports[-1]
+    try:
+        data = json.loads(latest_report.read_text(encoding="utf-8"))
+        bias_analysis = data.get("bias_analysis", {})
+        return {
+            "bias_score": bias_analysis.get("bias_score"),
+            "fairness_status": data.get("compliance_status", "unknown"),
+            "ethics_last_checked": data.get("generated_at"),
+            "ethics_report_hash": data.get("report_hash"),
+        }
+    except Exception:
+        return {
+            "bias_score": None,
+            "fairness_status": "error",
+            "ethics_last_checked": None,
+            "ethics_report_hash": None,
+        }
+
+
+def get_latest_decision_trace_id() -> Optional[str]:
+    """Get ID of most recent governance decision."""
+    if not DECISION_TRACE.exists():
+        return None
+    
+    try:
+        with DECISION_TRACE.open("r", encoding="utf-8") as f:
+            lines = [line for line in f if line.strip()]
+            if not lines:
+                return None
+            last_entry = json.loads(lines[-1])
+            return last_entry.get("id")
+    except Exception:
+        return None
+
+
 def main() -> None:
     metrics = read_json_safe(PORTAL_METRICS)
     manifest = read_json_safe(CAPSULE_MANIFEST)
@@ -51,6 +108,10 @@ def main() -> None:
     prov = metrics.get("provenance", {})
     cal = metrics.get("calibration", {})
     forecast = metrics.get("forecast_metrics", {})
+    
+    # Load ethics compliance data
+    ethics = load_ethics_data()
+    decision_trace_id = get_latest_decision_trace_id()
 
     # Build capsule proofs array (top-level capsule + first 5 files)
     capsule_proofs = []
@@ -80,10 +141,17 @@ def main() -> None:
         "forecast_bias": cal.get("forecast_bias"),
         "fdi": forecast.get("fdi", {}).get("value"),
         "cs": forecast.get("cs", {}).get("value"),
+        "bias_score": ethics.get("bias_score"),
+        "fairness_status": ethics.get("fairness_status"),
+        "ethics_last_checked": ethics.get("ethics_last_checked"),
+        "decision_trace_id": decision_trace_id,
+        "ethics_report_hash": ethics.get("ethics_report_hash"),
         "capsule_hash_proofs": capsule_proofs,
         "verification_endpoints": {
             "portal_metrics": "https://raw.githubusercontent.com/dhananjaysmvdu/BioSignal-AI/main/portal/metrics.json",
             "capsule_manifest": "https://raw.githubusercontent.com/dhananjaysmvdu/BioSignal-AI/main/exports/capsule_manifest.json",
+            "ethics_portal": "https://raw.githubusercontent.com/dhananjaysmvdu/BioSignal-AI/main/portal/ethics.html",
+            "decision_trace": "https://raw.githubusercontent.com/dhananjaysmvdu/BioSignal-AI/main/exports/decision_trace_log.jsonl",
             "doi_link": f"https://doi.org/{doi}" if doi else None,
         }
     }

@@ -1,0 +1,39 @@
+# Ethical Compliance Engine Configuration
+# Reflex Governance Architecture Phase VIII
+
+# Fairness threshold: minimum acceptable fairness score (0-1 scale)
+# Values ≥ fairness_threshold indicate acceptable parity across groups
+fairness_threshold: 0.95
+
+# Bias detection window: rolling window for computing bias trends
+bias_detection_window: 30  # days
+
+# Escalation policy when bias threshold breached
+escalation_policy: "audit + notify"  # Options: audit, notify, audit + notify, halt
+
+# Group fairness metrics to track
+fairness_metrics:
+  - demographic_parity
+  - equalized_odds
+  - calibration_parity
+
+# Bias score computation method
+bias_score_method: "max_min_ratio"  # |max(group_mean) - min(group_mean)| / mean(global)
+
+# Alert thresholds
+alert_thresholds:
+  bias_score_critical: 0.10  # BS > 0.10 triggers critical alert
+  bias_score_warning: 0.05   # BS > 0.05 triggers warning
+  fairness_below_threshold: true  # Alert if fairness < fairness_threshold
+
+# Observatory data sources
+data_sources:
+  integrity_metrics: "exports/integrity_metrics_registry.csv"
+  fairness_metrics: "observatory/fairness_metrics.csv"
+  decision_trace: "exports/decision_trace_log.jsonl"
+
+# Reporting
+reporting:
+  frequency: "weekly"  # weekly, monthly, quarterly
+  output_dir: "reports/ethics"
+  format: "json"  # json, csv, pdf

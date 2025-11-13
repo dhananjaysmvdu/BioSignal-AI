@@ -1,0 +1,41 @@
+name: Ethics Compliance Monitor
+
+on:
+  schedule:
+    - cron: '30 3 * * 2'  # Tuesdays 03:30 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  run-ethics-compliance:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install PyYAML
+        run: |
+          pip install pyyaml
+
+      - name: Run Ethical Compliance Engine
+        run: |
+          python scripts/ethics_engine/run_ethics_compliance_engine.py
+
+      - name: Commit ethics artifacts
+        run: |
+          git config user.name "github-actions"
+          git config user.email "github-actions@github.com"
+          git add observatory/ reports/ethics/ audit_summary.md
+          if git diff --cached --quiet; then
+            echo "No changes to commit"
+          else
+            git commit -m "ethics: deploy automated fairness & ethical compliance engine"
+            git push
+          fi
