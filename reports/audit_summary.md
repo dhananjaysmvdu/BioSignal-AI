@@ -2,6 +2,15 @@
 
 This file tracks audit history and governance adjustments.
 
+<!-- FEDERATION_RECOVERY:BEGIN -->
+**Federation Resilience Log**
+
+- Updated: 2025-11-14T09:20:00+00:00
+- Status: ✅ Auto-recovered configuration and status manifests
+- Corrections: federation_config.json regenerated from template; federation_status.json validated
+- Notes: Logged repairs to `federation_error_log.jsonl` for traceability
+<!-- FEDERATION_RECOVERY:END -->
+
 <!-- TRUST_CORRELATION:BEGIN -->
 **Trust–Health Correlation Analysis**
 

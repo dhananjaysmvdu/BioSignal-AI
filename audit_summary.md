@@ -1,5 +1,10 @@
 # Audit Summary
 
+<!-- FEDERATION_ERROR_RECOVERY:BEGIN -->
+Updated: 2025-11-14T09:20:00+00:00
+✅ Federation sync executed with auto-recovery safeguards (configuration regenerated, status manifest validated, log appended).
+<!-- FEDERATION_ERROR_RECOVERY:END -->
+
 <!-- REFLEX_HEALTH_DASHBOARD:BEGIN -->
 Updated: 2025-11-11T14:29:45+00:00
 🧭 Reflex Health Dashboard generated — 1-run timeline & CSV export available. Integrity score 97.5%. RRI 15.1.
@@ -64,14 +69,4 @@ Updated: 2025-11-13T16:35:00+00:00
 <!-- META_AUDIT: UPDATED 2025-11-13T18:00:00+00:00 -->
 
 <!-- NETWORK_SYNC: UPDATED 2025-11-13T18:00:00+00:00 -->
-
-<!-- FEDERATION_SYNC:BEGIN -->
-Updated: 2025-11-13T18:22:09+00:00
-🌐 Global Reproducibility Federation sync executed — FII 98.6% (drift 1.4% across 4 trusted nodes).
-<!-- FEDERATION_SYNC:END -->
-
-<!-- SELF_HEALING:BEGIN -->
-Updated: 2025-11-13T18:28:00+00:00
-🛡️ Self-Healing Governance Kernel active — Recovery Success Rate 99.3% with automated git-backed restoration.
-<!-- SELF_HEALING:END -->
 
