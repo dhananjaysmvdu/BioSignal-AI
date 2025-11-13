@@ -1,3 +1,22 @@
+## Phase XVII — Immutable Ledger Mirroring & Forensic Traceback
+
+Instructions executed:
+- 91: Immutable Ledger Snapshotter (weekly snapshots with SHA-256 and retention)
+- 92: Integrity Anchor Mirror (weekly mirror with cumulative hash chain)
+- 93: Forensic Traceback Tool (snapshot search, --verify-hash, portal forensics page)
+- 94: Automated Cold-Storage Verification (first Monday gate, verification logs)
+- 95: Phase XVII Certification & Tag (v2.1.0-forensics)
+
+Artifacts/Directories:
+- snapshots/ledger_snapshot_*.tar.gz, snapshots/ledger_snapshot_hash.json
+- mirrors/anchor_*.json, mirrors/anchor_chain.json
+- forensics/last_trace.json, forensics/verification_log.jsonl
+
+Workflows:
+- .github/workflows/ledger_snapshot.yml
+- .github/workflows/anchor_mirror.yml
+- .github/workflows/cold_storage_verify.yml
+
 ## Phase XV — Documentation Provenance & Integrity Verification
 
 Instructions executed:

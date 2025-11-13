@@ -1,0 +1,32 @@
+name: Integrity Anchor Mirror
+
+on:
+  schedule:
+    - cron: '15 4 * * 0'  # Sundays 04:15 UTC
+  workflow_dispatch:
+
+jobs:
+  mirror:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+
+      - name: Run anchor mirror
+        run: |
+          python scripts/forensics/mirror_integrity_anchor.py
+
+      - name: Upload mirror artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: anchor_mirror
+          path: |
+            mirrors/anchor_*.json
+            mirrors/anchor_chain.json

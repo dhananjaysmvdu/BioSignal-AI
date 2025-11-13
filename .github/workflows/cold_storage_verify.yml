@@ -1,0 +1,39 @@
+name: Cold Storage Verification
+
+on:
+  schedule:
+    - cron: '30 4 * * 1' # Mondays 04:30 UTC (guard in job to only run on first Monday)
+  workflow_dispatch:
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Check first Monday
+        id: when
+        run: |
+          D=$(date -u +%d)
+          if [ "$D" -le 7 ]; then echo "run=yes" >> $GITHUB_OUTPUT; else echo "run=no" >> $GITHUB_OUTPUT; fi
+
+      - name: Set up Python
+        if: steps.when.outputs.run == 'yes'
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+
+      - name: Run verification
+        if: steps.when.outputs.run == 'yes'
+        run: |
+          python scripts/forensics/verify_cold_storage.py
+
+      - name: Upload verification log
+        if: steps.when.outputs.run == 'yes'
+        uses: actions/upload-artifact@v4
+        with:
+          name: cold_storage_verification_log
+          path: forensics/verification_log.jsonl
