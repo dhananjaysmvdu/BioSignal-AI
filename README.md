@@ -124,6 +124,10 @@ If you use BioSignal-X in your research, please cite using the included `CITATIO
 Quarterly summaries of governance health, integrity trends, and reproducibility certification status:
 - **[Q4 2025 Bulletin](docs/quarterly/GOVERNANCE_SUMMARY_Q4_2025.md)** — v1.0.0-Whitepaper release metrics, DOI integration, and operational continuity
 
+### Live Governance Portal
+Real-time transparency dashboard with live integrity, reproducibility, and provenance metrics:
+- **[🔬 Governance Portal](portal/index.html)** — Interactive dashboard with automated metrics updates
+
 ### Next Release Roadmap
 Development planning for upcoming enhancements:
 - **[v1.1 Release Planning](planning/RELEASE_PLANNING_v1.1.md)** — Meta-Forecast 2.0, adaptive feedback refinement, performance optimization (Target: Q1 2026)

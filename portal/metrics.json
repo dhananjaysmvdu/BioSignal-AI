@@ -1,0 +1,23 @@
+{
+  "integrity": {
+    "score": 97.5,
+    "violations": 0,
+    "warnings": 1,
+    "health": 69.3,
+    "status": "green"
+  },
+  "reproducibility": {
+    "status": "certified",
+    "checks_passed": 4,
+    "checks_total": 4,
+    "doi": "10.5281/zenodo.14173152",
+    "capsule_sha256": "e8cf3e3fd735ce0f7bda3a46b4a0a13f0800372138ef6721940f9848ebb9329e"
+  },
+  "provenance": {
+    "release": "v1.0.0-Whitepaper",
+    "release_date": "2025-11-11",
+    "maintenance_branch": "release/v1.0.0-maintenance",
+    "baseline_tag": "baseline-v1.0.0"
+  },
+  "last_updated": "2025-11-13T15:30:00+00:00"
+}

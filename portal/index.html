@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Live governance metrics and transparency dashboard for BioSignal-AI Reflex Governance Architecture">
+    <title>BioSignal-AI Governance Portal</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #333;
+            padding: 20px;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        header {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            margin-bottom: 30px;
+        }
+        
+        h1 {
+            color: #667eea;
+            margin-bottom: 10px;
+            font-size: 2.5em;
+        }
+        
+        .subtitle {
+            color: #666;
+            font-size: 1.1em;
+        }
+        
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .metric-card {
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            transition: transform 0.3s ease;
+        }
+        
+        .metric-card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .metric-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .metric-title {
+            font-size: 1.3em;
+            font-weight: 600;
+            color: #333;
+        }
+        
+        .status-badge {
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.85em;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+        
+        .status-green {
+            background: #10b981;
+            color: white;
+        }
+        
+        .status-certified {
+            background: #6366f1;
+            color: white;
+        }
+        
+        .metric-value {
+            font-size: 3em;
+            font-weight: 700;
+            color: #667eea;
+            margin: 10px 0;
+        }
+        
+        .metric-label {
+            color: #666;
+            font-size: 0.95em;
+            margin-bottom: 8px;
+        }
+        
+        .metric-detail {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .metric-detail:last-child {
+            border-bottom: none;
+        }
+        
+        .detail-label {
+            color: #666;
+        }
+        
+        .detail-value {
+            font-weight: 600;
+            color: #333;
+        }
+        
+        .info-section {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            margin-bottom: 30px;
+        }
+        
+        .info-section h2 {
+            color: #667eea;
+            margin-bottom: 15px;
+        }
+        
+        .info-section p {
+            line-height: 1.6;
+            color: #666;
+            margin-bottom: 10px;
+        }
+        
+        .links {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+        
+        .link-button {
+            display: inline-block;
+            padding: 12px 24px;
+            background: #667eea;
+            color: white;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: 600;
+            transition: background 0.3s ease;
+        }
+        
+        .link-button:hover {
+            background: #5568d3;
+        }
+        
+        .timestamp {
+            text-align: center;
+            color: white;
+            margin-top: 30px;
+            font-size: 0.9em;
+        }
+        
+        footer {
+            text-align: center;
+            color: white;
+            margin-top: 50px;
+            padding-top: 20px;
+            border-top: 1px solid rgba(255,255,255,0.2);
+        }
+        
+        @media (max-width: 768px) {
+            .metrics-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            h1 {
+                font-size: 2em;
+            }
+            
+            .metric-value {
+                font-size: 2.5em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🔬 BioSignal-AI Governance Portal</h1>
+            <p class="subtitle">Live transparency dashboard for the Reflex Governance Architecture</p>
+        </header>
+        
+        <div class="metrics-grid">
+            <!-- Integrity Card -->
+            <div class="metric-card">
+                <div class="metric-header">
+                    <span class="metric-title">Integrity Score</span>
+                    <span class="status-badge status-green" id="integrity-status">GREEN</span>
+                </div>
+                <div class="metric-value" id="integrity-score">97.5%</div>
+                <div class="metric-label">Current System Integrity</div>
+                <div style="margin-top: 20px;">
+                    <div class="metric-detail">
+                        <span class="detail-label">Violations</span>
+                        <span class="detail-value" id="violations">0</span>
+                    </div>
+                    <div class="metric-detail">
+                        <span class="detail-label">Warnings</span>
+                        <span class="detail-value" id="warnings">1</span>
+                    </div>
+                    <div class="metric-detail">
+                        <span class="detail-label">Health Score</span>
+                        <span class="detail-value" id="health-score">69.3%</span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Reproducibility Card -->
+            <div class="metric-card">
+                <div class="metric-header">
+                    <span class="metric-title">Reproducibility</span>
+                    <span class="status-badge status-certified" id="repro-status">CERTIFIED</span>
+                </div>
+                <div class="metric-value" id="repro-checks">4/4</div>
+                <div class="metric-label">Validation Checks Passed</div>
+                <div style="margin-top: 20px;">
+                    <div class="metric-detail">
+                        <span class="detail-label">DOI Verified</span>
+                        <span class="detail-value">✅ Yes</span>
+                    </div>
+                    <div class="metric-detail">
+                        <span class="detail-label">Capsule Integrity</span>
+                        <span class="detail-value">✅ Verified</span>
+                    </div>
+                    <div class="metric-detail">
+                        <span class="detail-label">Documentation</span>
+                        <span class="detail-value">✅ Complete</span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Provenance Card -->
+            <div class="metric-card">
+                <div class="metric-header">
+                    <span class="metric-title">Release Provenance</span>
+                    <span class="status-badge status-green">TRACKED</span>
+                </div>
+                <div class="metric-value" style="font-size: 2em;" id="release-version">v1.0.0</div>
+                <div class="metric-label">Current Release</div>
+                <div style="margin-top: 20px;">
+                    <div class="metric-detail">
+                        <span class="detail-label">Release Date</span>
+                        <span class="detail-value">2025-11-11</span>
+                    </div>
+                    <div class="metric-detail">
+                        <span class="detail-label">DOI</span>
+                        <span class="detail-value">10.5281/zenodo.14173152</span>
+                    </div>
+                    <div class="metric-detail">
+                        <span class="detail-label">Maintenance Branch</span>
+                        <span class="detail-value">Active</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="info-section">
+            <h2>📊 About This Dashboard</h2>
+            <p>This governance portal provides real-time transparency into the BioSignal-AI Reflex Governance Architecture's integrity, reproducibility, and provenance tracking systems.</p>
+            <p><strong>Integrity Score</strong>: Calculated as 100 minus weighted penalties for violations (15 points each) and warnings (2.5 points each). Scores ≥90% indicate high integrity.</p>
+            <p><strong>Reproducibility Status</strong>: Certified when all validation checks pass, including DOI verification, capsule integrity, documentation completeness, and artifact consistency.</p>
+            <p><strong>Provenance Tracking</strong>: All governance artifacts are versioned, checksummed (SHA-256), and tracked in an immutable append-only ledger.</p>
+        </div>
+        
+        <div class="info-section">
+            <h2>🔗 Quick Links</h2>
+            <div class="links">
+                <a href="https://github.com/dhananjaysmvdu/BioSignal-AI" class="link-button" target="_blank">📁 GitHub Repository</a>
+                <a href="https://doi.org/10.5281/zenodo.14173152" class="link-button" target="_blank">📚 Zenodo DOI</a>
+                <a href="../docs/GOVERNANCE_WHITEPAPER.md" class="link-button" target="_blank">📄 Whitepaper</a>
+                <a href="../docs/quarterly/GOVERNANCE_SUMMARY_Q4_2025.md" class="link-button" target="_blank">📈 Q4 2025 Bulletin</a>
+                <a href="../GOVERNANCE_TRANSPARENCY.md" class="link-button" target="_blank">🔍 Transparency Manifest</a>
+                <a href="metrics.json" class="link-button" target="_blank">🔌 JSON API</a>
+            </div>
+        </div>
+        
+        <div class="info-section">
+            <h2>🤖 Automated Monitoring</h2>
+            <p><strong>Nightly Validation</strong>: Reproducibility checks run daily at 02:00 UTC, with alerts created for integrity < 90% or reproducibility ≠ certified.</p>
+            <p><strong>Observatory Collection</strong>: Metrics collected daily at 01:00 UTC and stored in rolling 30-day trends.</p>
+            <p><strong>Weekly Archiving</strong>: Provenance snapshots archived every Monday at 04:15 UTC to long-term storage with SHA-256 verification.</p>
+        </div>
+        
+        <p class="timestamp">Last Updated: <span id="last-update">2025-11-13T15:30:00+00:00</span></p>
+        
+        <footer>
+            <p><strong>BioSignal-AI: Reflex Governance Architecture v1.0.0-Whitepaper</strong></p>
+            <p>Autonomous self-verifying framework for transparent AI systems</p>
+            <p>&copy; 2025 Mrityunjay Dhananjay | MIT License</p>
+        </footer>
+    </div>
+    
+    <script>
+        // Fetch live metrics from JSON API
+        async function loadMetrics() {
+            try {
+                const response = await fetch('metrics.json');
+                const data = await response.json();
+                
+                // Update integrity metrics
+                if (data.integrity) {
+                    document.getElementById('integrity-score').textContent = data.integrity.score + '%';
+                    document.getElementById('violations').textContent = data.integrity.violations;
+                    document.getElementById('warnings').textContent = data.integrity.warnings;
+                    document.getElementById('health-score').textContent = data.integrity.health + '%';
+                    document.getElementById('integrity-status').textContent = data.integrity.status.toUpperCase();
+                }
+                
+                // Update reproducibility metrics
+                if (data.reproducibility) {
+                    document.getElementById('repro-checks').textContent = 
+                        data.reproducibility.checks_passed + '/' + data.reproducibility.checks_total;
+                    document.getElementById('repro-status').textContent = 
+                        data.reproducibility.status.toUpperCase();
+                }
+                
+                // Update provenance
+                if (data.provenance) {
+                    document.getElementById('release-version').textContent = data.provenance.release;
+                }
+                
+                // Update timestamp
+                if (data.last_updated) {
+                    document.getElementById('last-update').textContent = data.last_updated;
+                }
+                
+            } catch (error) {
+                console.error('Failed to load metrics:', error);
+            }
+        }
+        
+        // Load metrics on page load
+        loadMetrics();
+        
+        // Refresh metrics every 5 minutes
+        setInterval(loadMetrics, 300000);
+    </script>
+</body>
+</html>

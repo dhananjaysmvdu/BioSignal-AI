@@ -1,0 +1,17 @@
+# GitHub Pages Configuration
+# This file enables GitHub Pages to serve the governance portal from /portal/
+
+# Build settings
+theme: null
+exclude:
+  - .venv/
+  - __pycache__/
+  - "*.pyc"
+  - .git/
+  - .github/
+
+# Portal settings
+portal:
+  enabled: true
+  directory: portal
+  index: index.html
