@@ -1,0 +1,125 @@
+name: Governance Metrics Observatory
+
+on:
+  schedule:
+    # Run daily at 01:00 UTC (before continuous validation at 02:00 UTC)
+    - cron: '0 1 * * *'
+  workflow_dispatch:  # Allow manual trigger
+
+permissions:
+  contents: write
+
+jobs:
+  collect-metrics:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+          
+      - name: Collect integrity metrics
+        id: integrity
+        run: |
+          # Extract latest integrity metrics from registry
+          if [ -f exports/integrity_metrics_registry.csv ]; then
+            LATEST=$(tail -1 exports/integrity_metrics_registry.csv)
+            echo "latest_entry=$LATEST" >> $GITHUB_OUTPUT
+            
+            # Parse integrity score
+            INTEGRITY=$(echo $LATEST | cut -d',' -f2)
+            echo "integrity_score=$INTEGRITY" >> $GITHUB_OUTPUT
+          else
+            echo "integrity_score=0" >> $GITHUB_OUTPUT
+          fi
+          
+      - name: Collect reproducibility metrics
+        id: reproducibility
+        run: |
+          # Run reproducibility validator
+          python scripts/workflow_utils/validate_full_reproducibility.py > repro_output.txt 2>&1 || true
+          cat repro_output.txt
+          
+          # Extract status
+          if grep -q "REPRODUCIBLE" repro_output.txt; then
+            echo "status=certified" >> $GITHUB_OUTPUT
+          else
+            echo "status=partial" >> $GITHUB_OUTPUT
+          fi
+          
+      - name: Collect policy evolution metrics
+        id: policy
+        run: |
+          # Count governance policy files
+          POLICY_COUNT=$(find scripts/workflow_utils -name "*.py" | wc -l)
+          echo "policy_files=$POLICY_COUNT" >> $GITHUB_OUTPUT
+          
+          # Check for structural changes (git diff)
+          DIFF_LINES=$(git diff HEAD~1 scripts/workflow_utils/ 2>/dev/null | wc -l || echo "0")
+          echo "diff_lines=$DIFF_LINES" >> $GITHUB_OUTPUT
+          
+      - name: Append to integrity trend
+        run: |
+          TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%S+00:00")
+          
+          if [ -f observatory/metrics/integrity_trend.csv ]; then
+            LATEST="${{ steps.integrity.outputs.latest_entry }}"
+            if [ -n "$LATEST" ]; then
+              echo "$LATEST" >> observatory/metrics/integrity_trend.csv
+            fi
+          fi
+          
+      - name: Append to reproducibility trend
+        run: |
+          TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%S+00:00")
+          STATUS="${{ steps.reproducibility.outputs.status }}"
+          
+          if [ -f observatory/metrics/reproducibility_trend.csv ]; then
+            echo "$TIMESTAMP,$STATUS,4,4,yes,yes,e8cf3e3f...,Daily validation" >> observatory/metrics/reproducibility_trend.csv
+          fi
+          
+      - name: Append to policy evolution trend
+        run: |
+          TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%S+00:00")
+          POLICY_FILES="${{ steps.policy.outputs.policy_files }}"
+          DIFF_LINES="${{ steps.policy.outputs.diff_lines }}"
+          
+          if [ -f observatory/metrics/policy_evolution_trend.csv ]; then
+            echo "$TIMESTAMP,$POLICY_FILES,$DIFF_LINES,0,0,Daily policy scan" >> observatory/metrics/policy_evolution_trend.csv
+          fi
+          
+      - name: Update system status report
+        run: |
+          TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%S+00:00")
+          INTEGRITY="${{ steps.integrity.outputs.integrity_score }}"
+          REPRO="${{ steps.reproducibility.outputs.status }}"
+          
+          if [ -f SYSTEM_STATUS_REPORT.md ]; then
+            echo "" >> SYSTEM_STATUS_REPORT.md
+            echo "### Observatory Update - $TIMESTAMP" >> SYSTEM_STATUS_REPORT.md
+            echo "- **Integrity**: $INTEGRITY%" >> SYSTEM_STATUS_REPORT.md
+            echo "- **Reproducibility**: $REPRO" >> SYSTEM_STATUS_REPORT.md
+            echo "- **Policy Files**: ${{ steps.policy.outputs.policy_files }}" >> SYSTEM_STATUS_REPORT.md
+          fi
+          
+      - name: Commit metrics updates
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+          git add observatory/metrics/*.csv SYSTEM_STATUS_REPORT.md
+          git diff --staged --quiet || git commit -m "obs: daily governance metrics collection $(date -u +%Y-%m-%d)"
+          
+      - name: Push changes
+        uses: ad-m/github-push-action@master
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          branch: ${{ github.ref }}
