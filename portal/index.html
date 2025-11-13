@@ -321,6 +321,29 @@
                     </div>
                 </div>
             </div>
+
+            <!-- Documentation Provenance Card -->
+            <div class="metric-card">
+                <div class="metric-header">
+                    <span class="metric-title">Documentation Provenance</span>
+                    <span class="status-badge status-certified" id="doc-prov-status">MONITORING</span>
+                </div>
+                <div class="metric-label">Live hash tracking (auto-refreshes every 10 minutes)</div>
+                <div style="margin-top: 20px;">
+                    <div class="metric-detail">
+                        <span class="detail-label">README Hash</span>
+                        <span class="detail-value"><a id="readme-hash-link" href="../docs/readme_integrity.json" target="_blank"><code id="readme-hash">—</code></a></span>
+                    </div>
+                    <div class="metric-detail">
+                        <span class="detail-label">Transparency Hash</span>
+                        <span class="detail-value"><a id="transp-hash-link" href="../docs/transparency_integrity.json" target="_blank"><code id="transp-hash">—</code></a></span>
+                    </div>
+                    <div class="metric-detail">
+                        <span class="detail-label">Bundle Hash</span>
+                        <span class="detail-value"><a id="bundle-hash-link" href="../docs/documentation_provenance_hash.json" target="_blank"><code id="bundle-hash">—</code></a></span>
+                    </div>
+                </div>
+            </div>
         </div>
         
         <div class="info-section">
@@ -562,6 +585,27 @@
         
         // Refresh metrics every 5 minutes
         setInterval(loadMetrics, 300000);
+
+        async function loadDocProvenance(){
+            try{
+                const r1 = await fetch('../docs/readme_integrity.json', {cache:'no-store'});
+                if(r1.ok){ const j = await r1.json(); document.getElementById('readme-hash').textContent = (j.sha256||'—').slice(0,16)+'…'; }
+            }catch(e){ /* noop */ }
+            try{
+                const r2 = await fetch('../docs/transparency_integrity.json', {cache:'no-store'});
+                if(r2.ok){ const j = await r2.json();
+                    // Show a combined short hash if available, else count entries
+                    const first = Object.values(j||{}).find(v => v && v.sha256);
+                    document.getElementById('transp-hash').textContent = first && first.sha256 ? (first.sha256.slice(0,16)+'…') : '—';
+                }
+            }catch(e){ /* noop */ }
+            try{
+                const r3 = await fetch('../docs/documentation_provenance_hash.json', {cache:'no-store'});
+                if(r3.ok){ const j = await r3.json(); document.getElementById('bundle-hash').textContent = (j.sha256||'—').slice(0,16)+'…'; }
+            }catch(e){ /* noop */ }
+        }
+        loadDocProvenance();
+        setInterval(loadDocProvenance, 600000); // 10 minutes
     </script>
 </body>
 </html>
