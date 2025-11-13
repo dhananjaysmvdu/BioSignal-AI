@@ -1,0 +1,80 @@
+name: Adaptive Forensic Response
+
+on:
+  schedule:
+    # Daily at 04:20 UTC (after forecast at 03:00 UTC)
+    - cron: '20 4 * * *'
+  workflow_dispatch:
+
+jobs:
+  adaptive-response:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      
+      - name: Run forecast (ensure latest data)
+        run: |
+          python scripts/forensics/forensic_anomaly_forecaster.py
+      
+      - name: Run adaptive response engine
+        id: response
+        run: |
+          python scripts/forensics/adaptive_response_engine.py
+          
+          # Extract response status for conditional steps
+          if [ -f forensics/response_history.jsonl ]; then
+            LAST_STATUS=$(tail -n 1 forensics/response_history.jsonl | python -c "import sys, json; d=json.load(sys.stdin); print(d.get('event_type', 'unknown'))")
+            echo "status=$LAST_STATUS" >> $GITHUB_OUTPUT
+          else
+            echo "status=unknown" >> $GITHUB_OUTPUT
+          fi
+        continue-on-error: true
+      
+      - name: Upload response history
+        uses: actions/upload-artifact@v4
+        with:
+          name: adaptive-response-${{ github.run_number }}
+          path: |
+            forensics/response_history.jsonl
+            forensics/reversible_actions_ledger.jsonl
+            forensics/safety_brake_state.json
+          retention-days: 90
+      
+      - name: Check safety brake state
+        id: check_brake
+        run: |
+          if [ -f forensics/safety_brake_state.json ]; then
+            IS_ENGAGED=$(python -c "import json; j=json.load(open('forensics/safety_brake_state.json')); print(str(j.get('is_engaged', False)).lower())")
+            RESPONSE_COUNT=$(python -c "import json; j=json.load(open('forensics/safety_brake_state.json')); print(j.get('response_count_24h', 0))")
+            echo "brake_engaged=$IS_ENGAGED" >> $GITHUB_OUTPUT
+            echo "response_count=$RESPONSE_COUNT" >> $GITHUB_OUTPUT
+          else
+            echo "brake_engaged=false" >> $GITHUB_OUTPUT
+            echo "response_count=0" >> $GITHUB_OUTPUT
+          fi
+      
+      - name: Commit response artifacts
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+          git pull --rebase
+          git add forensics/response_history.jsonl forensics/reversible_actions_ledger.jsonl forensics/safety_brake_state.json audit_summary.md || true
+          git commit -m "chore: adaptive response executed (status=${{ steps.response.outputs.status }}, brake=${{ steps.check_brake.outputs.brake_engaged }})" || echo "No changes to commit"
+          git push
+        continue-on-error: true
+      
+      - name: Log completion
+        run: |
+          echo "Adaptive response workflow complete"
+          echo "Status: ${{ steps.response.outputs.status }}"
+          echo "Safety brake: ${{ steps.check_brake.outputs.brake_engaged }}"
+          echo "24h response count: ${{ steps.check_brake.outputs.response_count }}/10"

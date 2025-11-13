@@ -430,6 +430,29 @@
                     </div>
                 </div>
             </div>
+
+            <!-- Adaptive Responses Card -->
+            <div class="metric-card">
+                <div class="metric-header">
+                    <span class="metric-title">Adaptive Responses</span>
+                    <span class="status-badge status-green" id="adaptive-brake-badge">ACTIVE</span>
+                </div>
+                <div class="metric-value" style="font-size: 2em;" id="adaptive-response-count">—</div>
+                <div class="metric-label">24h Response Count</div>
+                <div style="margin-top: 20px;">
+                    <div class="metric-detail">
+                        <span class="detail-label">Last Action</span>
+                        <span class="detail-value" id="adaptive-last-action">—</span>
+                    </div>
+                    <div class="metric-detail">
+                        <span class="detail-label">Safety Brake</span>
+                        <span class="detail-value" id="adaptive-brake-status">—</span>
+                    </div>
+                    <div style="margin-top: 15px; text-align: center;">
+                        <a href="../forensics/response_history.jsonl" style="color: #667eea; text-decoration: none; font-weight: 600;" download>→ Download Response History</a>
+                    </div>
+                </div>
+            </div>
         </div>
         
         <div class="info-section">
@@ -759,6 +782,53 @@
                         if(risk === 'high'){ badge.className='status-badge'; badge.style.background='#ef4444'; badge.style.color='white'; }
                         else if(risk === 'medium'){ badge.className='status-badge'; badge.style.background='#f59e0b'; badge.style.color='white'; }
                         else { badge.className='status-badge status-green'; }
+                    }
+                }
+            }catch(e){}
+            
+            // Load adaptive response data
+            try{
+                const brake = await fetch('../forensics/safety_brake_state.json', {cache:'no-store'});
+                if(brake.ok){
+                    const b = await brake.json();
+                    const count = b.response_count_24h || 0;
+                    const maxCount = b.max_allowed || 10;
+                    const isEngaged = b.is_engaged || false;
+                    
+                    document.getElementById('adaptive-response-count').textContent = `${count}/${maxCount}`;
+                    document.getElementById('adaptive-brake-status').textContent = isEngaged ? 'ENGAGED' : 'ACTIVE';
+                    
+                    const brakeBadge = document.getElementById('adaptive-brake-badge');
+                    if(isEngaged){
+                        brakeBadge.className = 'status-badge';
+                        brakeBadge.style.background = '#ef4444';
+                        brakeBadge.style.color = 'white';
+                        brakeBadge.textContent = 'PARKED';
+                    } else if(count >= maxCount * 0.7){
+                        brakeBadge.className = 'status-badge';
+                        brakeBadge.style.background = '#f59e0b';
+                        brakeBadge.style.color = 'white';
+                        brakeBadge.textContent = 'WARNING';
+                    } else {
+                        brakeBadge.className = 'status-badge status-green';
+                        brakeBadge.textContent = 'ACTIVE';
+                    }
+                }
+            }catch(e){}
+            
+            // Load last adaptive action
+            try{
+                const resp = await fetch('../forensics/response_history.jsonl', {cache:'no-store'});
+                if(resp.ok){
+                    const text = await resp.text();
+                    const lines = text.trim().split('\n').filter(l => l);
+                    if(lines.length > 0){
+                        const lastEntry = JSON.parse(lines[lines.length - 1]);
+                        const actionCount = lastEntry.actions_taken?.length || 0;
+                        const eventType = lastEntry.event_type || 'unknown';
+                        document.getElementById('adaptive-last-action').textContent = 
+                            eventType === 'SAFETY_BRAKE' ? 'Safety Brake' : 
+                            `${actionCount} action(s)`;
                     }
                 }
             }catch(e){}
