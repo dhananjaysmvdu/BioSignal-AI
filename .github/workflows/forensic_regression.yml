@@ -1,0 +1,45 @@
+name: Forensic Regression Tests
+
+on:
+  schedule:
+    - cron: '45 4 * * 0'  # Sundays 04:45 UTC
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+          pip install pytest
+
+      - name: Run snapshot integrity tests
+        run: |
+          mkdir -p forensic_regression_logs
+          pytest -q tests/forensics/test_snapshot_ledger_state.py --junitxml=forensic_regression_logs/snapshot.xml || exit 1
+
+      - name: Run anchor-chain continuity tests
+        run: |
+          pytest -q tests/forensics/test_mirror_integrity_anchor.py --junitxml=forensic_regression_logs/anchor.xml || exit 1
+
+      - name: Run cold-storage verification tests
+        run: |
+          pytest -q tests/forensics/test_verify_cold_storage.py --junitxml=forensic_regression_logs/cold_storage.xml || exit 1
+
+      - name: Upload forensic regression logs
+        uses: actions/upload-artifact@v4
+        with:
+          name: forensic_regression_logs
+          path: forensic_regression_logs

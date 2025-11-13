@@ -61,7 +61,7 @@ def verify():
         ok = False
         if bundle and bundle.exists():
             ok = (sha256_path(bundle) == expected)
-        append_line(FORENSICS / 'verification_log.jsonl', json.dumps({'timestamp': ts, 'type': 'snapshot', 'file': fname, 'ok': ok}))
+        append_line(FORENSICS / 'verification_log.jsonl', json.dumps({'timestamp': ts, 'type': 'snapshot', 'file': fname, 'ok': ok, 'verified': ok}))
 
     # Verify mirrors via anchor_chain.json continuity
     chain = MIRRORS / 'anchor_chain.json'
@@ -79,7 +79,8 @@ def verify():
             import hashlib as _h
             ok_chain = _h.sha256((prev_chain_hash + (sha or '')).encode('utf-8')).hexdigest() == chain_hash
             prev_chain_hash = chain_hash or ''
-            append_line(FORENSICS / 'verification_log.jsonl', json.dumps({'timestamp': ts, 'type': 'mirror', 'file': file.name, 'ok_file': ok_file, 'ok_chain': ok_chain}))
+            verified = bool(ok_file and ok_chain)
+            append_line(FORENSICS / 'verification_log.jsonl', json.dumps({'timestamp': ts, 'type': 'mirror', 'file': file.name, 'ok_file': ok_file, 'ok_chain': ok_chain, 'verified': verified}))
 
     append_audit_marker(ts)
 

@@ -918,3 +918,18 @@ Artifacts:
 
 Workflow:
 - .github/workflows/meta_verification.yml
+
+## Phase XVIII — Continuous Forensic Validation & Regression Assurance
+
+Instructions executed:
+- 96: Snapshot Integrity Regression Tests
+- 97: Anchor-Chain Continuity Tests
+- 98: Cold-Storage Verification Tests
+- 99: Weekly Forensic Regression Workflow
+- 100: Phase XVIII Certification & Tag (v2.2.0-forensic-validation)
+
+Artifacts:
+- forensic_regression_logs/*.xml (workflow artifacts)
+
+Workflow:
+- .github/workflows/forensic_regression.yml
