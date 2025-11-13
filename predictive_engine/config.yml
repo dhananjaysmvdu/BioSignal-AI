@@ -1,0 +1,107 @@
+# Meta-Forecast 2.0 Configuration
+# Predictive Governance Analytics (PGA) Engine
+
+# Rolling Window Configuration
+rolling_window:
+  historical_days: 90        # Training window for predictive models
+  forecast_horizon: 30       # Days ahead to predict
+  update_frequency: 3        # Days between forecast updates
+  min_data_points: 7         # Minimum historical points required
+
+# Model Weights (GRLM + MPI Ensemble)
+model_weights:
+  integrity_score: 0.40      # Weight for integrity prediction
+  health_score: 0.25         # Weight for health trajectory
+  rri_index: 0.20            # Reinforcement Index contribution
+  mpi_index: 0.15            # Meta-Performance Index contribution
+
+# Forecast Parameters
+forecast_params:
+  confidence_threshold: 0.70  # Minimum confidence for "reliable" classification
+  stability_window: 10        # Days for stability calculation
+  smoothing_factor: 0.3       # Exponential smoothing alpha (0-1)
+  
+# Risk Thresholds
+risk_thresholds:
+  fdi_excellent: 5.0         # Forecast Deviation Index < 5% = excellent
+  fdi_good: 10.0             # FDI < 10% = good
+  fdi_warning: 15.0          # FDI ≥ 15% = warning/alert
+  cs_stable: 3.0             # Confidence Stability < 3 = stable
+  cs_moderate: 5.0           # CS < 5 = moderate variance
+  cs_unstable: 5.0           # CS ≥ 5 = unstable (alert)
+
+# Prediction Targets
+targets:
+  integrity:
+    enabled: true
+    min_threshold: 90.0
+    target_range: [97.0, 99.0]
+  
+  reproducibility:
+    enabled: true
+    expected_status: "certified"
+    checks_required: 4
+  
+  violations:
+    enabled: true
+    max_acceptable: 1
+    critical_threshold: 0
+  
+  warnings:
+    enabled: true
+    max_acceptable: 3
+    trend_analysis: true
+
+# Output Configuration
+output:
+  json_path: "forecast/predictive_metrics_Q1_2026.json"
+  csv_path: "observatory/metrics/predictive_forecast.csv"
+  update_portal: true
+  log_predictions: true
+
+# Model Metadata
+metadata:
+  version: "2.0.0"
+  algorithm: "GRLM_MPI_Ensemble"
+  description: "Governance Reinforcement Learning Model with Meta-Performance Index"
+  training_data: "Integrity metrics registry (90-day rolling window)"
+  confidence_method: "Bootstrap confidence intervals (95%)"
+  
+# Feature Engineering
+features:
+  - name: "integrity_trend"
+    type: "time_series"
+    lag_periods: [1, 3, 7]
+  
+  - name: "violation_rate"
+    type: "categorical"
+    encoding: "binary"
+  
+  - name: "health_velocity"
+    type: "derivative"
+    window: 7
+  
+  - name: "rri_stability"
+    type: "variance"
+    window: 10
+
+# Alerting Rules
+alerts:
+  - condition: "fdi >= 15.0"
+    severity: "warning"
+    action: "create_github_issue"
+    
+  - condition: "confidence_stability > 5.0"
+    severity: "warning"
+    action: "append_audit_log"
+    
+  - condition: "predicted_integrity < 90.0"
+    severity: "critical"
+    action: "emergency_alert"
+
+# Validation
+validation:
+  enabled: true
+  retrospective_window: 30   # Days to validate past predictions
+  accuracy_threshold: 0.85   # Minimum acceptable prediction accuracy
+  recalibration_trigger: 0.70  # Accuracy below this triggers model recalibration
