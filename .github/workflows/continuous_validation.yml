@@ -24,6 +24,29 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+      
+      - name: Run Adaptive Controller v2
+        id: adaptive
+        continue-on-error: true
+        run: |
+          if [ -f "controllers/adaptive_v2/risk_aware_controller.py" ]; then
+            python controllers/adaptive_v2/risk_aware_controller.py > adaptive_output.txt 2>&1 || true
+            cat adaptive_output.txt
+            
+            if [ -f "reports/adaptive_governance_v2.json" ]; then
+              LR_FACTOR=$(python -c "import json; print(json.load(open('reports/adaptive_governance_v2.json'))['control_outputs']['learning_rate_factor'])" 2>/dev/null || echo "1.0")
+              ALERT_COUNT=$(python -c "import json; print(json.load(open('reports/adaptive_governance_v2.json'))['alert_count'])" 2>/dev/null || echo "0")
+              echo "lr_factor=$LR_FACTOR" >> $GITHUB_OUTPUT
+              echo "alert_count=$ALERT_COUNT" >> $GITHUB_OUTPUT
+            else
+              echo "lr_factor=1.0" >> $GITHUB_OUTPUT
+              echo "alert_count=0" >> $GITHUB_OUTPUT
+            fi
+          else
+            echo "Adaptive Controller v2 not found, skipping"
+            echo "lr_factor=1.0" >> $GITHUB_OUTPUT
+            echo "alert_count=0" >> $GITHUB_OUTPUT
+          fi
           
       - name: Run validator
         id: validate
@@ -74,7 +97,10 @@ jobs:
           git config --local user.email "github-actions[bot]@users.noreply.github.com"
           git config --local user.name "github-actions[bot]"
           git add logs/continuous_audit_validation.csv audit_summary.md
-          git diff --staged --quiet || git commit -m "ci: nightly validation $(date -u +%Y-%m-%d)"
+          if [ -f "reports/adaptive_governance_v2.json" ]; then
+            git add reports/adaptive_governance_v2.json
+          fi
+          git diff --staged --quiet || git commit -m "ci: nightly validation $(date -u +%Y-%m-%d) [LR=${{ steps.adaptive.outputs.lr_factor }}]"
           
       - name: Push changes
         uses: ad-m/github-push-action@master

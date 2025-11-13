@@ -1,0 +1,23 @@
+{
+  "generated_at": "2025-11-13T17:00:54.575073+00:00",
+  "controller_version": "2.0.0",
+  "risk_inputs": {
+    "fdi": 0.0,
+    "fdi_status": "excellent",
+    "cs": 2.1,
+    "cs_status": "stable",
+    "overall_risk": "low"
+  },
+  "predictive_inputs": {
+    "predicted_integrity": 98.0,
+    "confidence": 0.85
+  },
+  "control_outputs": {
+    "learning_rate_factor": 1.2,
+    "adjustment_reason": "FDI=excellent, CS=stable",
+    "recommended_audit_frequency": "7d"
+  },
+  "alerts": [],
+  "alert_count": 0,
+  "status": "nominal"
+}
