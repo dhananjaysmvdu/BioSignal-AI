@@ -1,0 +1,24 @@
+name: README Integrity Verification
+
+on:
+  schedule:
+    - cron: '15 0 * * *'  # 00:15 UTC nightly
+  workflow_dispatch:
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+
+      - name: Run README integrity and transparency sweep
+        run: |
+          python scripts/docs/hash_readme_integrity.py
