@@ -1,0 +1,22 @@
+name: Meta-Audit Summary Feed
+
+on:
+  schedule:
+    - cron: '15 2 * * *'
+  workflow_dispatch:
+
+jobs:
+  meta-audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+      - name: Build public meta-governance feed
+        run: python scripts/audit/generate_meta_audit_summary.py
+      - name: Upload feed artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: meta-governance-feed
+          path: portal/meta_audit_feed.json

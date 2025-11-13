@@ -219,3 +219,7 @@ If you use or build on this governance reflex architecture, please cite:
 
 ---
 This file is auto-generated; do not edit manually.
+
+<!-- ETHICS_SYNC: UPDATED 2025-11-13T20:13:16.218415+00:00 -->
+
+<!-- ETHICS_SYNC: UPDATED 2025-11-13T20:13:17.605520+00:00 -->

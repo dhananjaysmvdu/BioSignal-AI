@@ -1,0 +1,26 @@
+name: Distributed Policy Consensus
+
+on:
+  schedule:
+    - cron: '45 2 * * 0'
+  workflow_dispatch:
+
+jobs:
+  policy-consensus:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+      - name: Run policy consensus engine
+        run: python scripts/governance/policy_consensus_engine.py
+      - name: Commit policy updates if any
+        run: |
+          git config user.name "github-actions"
+          git config user.email "actions@users.noreply.github.com"
+          if [ -n "$(git status --porcelain)" ]; then
+            git add -A
+            git commit -m "gov: apply distributed policy consensus update"
+            git push
+          fi

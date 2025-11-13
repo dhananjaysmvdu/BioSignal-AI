@@ -1,0 +1,22 @@
+name: Federation Peer Exchange
+
+on:
+  schedule:
+    - cron: '0 3 * * 2'
+  workflow_dispatch:
+
+jobs:
+  peer-exchange:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+      - name: Run peer exchange
+        run: python scripts/federation/federation_peer_exchange.py
+      - name: Upload peer exchange report
+        uses: actions/upload-artifact@v4
+        with:
+          name: federation-peer-exchange-report
+          path: results/federation_peer_exchange_report.json

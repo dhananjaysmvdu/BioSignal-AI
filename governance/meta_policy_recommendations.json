@@ -1,0 +1,10 @@
+{
+  "timestamp": "2025-11-13T20:13:17.159249+00:00",
+  "recommended_drift_tolerance_pct": null,
+  "recommended_guardrail_window_min": null,
+  "context": {
+    "schema_drift_prob": 45.0,
+    "recent_ethics_bias": null,
+    "peers_considered": 0
+  }
+}

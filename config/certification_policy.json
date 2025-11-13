@@ -1,7 +1,7 @@
 {
   "timestamp": "2025-11-13T20:03:06.771157+00:00",
   "drift_tolerance_pct": 1.0,
-  "guardrail_window_min": 5,
+  "guardrail_window_min": 5.0,
   "inputs": {
     "fii": 98.0,
     "recovery_rate": 27.27272727272727

@@ -1,0 +1,275 @@
+{
+  "timestamp": "2025-11-13T20:14:02.239651+00:00",
+  "count": 39,
+  "events": [
+    {
+      "timestamp": "2025-11-14T09:30:00+00:00",
+      "event": "hash_computed",
+      "severity": "info",
+      "message": "Computed SHA256 for exports/integrity_metrics_registry.csv",
+      "metadata": {
+        "hash": "73bb7db891e9abe9960488aee2d2562b75c96bdba87665c4469bf053e9ba73e1"
+      },
+      "section": "general"
+    },
+    {
+      "timestamp": "2025-11-14T09:25:30+00:00",
+      "event": "hashlib_recovered",
+      "severity": "info",
+      "message": "hashlib import recovered after adjusting PYTHONPATH",
+      "section": "general"
+    },
+    {
+      "timestamp": "2025-11-14T09:20:00+00:00",
+      "event": "config_regenerated",
+      "severity": "recovery",
+      "message": "federation_config.json regenerated from template",
+      "metadata": {
+        "attempt": 1
+      },
+      "section": "general"
+    },
+    {
+      "timestamp": "2025-11-13T20:13:17.605079+00:00",
+      "event": "ethics_sync",
+      "fairness_min_pct": 98.0,
+      "policy_updated": false
+    },
+    {
+      "timestamp": "2025-11-13T20:13:16.730937+00:00",
+      "event": "peer_exchange",
+      "message": "Completed federation peer comparison.",
+      "metadata": {
+        "count": 1
+      }
+    },
+    {
+      "timestamp": "2025-11-13T20:13:16.217756+00:00",
+      "event": "ethics_sync",
+      "fairness_min_pct": 98.0,
+      "policy_updated": false
+    },
+    {
+      "timestamp": "2025-11-13T20:13:16.080802+00:00",
+      "event": "peer_exchange",
+      "message": "Completed federation peer comparison.",
+      "metadata": {
+        "count": 1
+      }
+    },
+    {
+      "timestamp": "2025-11-13T20:03:17.0993411Z",
+      "event": "hash_computed",
+      "severity": "info",
+      "message": "Computed SHA256 for C:\\BioSignal-AI\\exports\\integrity_metrics_registry.csv",
+      "metadata": {
+        "hash": "73bb7db891e9abe9960488aee2d2562b75c96bdba87665c4469bf053e9ba73e1"
+      }
+    },
+    {
+      "timestamp": "2025-11-13T20:03:16.0213497Z",
+      "event": "hash_temp_script",
+      "severity": "warning",
+      "message": "Fallback to temporary _hash_eval.py"
+    },
+    {
+      "timestamp": "2025-11-13T20:03:07.382219+00:00",
+      "event": "sync_completed",
+      "severity": "info",
+      "message": "Federation synchronization completed with resilience checks."
+    },
+    {
+      "timestamp": "2025-11-13T20:03:06.594189+00:00",
+      "path": "integration\\network_drift_report.json",
+      "action": "json_repaired_keys"
+    },
+    {
+      "timestamp": "2025-11-13T20:03:06.592724+00:00",
+      "path": "integration\\api_reference.json",
+      "action": "json_repaired_keys"
+    },
+    {
+      "timestamp": "2025-11-13T20:03:06.590902+00:00",
+      "path": "portal\\metrics.json",
+      "action": "json_repaired_keys"
+    },
+    {
+      "timestamp": "2025-11-13T20:03:06.588539+00:00",
+      "path": "portal\\errors.json",
+      "action": "json_repaired_keys"
+    },
+    {
+      "timestamp": "2025-11-13T20:03:06.574859+00:00",
+      "path": "self_healing\\self_healing_log.jsonl",
+      "action": "jsonl_repaired"
+    },
+    {
+      "timestamp": "2025-11-13T20:03:06.573473+00:00",
+      "path": "self_healing\\self_healing_summary.json",
+      "action": "json_repaired_keys"
+    },
+    {
+      "timestamp": "2025-11-13T20:03:06.571987+00:00",
+      "path": "self_healing\\self_healing_status.json",
+      "action": "json_repaired_keys"
+    },
+    {
+      "timestamp": "2025-11-13T20:03:06.571355+00:00",
+      "path": "self_healing\\recovery_manifest.json",
+      "action": "json_repaired_keys"
+    },
+    {
+      "timestamp": "2025-11-13T20:03:06.569528+00:00",
+      "path": "federation\\guardrail_validation_log.jsonl",
+      "action": "jsonl_repaired"
+    },
+    {
+      "timestamp": "2025-11-13T20:03:06.562895+00:00",
+      "path": "federation\\federation_error_log.jsonl",
+      "action": "jsonl_repaired"
+    },
+    {
+      "timestamp": "2025-11-13T20:03:06.561052+00:00",
+      "path": "federation\\federation_sync_summary.json",
+      "action": "json_repaired_keys"
+    },
+    {
+      "timestamp": "2025-11-13T20:03:06.559282+00:00",
+      "path": "federation\\federation_status.json",
+      "action": "json_repaired_keys"
+    },
+    {
+      "timestamp": "2025-11-13T20:03:06.558668+00:00",
+      "path": "federation\\federation_status.json",
+      "action": "json_reencoded"
+    },
+    {
+      "timestamp": "2025-11-13T20:03:06.557831+00:00",
+      "path": "federation\\federation_config.template.json",
+      "action": "json_repaired_keys"
+    },
+    {
+      "timestamp": "2025-11-13T20:03:06.557014+00:00",
+      "path": "federation\\federation_config.json",
+      "action": "json_repaired_keys"
+    },
+    {
+      "timestamp": "2025-11-13T19:46:17.3624714Z",
+      "event": "hash_computed",
+      "severity": "info",
+      "message": "Computed SHA256 for C:\\BioSignal-AI\\exports\\integrity_metrics_registry.csv",
+      "metadata": {
+        "hash": "73bb7db891e9abe9960488aee2d2562b75c96bdba87665c4469bf053e9ba73e1"
+      },
+      "section": "general"
+    },
+    {
+      "timestamp": "2025-11-13T19:46:16.3126121Z",
+      "event": "hash_temp_script",
+      "severity": "warning",
+      "message": "Fallback to temporary _hash_eval.py",
+      "section": "general"
+    },
+    {
+      "timestamp": "2025-11-13T19:46:07.730261+00:00",
+      "event": "sync_completed",
+      "severity": "info",
+      "message": "Federation synchronization completed with resilience checks.",
+      "section": "general"
+    },
+    {
+      "timestamp": "2025-11-13T19:46:07.729700+00:00",
+      "event": "status_json_fallback",
+      "severity": "error",
+      "message": "Unable to repair federation_status.json; applied default template.",
+      "metadata": {
+        "error": "Unexpected UTF-8 BOM (decode using utf-8-sig): line 1 column 1 (char 0)"
+      },
+      "section": "general"
+    },
+    {
+      "timestamp": "2025-11-13T19:46:07.727607+00:00",
+      "event": "status_json_error",
+      "severity": "warning",
+      "message": "Detected JSON syntax issue in federation_status.json; attempting automated repair.",
+      "metadata": {
+        "error": "Unexpected UTF-8 BOM (decode using utf-8-sig): line 1 column 1 (char 0)"
+      },
+      "section": "general"
+    },
+    {
+      "timestamp": "2025-11-13T19:31:51.5454106Z",
+      "event": "audit_marker_appended",
+      "severity": "info",
+      "message": "Appended HASH_GUARDRAIL verification marker to audit summary",
+      "section": "general"
+    },
+    {
+      "timestamp": "2025-11-13T19:31:51.5179501Z",
+      "event": "hash_computed",
+      "severity": "info",
+      "message": "Computed SHA256 for C:\\BioSignal-AI\\exports\\integrity_metrics_registry.csv",
+      "metadata": {
+        "hash": "73bb7db891e9abe9960488aee2d2562b75c96bdba87665c4469bf053e9ba73e1"
+      },
+      "section": "general"
+    },
+    {
+      "timestamp": "2025-11-13T19:31:50.4673821Z",
+      "event": "hash_temp_script",
+      "severity": "warning",
+      "message": "Fallback to temporary _hash_eval.py",
+      "section": "general"
+    },
+    {
+      "timestamp": "2025-11-13T19:25:39.111072Z",
+      "phaseX_integration_error": true,
+      "failures": [
+        "hash_guardrail"
+      ],
+      "section": "general",
+      "message": "auto-filled"
+    },
+    {
+      "timestamp": "2025-11-13T19:25:38.706872+00:00",
+      "event": "sync_completed",
+      "severity": "info",
+      "message": "Federation synchronization completed with resilience checks.",
+      "section": "general"
+    },
+    {
+      "timestamp": "2025-11-13T19:24:55.740029+00:00",
+      "recorded_hash_fragment": "{'timestamp': '2",
+      "recomputed_hash": "73bb7db891e9abe9960488aee2d2562b75c96bdba87665c4469bf053e9ba73e1",
+      "hash_match": true,
+      "header_repaired": false,
+      "guardrail_markers_ok": true,
+      "section": "general",
+      "message": "auto-filled"
+    },
+    {
+      "timestamp": "2025-11-13T19:24:55.630693+00:00",
+      "event": "sync_completed",
+      "severity": "info",
+      "message": "Federation synchronization completed with resilience checks.",
+      "section": "general"
+    },
+    {
+      "timestamp": "2025-11-13T19:24:54.636170Z",
+      "phaseX_integration_error": true,
+      "failures": [
+        "federation_sync",
+        "hash_guardrail"
+      ],
+      "section": "general",
+      "message": "auto-filled"
+    },
+    {
+      "timestamp": "2025-11-13T19:24:54.074370+00:00",
+      "event": "sync_completed",
+      "severity": "info",
+      "message": "Federation synchronization completed with resilience checks.",
+      "section": "general"
+    }
+  ]
+}
