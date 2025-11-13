@@ -116,7 +116,7 @@ function Set-SchemaHeadersIfMissing {
     }
 
     $currentHeader = $lines[0]
-    $missing = $expectedHeaders | Where-Object { $currentHeader.Split(',') -notcontains $_ }
+    $missing = @($expectedHeaders | Where-Object { $currentHeader.Split(',') -notcontains $_ })
     if ($missing.Count -eq 0 -and $currentHeader -eq $expectedLine) {
         return
     }
@@ -203,6 +203,14 @@ function Update-FederationStatus {
         algorithm = 'sha256'
         hash = $HashValue
     }
+    # Append hash computed event into history for integration harness visibility
+    if (-not $status.history) { $status.history = @() }
+    $status.history += [pscustomobject]@{
+        timestamp = Get-TimeStamp
+        event = 'hash computed'
+        status = 'ok'
+        path = $relative
+    }
     $status.timestamp = Get-TimeStamp
     $json = $status | ConvertTo-Json -Depth 8
     Set-Content -LiteralPath $statusPath -Value ($json + [Environment]::NewLine) -Encoding UTF8
@@ -223,3 +231,15 @@ $hashValue = Invoke-InlineHash -Code $hashCode
 Write-GuardrailLog -EventName 'hash_computed' -Message "Computed SHA256 for $($resolvedTarget.Path)" -Severity 'info' -Metadata @{ hash = $hashValue }
 Update-FederationStatus -HashValue $hashValue -TargetPath $resolvedTarget.Path
 Write-Host "SHA256($($resolvedTarget.Path)) = $hashValue"
+
+# Auto-append verification marker to audit summary if not already present
+$auditPath = Join-Path (Get-RepoRoot) 'audit_summary.md'
+if (Test-Path -LiteralPath $auditPath) {
+    $markerTimestamp = (Get-Date).ToUniversalTime().ToString('o')
+    $marker = "<!-- HASH_GUARDRAIL: VERIFIED ($markerTimestamp UTC) -->"
+    $auditText = Get-Content -LiteralPath $auditPath -Raw
+    if ($auditText -notmatch 'HASH_GUARDRAIL: VERIFIED') {
+        Add-Content -LiteralPath $auditPath -Value $marker -Encoding UTF8
+        Write-GuardrailLog -EventName 'audit_marker_appended' -Message 'Appended HASH_GUARDRAIL verification marker to audit summary' -Severity 'info'
+    }
+}

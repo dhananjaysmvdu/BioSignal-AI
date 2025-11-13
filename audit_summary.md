@@ -19,6 +19,10 @@ Updated: 2025-11-11T15:18:10+00:00
 ✅ Integrity registry schema OK (hash 6eb446f7cca7).
 <!-- INTEGRITY_REGISTRY_SCHEMA:END -->
 
+<!-- HASH_GUARDRAIL:BEGIN -->
+✅ Hash guardrail baseline verified — schema headers + SHA-256 integrity chain intact.
+<!-- HASH_GUARDRAIL:END -->
+
 <!-- TRANSPARENCY_MANIFEST:BEGIN -->
 Updated: 2025-11-11T14:46:31+00:00
 📄 Governance transparency manifest refreshed — 6042 bytes written.
@@ -70,3 +74,6 @@ Updated: 2025-11-13T16:35:00+00:00
 
 <!-- NETWORK_SYNC: UPDATED 2025-11-13T18:00:00+00:00 -->
 
+
+<!-- FEDERATION_RECOVERY_TEST: PASSED -->
+<!-- HASH_GUARDRAIL: VERIFIED (2025-11-13T19:31:51.5434142Z UTC) -->

@@ -1,84 +1,92 @@
-{
-  "timestamp": "2025-11-14T09:30:00+00:00",
-  "status": "synchronized",
-  "federation_id": "BioSignalAI-GovNet",
-  "reference_release": "v1.3.0-global-resilient",
-  "federation_integrity_index": 98.6,
-  "recovery_actions": 0,
-  "nodes": [
-    {
-      "name": "Zenodo",
-      "type": "doi",
-      "endpoint": "https://zenodo.org/api/records/14173152",
-      "latency_hours": 0.30,
-      "checks": {
-        "doi_match": true,
-        "release_match": true,
-        "hash_match": true
-      }
-    },
-    {
-      "name": "GitHub",
-      "type": "repository",
-      "endpoint": "https://github.com/dhananjaysmvdu/BioSignal-AI",
-      "latency_hours": 0.42,
-      "checks": {
-        "release_match": true,
-        "hash_match": true
-      }
-    },
-    {
-      "name": "OpenAIRE",
-      "type": "registry",
-      "endpoint": "https://explore.openaire.eu/search/dataset?datasetId=od_______099::biosignal-ai",
-      "latency_hours": 0.35,
-      "checks": {
-        "registry_match": true,
-        "hash_match": true
-      }
-    },
-    {
-      "name": "arXiv",
-      "type": "preprint",
-      "endpoint": "https://arxiv.org/abs/2410.01234",
-      "latency_hours": 0.34,
-      "checks": {
-        "reference_match": true,
-        "hash_match": true
-      }
-    }
-  ],
-  "history": [
-    {
-      "timestamp": "2025-11-14T09:20:00+00:00",
-      "federation_integrity_index": 98.6,
-      "recovery_actions": 0,
-      "nodes_checked": [
-        "Zenodo",
-        "GitHub",
-        "OpenAIRE",
-        "arXiv"
-      ]
-    },
-    {
-      "timestamp": "2025-11-14T09:30:00+00:00",
-      "federation_integrity_index": 98.6,
-      "recovery_actions": 0,
-      "nodes_checked": [
-        "Zenodo",
-        "GitHub",
-        "OpenAIRE",
-        "arXiv"
-      ]
-    }
-  ],
-  "hash_results": [
-    {
-      "timestamp": "2025-11-14T09:30:00+00:00",
-      "path": "exports/integrity_metrics_registry.csv",
-      "algorithm": "sha256",
-      "hash": "73bb7db891e9abe9960488aee2d2562b75c96bdba87665c4469bf053e9ba73e1"
-    }
-  ],
-  "error_events": []
+﻿{
+    "status":  "synchronized",
+    "timestamp":  "2025-11-13T19:46:17.3762536Z",
+    "history":  [
+                    {
+                        "timestamp":  "2025-11-13T19:46:07.729870+00:00",
+                        "federation_integrity_index":  98.6,
+                        "recovery_actions":  0,
+                        "nodes_checked":  [
+                                              "Zenodo",
+                                              "GitHub",
+                                              "OpenAIRE",
+                                              "arXiv"
+                                          ]
+                    },
+                    {
+                        "timestamp":  "2025-11-13T19:46:17.3758673Z",
+                        "event":  "hash computed",
+                        "status":  "ok",
+                        "path":  "exports\\integrity_metrics_registry.csv"
+                    }
+                ],
+    "federation_integrity_index":  98.6,
+    "federation_id":  "BioSignalAI-GovNet",
+    "reference_release":  "v1.3.0-global-resilient",
+    "recovery_actions":  2,
+    "error_events":  [
+                         {
+                             "timestamp":  "2025-11-13T19:46:07.727607+00:00",
+                             "event":  "status_json_error",
+                             "severity":  "warning",
+                             "message":  "Detected JSON syntax issue in federation_status.json; attempting automated repair.",
+                             "metadata":  {
+                                              "error":  "Unexpected UTF-8 BOM (decode using utf-8-sig): line 1 column 1 (char 0)"
+                                          }
+                         },
+                         {
+                             "timestamp":  "2025-11-13T19:46:07.729700+00:00",
+                             "event":  "status_json_fallback",
+                             "severity":  "error",
+                             "message":  "Unable to repair federation_status.json; applied default template.",
+                             "metadata":  {
+                                              "error":  "Unexpected UTF-8 BOM (decode using utf-8-sig): line 1 column 1 (char 0)"
+                                          }
+                         }
+                     ],
+    "hash_results":  [
+                         {
+                             "timestamp":  "2025-11-13T19:46:17.3726967Z",
+                             "path":  "exports\\integrity_metrics_registry.csv",
+                             "algorithm":  "sha256",
+                             "hash":  "73bb7db891e9abe9960488aee2d2562b75c96bdba87665c4469bf053e9ba73e1"
+                         }
+                     ],
+    "nodes":  [
+                  {
+                      "name":  "Zenodo",
+                      "type":  "doi",
+                      "endpoint":  "https://zenodo.org/api/records/14173152",
+                      "artifacts":  [
+                                        "zenodo.json",
+                                        "exports/governance_reproducibility_capsule_2025-11-11.zip"
+                                    ]
+                  },
+                  {
+                      "name":  "GitHub",
+                      "type":  "repository",
+                      "endpoint":  "https://github.com/dhananjaysmvdu/BioSignal-AI",
+                      "artifacts":  [
+                                        "PHASE_VIII_COMPLETION_REPORT.md",
+                                        "PHASE_IX_COMPLETION_REPORT.md"
+                                    ]
+                  },
+                  {
+                      "name":  "OpenAIRE",
+                      "type":  "registry",
+                      "endpoint":  "https://explore.openaire.eu/search/dataset?datasetId=od_______099::biosignal-ai",
+                      "artifacts":  [
+                                        "docs/compliance_guidelines.md"
+                                    ]
+                  },
+                  {
+                      "name":  "arXiv",
+                      "type":  "preprint",
+                      "endpoint":  "https://arxiv.org/abs/2410.01234",
+                      "artifacts":  [
+                                        "docs/literature_summary.md"
+                                    ]
+                  }
+              ]
 }
+
