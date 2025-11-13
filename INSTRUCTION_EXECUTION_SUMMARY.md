@@ -1,3 +1,22 @@
+## Phase XX — Federated Reputation & Weighted Consensus
+
+Instructions executed:
+- 106: Reputation Index Engine (agreement history, drift penalty, ethics bonus; writes federation/reputation_index.json; audit marker)
+- 107: Weighted Consensus Engine (reputation-weighted agreement with 95% CI; writes federation/weighted_consensus.json; audit marker)
+- 108: Reputation & Weighted Consensus Tests (unit tests validating scoring and weighted aggregation)
+- 109: Scheduled Verification Workflow (weekly tests and JUnit upload)
+- 110: Phase XX Certification & Tag (v2.4.0-reputation)
+
+Artifacts/Directories:
+- federation/reputation_index.json, federation/weighted_consensus.json
+
+Workflows:
+- .github/workflows/reputation_index.yml
+- .github/workflows/weighted_consensus_verification.yml
+
+Portal:
+- portal/index.html — “Federated Confidence” card (weighted agreement %, 95% CI, top 3 trusted peers)
+
 ## Phase XIX — Federated Provenance Consensus & Integrity
 
 Instructions executed:

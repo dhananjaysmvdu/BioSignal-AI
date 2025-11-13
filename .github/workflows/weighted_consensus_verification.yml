@@ -1,0 +1,38 @@
+name: Reputation & Weighted Consensus Verification
+
+on:
+  schedule:
+    - cron: '30 5 * * 5'  # Fridays 05:30 UTC
+  workflow_dispatch:
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Install requirements
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.lock
+
+      - name: Run reputation & weighted consensus tests
+        run: |
+          pytest -q tests/federation/test_reputation_index.py tests/federation/test_weighted_consensus.py --junitxml=pytest-federation-xx.xml
+
+      - name: Upload validation logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: federation_validation_logs
+          path: pytest-federation-xx.xml
+          if-no-files-found: warn

@@ -344,6 +344,46 @@
                     </div>
                 </div>
             </div>
+
+            <!-- Trust & Consensus Card -->
+            <div class="metric-card">
+                <div class="metric-header">
+                    <span class="metric-title">Trust & Consensus</span>
+                    <span class="status-badge status-green" id="consensus-status">OK</span>
+                </div>
+                <div class="metric-value" style="font-size: 2em;" id="prov-agree">—</div>
+                <div class="metric-label">Provenance Agreement</div>
+                <div style="margin-top: 20px;">
+                    <div class="metric-detail">
+                        <span class="detail-label">Trust Federation</span>
+                        <span class="detail-value" id="trust-agree">—</span>
+                    </div>
+                    <div class="metric-detail">
+                        <span class="detail-label">Peers Checked</span>
+                        <span class="detail-value" id="consensus-peers">—</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Federated Confidence Card -->
+            <div class="metric-card">
+                <div class="metric-header">
+                    <span class="metric-title">Federated Confidence</span>
+                    <span class="status-badge status-green" id="weighted-status">OK</span>
+                </div>
+                <div class="metric-value" style="font-size: 2em;" id="weighted-agree">—</div>
+                <div class="metric-label">Weighted Agreement (min across categories)</div>
+                <div style="margin-top: 20px;">
+                    <div class="metric-detail">
+                        <span class="detail-label">95% Confidence</span>
+                        <span class="detail-value" id="weighted-ci">—</span>
+                    </div>
+                    <div class="metric-detail">
+                        <span class="detail-label">Top Trusted Peers</span>
+                        <span class="detail-value" id="top-trusted">—</span>
+                    </div>
+                </div>
+            </div>
         </div>
         
         <div class="info-section">
@@ -606,6 +646,58 @@
         }
         loadDocProvenance();
         setInterval(loadDocProvenance, 600000); // 10 minutes
+
+        async function loadTrustConsensus(){
+            try{
+                const prov = await fetch('../federation/provenance_consensus.json', {cache:'no-store'});
+
+        async function loadFederatedConfidence(){
+            try{
+                const wc = await fetch('../federation/weighted_consensus.json', {cache:'no-store'});
+                if(wc.ok){
+                    const j = await wc.json();
+                    const pct = j.weighted_agreement_pct ?? 0;
+                    const ci = j.confidence_interval_95 || [pct, pct];
+                    document.getElementById('weighted-agree').textContent = (pct||0).toFixed(1) + '%';
+                    document.getElementById('weighted-ci').textContent = `${ci[0].toFixed?.(1) ?? ci[0]}% – ${ci[1].toFixed?.(1) ?? ci[1]}%`;
+                    const status = document.getElementById('weighted-status');
+                    if(pct >= 99.0){ status.className='status-badge status-green'; status.textContent='HIGH'; }
+                    else if(pct >= 90){ status.className='status-badge status-certified'; status.textContent='MED'; }
+                    else { status.className='status-badge'; status.style.background='#ef4444'; status.textContent='LOW'; }
+                }
+            }catch(e){}
+            try{
+                const rep = await fetch('../federation/reputation_index.json', {cache:'no-store'});
+                if(rep.ok){
+                    const r = await rep.json();
+                    const top = (r.scores || []).slice(0,3).map(x=>`${x.peer ?? x.base_url} (${x.score})`).join(', ');
+                    document.getElementById('top-trusted').textContent = top || '—';
+                }
+            }catch(e){}
+        }
+        loadFederatedConfidence();
+        setInterval(loadFederatedConfidence, 600000);
+                if(prov.ok){
+                    const j = await prov.json();
+                    const pct = j.agreement_pct ?? 0;
+                    document.getElementById('prov-agree').textContent = (pct||0).toFixed(1) + '%';
+                    document.getElementById('consensus-peers').textContent = j.peers_checked ?? 0;
+                    const status = document.getElementById('consensus-status');
+                    if(pct >= 99.9){ status.className='status-badge status-green'; status.textContent='OK'; }
+                    else if(pct >= 90){ status.className='status-badge status-certified'; status.textContent='WATCH'; }
+                    else { status.className='status-badge'; status.style.background='#ef4444'; status.textContent='DRIFT'; }
+                }
+            }catch(e){}
+            try{
+                const trust = await fetch('../federation/trust_consensus_report.json', {cache:'no-store'});
+                if(trust.ok){ const t = await trust.json();
+                    const tp = (t.trust && t.trust.agreement_pct != null) ? t.trust.agreement_pct : (t.trust && t.trust.status==='verified' ? 100 : 0);
+                    document.getElementById('trust-agree').textContent = (tp||0).toFixed(1) + '%';
+                }
+            }catch(e){}
+        }
+        loadTrustConsensus();
+        setInterval(loadTrustConsensus, 600000);
     </script>
 </body>
 </html>

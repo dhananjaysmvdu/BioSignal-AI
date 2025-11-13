@@ -1,0 +1,30 @@
+name: Federated Reputation Index
+
+on:
+  schedule:
+    - cron: '0 5 * * 4'  # Thursdays 05:00 UTC
+  workflow_dispatch:
+
+jobs:
+  reputation:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+
+      - name: Generate reputation index
+        run: |
+          python scripts/federation/reputation_index_engine.py
+
+      - name: Upload reputation index
+        uses: actions/upload-artifact@v4
+        with:
+          name: reputation_index
+          path: federation/reputation_index.json
