@@ -1,3 +1,23 @@
+## Phase XIX — Federated Provenance Consensus & Integrity
+
+Instructions executed:
+- 101: Federated Provenance Sync Engine (compute majority consensus across peers; write federation/provenance_consensus.json; audit marker)
+- 102: Cross-Node Drift Detector (log drift, optional --repair to rebuild documentation bundle and re-sync; non-zero exit if agreement < 90%)
+- 103: Consensus Trust Bridge (merge provenance consensus with trust federation; write federation/trust_consensus_report.json; audit marker)
+- 104: Federation Consensus Tests & Workflow (unit tests for consensus/drift/bridge; scheduled verification workflow)
+- 105: Phase XIX Certification & Tag (v2.3.0-consensus)
+
+Artifacts/Directories:
+- federation/provenance_consensus.json, federation/provenance_drift_log.jsonl, federation/trust_consensus_report.json
+
+Workflows:
+- .github/workflows/provenance_sync.yml
+- .github/workflows/provenance_drift.yml
+- .github/workflows/consensus_verification.yml
+
+Portal:
+- portal/index.html — “Trust & Consensus” card (Provenance Agreement, Trust Federation %, Peers Checked)
+
 ## Phase XVII — Immutable Ledger Mirroring & Forensic Traceback
 
 Instructions executed:
