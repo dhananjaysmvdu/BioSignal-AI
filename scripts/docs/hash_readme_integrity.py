@@ -154,7 +154,8 @@ def verify_transparency() -> Dict[str, Dict[str, str]]:
 def main() -> int:
     ok = verify_readme()
     verify_transparency()
-    return 0 if ok else 2
+    # Per Phase XVI tests, return exit code 1 for failure
+    return 0 if ok else 1
 
 
 if __name__ == '__main__':

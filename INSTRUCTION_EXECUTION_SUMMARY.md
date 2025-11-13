@@ -884,3 +884,18 @@ Phase IX fortifies the Reflex Governance Architecture with autonomous recovery, 
 **Summary Last Updated**: 2025-11-14T09:32:00+00:00
 
 ```
+
+## Phase XVI — Meta-Verification & Self-Testing Layer
+
+Instructions executed:
+- 86: Hash Function Regression Tests (README hashing, UTC enforcement, failure path)
+- 87: Transparency Drift Simulation Tests (thresholds and markers)
+- 88: Provenance Bundle Integrity Test (contents and hash consistency)
+- 89: Meta-Verification Workflow (nightly tests + artifacts)
+- 90: Phase XVI Certification & Tag (v2.0.0-meta-verification)
+
+Artifacts:
+- meta_verification_logs/*.xml (workflow artifacts)
+
+Workflow:
+- .github/workflows/meta_verification.yml
