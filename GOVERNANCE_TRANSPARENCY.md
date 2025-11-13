@@ -173,21 +173,6 @@ The Public Verification Gateway harmonizes governance, ethics, and reproducibili
 
 **Access**: `https://raw.githubusercontent.com/dhananjaysmvdu/BioSignal-AI/main/verification_gateway/public_verification_api.json`
 
-## Automated Restoration & Integrity Recovery
-The **Self-Healing Governance Kernel (SHGK)** ensures critical governance artifacts remain intact by
-comparing live files with the reproducibility capsule manifest and performing automated recoveries.
-
-**Capabilities**:
-- Hash reconciliation for 31 governance artifacts enumerated in `exports/capsule_manifest.json`
-- Git-backed restoration via `git show HEAD:<path>` with provenance logging
-- Structured telemetry emitted to `self_healing/self_healing_log.jsonl`
-- Dashboard-ready snapshots in `self_healing/self_healing_status.json`
-
-**Operational Metrics**:
-- Baseline recovery success rate: **99.3%** (accounts for 0.7% propagation variance buffer)
-- Daily monitoring at 05:15 UTC (`.github/workflows/self_healing_monitor.yml`)
-- Audit trail recorded under the `<!-- SELF_HEALING -->` marker in `audit_summary.md`
-
 ## Portal Features
 **Live Dashboard** (portal/index.html):
 - Real-time metrics: Integrity, Reproducibility, Provenance, Forecast Accuracy
@@ -195,6 +180,14 @@ comparing live files with the reproducibility capsule manifest and performing au
 - Predicted Integrity: Q1 2026 forecasts with confidence intervals
 - Auto-refresh: Metrics reload every 5 minutes from JSON API
 - Forecast updates: Twice weekly (Tuesday/Friday 00:30 UTC via Meta-Forecast 2.0)
+- Error Monitoring Dashboard (portal/errors.html): Federation recoveries, workflow retries, self-healing interventions, and schema hash recalculations with live JSONL sourcing
+
+## Resilience & Recovery Automation
+- **Fault-Tolerant Federation Sync**: `scripts/federation/run_federation_sync.ps1` wraps Python execution with interpreter discovery, inline escaping, and template regeneration. Recovery events logged to `federation/federation_error_log.jsonl`.
+- **Self-Healing Kernel**: `scripts/self_healing/self_healing_kernel.py` restores files from git history after repeated hash mismatches, generates `self_healing_status.json`, and appends `<!-- AUTO_RECOVERY: SUCCESS -->` markers to audit reports.
+- **Schema Hash Guardrail**: `scripts/tools/hash_guardrail.ps1` enforces canonical headers from `templates/integrity_registry_schema.json`, retries inline hashing with temp `_hash_eval.py`, and appends hash results to `federation_status.json`.
+- **Workflow Smart Retry**: `.github/workflows/federation_sync.yml` and `.github/workflows/self_healing_monitor.yml` implement `MAX_ATTEMPTS=3` with exponential backoff (5s → 15s → 45s), auto-install dependencies before final retry, and log persistent failures to `logs/workflow_failures.jsonl`.
+- **Error Observatory**: `portal/errors.html` visualizes recovery telemetry sourced from federation logs, workflow retries, self-healing status, and schema hash events; summary metrics published via `portal/errors.json`.
 
 ## Citation & Research Export
 
@@ -223,17 +216,6 @@ If you use or build on this governance reflex architecture, please cite:
 **Purpose**: Enable transparent AI autonomy with auditable decision history. Each entry is immutable and append-only.
 
 **Visualization**: Latest 5 governance decisions displayed on `portal/accountability.html`.
-
-## Automated Restoration & Integrity Recovery
-
-The **Self-Healing Governance Kernel (SHGK)** monitors critical governance artifacts and restores them automatically when corruption or drift is detected:
-
-- **Manifest**: `self_healing/recovery_manifest.json` (hash-based baseline per artifact)
-- **Execution**: Daily at 05:15 UTC via `.github/workflows/self_healing_monitor.yml`
-- **Logs**: `self_healing/self_healing_log.jsonl` with recovery summaries (`recovery_rate`, `issues_detected`, `issues_recovered`)
-- **Restoration Source**: Git history (`git show <ref>:<path>`) for deterministic recovery
-
-If an artifact is missing or its hash diverges from the manifest, SHGK restores the file from the pinned commit and records the event for audit replay. Recovery effectiveness is tracked and surfaced in the global dashboard.
 
 ---
 This file is auto-generated; do not edit manually.
