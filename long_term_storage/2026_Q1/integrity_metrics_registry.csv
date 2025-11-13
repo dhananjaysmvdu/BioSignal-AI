@@ -1,0 +1,3 @@
+timestamp,integrity_score,violations,warnings,health_score,rri,mpi,confidence,status
+# Q1 2026 collection initialized 2025-11-13
+# Data will be populated by weekly validation runs starting January 2026

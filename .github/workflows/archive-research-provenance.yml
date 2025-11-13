@@ -1,0 +1,39 @@
+name: archive-research-provenance
+on:
+  schedule:
+    - cron: '0 4 * * 1'  # Mondays at 04:00 UTC
+  workflow_dispatch:
+
+jobs:
+  archive-provenance:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: |
+          # Determine current quarter
+          MONTH=$(date +'%m')
+          YEAR=$(date +'%Y')
+          if [ $MONTH -ge 1 ] && [ $MONTH -le 3 ]; then QUARTER="Q1"; fi
+          if [ $MONTH -ge 4 ] && [ $MONTH -le 6 ]; then QUARTER="Q2"; fi
+          if [ $MONTH -ge 7 ] && [ $MONTH -le 9 ]; then QUARTER="Q3"; fi
+          if [ $MONTH -ge 10 ] && [ $MONTH -le 12 ]; then QUARTER="Q4"; fi
+          
+          # Archive to appropriate quarter folder
+          mkdir -p research_provenance
+          mkdir -p long_term_storage/${YEAR}_${QUARTER}
+          
+          cp -r badges exports reports logs research_provenance/
+          zip -r research_provenance/archive_$(date +'%Y-%m-%d').zip research_provenance
+          
+          # Copy latest metrics to quarterly storage
+          if [ -f exports/integrity_metrics_registry.csv ]; then
+            cp exports/integrity_metrics_registry.csv long_term_storage/${YEAR}_${QUARTER}/
+          fi
+          if [ -f exports/reflex_health_timeline.csv ]; then
+            cp exports/reflex_health_timeline.csv long_term_storage/${YEAR}_${QUARTER}/
+          fi
+          
+          git add research_provenance/archive_*.zip long_term_storage/
+          git commit -m "archive: weekly research provenance snapshot (${YEAR} ${QUARTER})" || true
+          git push
+
