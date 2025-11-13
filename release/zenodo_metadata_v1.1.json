@@ -1,0 +1,80 @@
+{
+  "title": "BioSignal-AI Reflex Governance Architecture v1.1.0: Predictive Intelligence",
+  "upload_type": "software",
+  "description": "Self-verifying adaptive governance framework with predictive analytics and risk-aware feedback control. Version 1.1 introduces Meta-Forecast 2.0 engine, Forecast Deviation Index (FDI) and Confidence Stability (CS) metrics, Adaptive Controller v2, and enhanced public transparency portal with interactive risk visualization.<br><br><strong>Key Features:</strong><ul><li>Predictive Analytics: GRLM_MPI_Ensemble model forecasting integrity 30 days ahead (98.0% predicted, 85% confidence)</li><li>Risk Evaluation: FDI measures prediction accuracy (|predicted - actual| / predicted × 100), CS tracks confidence variance (rolling std)</li><li>Adaptive Feedback: Learning rate auto-adjustment based on FDI/CS thresholds (1.2x excellent → 0.5x critical)</li><li>Public Portal: Live dashboard with forecast accuracy gauges, predicted integrity, risk meter</li><li>Automation: Twice-weekly predictions (Tue/Fri 00:30 UTC), nightly validation (02:00 UTC)</li></ul><strong>Reproducibility:</strong> All governance artifacts included (predictive engine config, risk assessment reports, adaptive controller outputs, portal metrics API). Integrity score: TBD% (will be updated at release). Reproducibility status: TBD (will be validated pre-release).<br><br><strong>Citation:</strong> If you use this framework or build on these predictive governance methods, please cite this DOI and the accompanying publications (ICSE 2026, IEEE TSE).",
+  "creators": [
+    {
+      "name": "Dhananjay, Mrityunjay",
+      "affiliation": "Independent Researcher",
+      "orcid": "0000-0000-0000-0000"
+    }
+  ],
+  "keywords": [
+    "governance",
+    "reproducibility",
+    "predictive analytics",
+    "adaptive control",
+    "machine learning",
+    "AI safety",
+    "forecast accuracy",
+    "risk evaluation",
+    "transparency",
+    "open science",
+    "Meta-Forecast",
+    "FDI",
+    "Confidence Stability"
+  ],
+  "license": "MIT",
+  "access_right": "open",
+  "related_identifiers": [
+    {
+      "identifier": "10.5281/zenodo.14173152",
+      "relation": "isVersionOf",
+      "resource_type": "software",
+      "scheme": "doi"
+    },
+    {
+      "identifier": "10.5281/zenodo.14173151",
+      "relation": "isVersionOf",
+      "resource_type": "software",
+      "scheme": "doi"
+    },
+    {
+      "identifier": "https://github.com/dhananjaysmvdu/BioSignal-AI",
+      "relation": "isSupplementTo",
+      "resource_type": "software",
+      "scheme": "url"
+    }
+  ],
+  "contributors": [
+    {
+      "name": "GitHub Actions Bot",
+      "type": "DataCollector",
+      "affiliation": "GitHub"
+    }
+  ],
+  "references": [
+    "Reflex Governance Architecture: Self-Verifying Adaptive Control System, v1.0, DOI: 10.5281/zenodo.14173152",
+    "Meta-Forecast 2.0: Predictive Governance Intelligence for Autonomous AI Systems (Submitted to ICSE 2026)",
+    "Forecast Deviation Index and Confidence Stability: Risk Evaluation Metrics for ML Governance (Submitted to IEEE TSE)"
+  ],
+  "version": "1.1.0",
+  "language": "eng",
+  "notes": "Release v1.1.0 (March 2026) builds on v1.0.0-Whitepaper (November 2025) by adding predictive governance capabilities. This version includes 30+ historical data points (vs. 7 in v1.0), calibrated FDI/CS metrics (vs. baseline placeholders), and production-ready adaptive controller with alert integration. Reproducibility capsule contains: (1) predictive_engine/ config and workflows, (2) controllers/adaptive_v2/ risk-aware controller, (3) reports/ forecast risk assessments and adaptive outputs, (4) portal/ enhanced dashboard with forecast visualization, (5) forecast/ Q1 2026 predictions, (6) exports/ integrity metrics registry (30+ entries), (7) GOVERNANCE_TRANSPARENCY.md with API documentation. All timestamps ISO 8601 UTC. SHA-256 checksums included for artifact integrity verification.",
+  "method": "Automated governance monitoring via GitHub Actions workflows. Predictive engine runs twice weekly (Tuesday/Friday 00:30 UTC) using 90-day rolling window to forecast 30-day ahead integrity and reproducibility. Adaptive controller executes after predictions and before nightly validation (02:00 UTC), adjusting learning rate factors based on FDI < 5% (excellent), FDI < 10% (good), FDI ≥ 10% (drifting), CS < 3.0 (stable), CS ≥ 5.0 (unstable). Risk assessment reports generated with each prediction cycle. Portal metrics API (portal/metrics.json) updated in real-time with FDI, CS, predicted integrity, and learning rate factors. All workflows idempotent and deterministic (fixed random seeds, versioned dependencies).",
+  "communities": [
+    {
+      "identifier": "zenodo"
+    }
+  ],
+  "grants": [
+    {
+      "id": "N/A"
+    }
+  ],
+  "embargo_date": "",
+  "prereserve_doi": {
+    "doi": "",
+    "recid": ""
+  }
+}
