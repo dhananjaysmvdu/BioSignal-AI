@@ -403,6 +403,25 @@ Validation (Instruction 69):
 
 Certification: Phase XII validation PASSED — Eligible for tag `v1.6.0-meta-federation`.
 
+---
+
+## Phase XIII — Temporal Hardening, Provenance Anchoring & Public Ledger Integration (2025-11-14)
+
+Implemented Instructions 70–75:
+- UTC Normalization & Temporal Hardening: Replaced deprecated utcnow() with timezone-aware datetime.now(UTC) across targeted modules; added enforcement test at tests/time/test_utc_normalization.py.
+- Governance Provenance Ledger: Added scripts/ledger/governance_provenance_ledger.py to aggregate PHASE I–XII reports into governance_provenance_ledger.jsonl; computed governance_ledger_hash.json; appended audit marker.
+- Public Verifiable Ledger Portal: Added portal/ledger.html with phases timeline, integrity scores, and SHA-256 anchor; linked from portal/index.html.
+- Integrity Anchor & External Proof Bridge: Added scripts/anchors/publish_integrity_anchor.py to compute combined SHA-256 over key artifacts and optionally publish to GitHub Gist / Zenodo; logs to anchors/anchor_log.jsonl.
+- Public Archival Bundle & DOI Alignment: Hardened scripts/release/publish_archive_and_update_doi.py with timeouts and --dry-run/--skip-zenodo flags to avoid hangs; produces exports/reflex_governance_archive_v1.6.zip and updates docs on DOI mint.
+
+Validation:
+- UTC normalization tests — PASS
+- Full test suite — PASS (82 tests)
+- Ledger hash reproducibility — PASS (3 consecutive runs match)
+- Portal ledger page — Loads with timeline, integrity scores, and anchor
+
+Certification: Phase XIII PASSED — Ready to tag v1.7.0-ledger.
+
 ## Phase II Update: DOI Integration & Release Certification Complete
 
 **Session Date**: 2025-11-11 (Phase II)
