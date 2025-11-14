@@ -1,0 +1,75 @@
+name: Policy Fusion
+
+on:
+  schedule:
+    - cron: '30 5 * * *'  # Daily at 05:30 UTC (after orchestration + alerts)
+  workflow_run:
+    workflows: ["Policy Orchestration"]
+    types:
+      - completed
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  policy-fusion:
+    runs-on: ubuntu-latest
+    if: ${{ github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Run policy fusion engine
+        id: fusion
+        continue-on-error: true
+        run: |
+          python scripts/policy/policy_fusion_engine.py --run > fusion_output.txt 2>&1
+          echo "exit_code=$?" >> $GITHUB_OUTPUT
+          cat fusion_output.txt
+
+      - name: Upload fusion artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: policy-fusion-${{ github.run_number }}
+          path: |
+            state/policy_fusion_state.json
+            state/policy_fusion_log.jsonl
+            fusion_output.txt
+          retention-days: 90
+
+      - name: Handle persistent failure
+        if: steps.fusion.outputs.exit_code != '0'
+        run: |
+          TIMESTAMP=$(date -u +"%Y%m%d-%H%M%S")
+          BRANCH_NAME="fix/policy-fusion-ci-${TIMESTAMP}"
+          
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          
+          git checkout -b "${BRANCH_NAME}"
+          git add fusion_output.txt logs/ || true
+          git commit -m "fix: policy fusion CI failure - ${TIMESTAMP}" || true
+          git push origin "${BRANCH_NAME}" || true
+          
+          echo "<!-- POLICY_FUSION: CI_FAIL $(date -u +"%Y-%m-%dT%H:%M:%SZ") -->" >> audit_summary.md
+          git add audit_summary.md
+          git commit -m "chore: append policy fusion CI failure marker [skip ci]" || true
+          git push origin "${BRANCH_NAME}" || true
+
+      - name: Commit fusion state on success
+        if: steps.fusion.outputs.exit_code == '0'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add state/policy_fusion_state.json state/policy_fusion_log.jsonl audit_summary.md || true
+          git diff --cached --quiet || git commit -m "chore: update policy fusion state [skip ci]"
+          git push || true

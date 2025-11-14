@@ -480,6 +480,33 @@
                     </div>
                 </div>
             </div>
+
+            <!-- Policy Fusion Status Card -->
+            <div class="metric-card">
+                <div class="metric-header">
+                    <span class="metric-title">Policy Fusion Status</span>
+                    <span class="status-badge" id="fusion-badge">—</span>
+                </div>
+                <div class="metric-value" style="font-size: 2.5em;" id="fusion-level">—</div>
+                <div class="metric-label">System-Wide Fusion Level</div>
+                <div style="margin-top: 20px;">
+                    <div class="metric-detail">
+                        <span class="detail-label">Weighted Consensus</span>
+                        <span class="detail-value" id="fusion-consensus">—</span>
+                    </div>
+                    <div class="metric-detail">
+                        <span class="detail-label">Safety Brake</span>
+                        <span class="detail-value" id="fusion-brake">—</span>
+                    </div>
+                    <div class="metric-detail">
+                        <span class="detail-label">Trust Lock</span>
+                        <span class="detail-value" id="fusion-trust">—</span>
+                    </div>
+                    <div style="margin-top: 15px; text-align: center;">
+                        <a href="../state/policy_fusion_state.json" style="color: #667eea; text-decoration: none; font-weight: 600;" target="_blank">→ View Fusion Details</a>
+                    </div>
+                </div>
+            </div>
         </div>
         
         <div class="info-section">
@@ -911,7 +938,65 @@
                 }
             }catch(e){}
         }
+        
+        // Load Policy Fusion State
+        async function loadPolicyFusionState(){
+            try{
+                const response = await fetch('../state/policy_fusion_state.json');
+                if(!response.ok) throw new Error('Failed to fetch fusion state');
+                const data = await response.json();
+                
+                if(data){
+                    const level = data.fusion_level || '—';
+                    const inputs = data.inputs || {};
+                    const computed = data.computed_at || '—';
+                    
+                    document.getElementById('fusion-level').textContent = level;
+                    
+                    // Format timestamp
+                    if(computed !== '—'){
+                        const date = new Date(computed);
+                        document.getElementById('fusion-timestamp').textContent = 
+                            date.toISOString().slice(0,16).replace('T', ' ');
+                    }
+                    
+                    // Weighted consensus
+                    const consensus = inputs.weighted_consensus_pct || 0;
+                    document.getElementById('fusion-consensus').textContent = 
+                        consensus.toFixed(1) + '%';
+                    
+                    // Safety brake status
+                    document.getElementById('fusion-brake').textContent = 
+                        inputs.safety_brake_engaged ? '🔴 ENGAGED' : '🟢 OFF';
+                    
+                    // Trust lock status
+                    document.getElementById('fusion-trust').textContent = 
+                        inputs.trust_locked ? '🔒 LOCKED' : '🔓 Unlocked';
+                    
+                    // Update badge color
+                    const badge = document.getElementById('fusion-badge');
+                    badge.textContent = level;
+                    if(level === 'FUSION_RED'){
+                        badge.className = 'status-badge';
+                        badge.style.background = '#dc2626';
+                        badge.style.color = 'white';
+                    } else if(level === 'FUSION_YELLOW'){
+                        badge.className = 'status-badge';
+                        badge.style.background = '#f59e0b';
+                        badge.style.color = 'white';
+                    } else if(level === 'FUSION_GREEN'){
+                        badge.className = 'status-badge status-green';
+                    } else {
+                        badge.className = 'status-badge';
+                        badge.style.background = '#6b7280';
+                        badge.style.color = 'white';
+                    }
+                }
+            }catch(e){}
+        }
+        
         loadForensicsInsights();
+        loadPolicyFusionState();
         setInterval(loadForensicsInsights, 15000); // Refresh policy every 15 seconds
 
                 if(prov.ok){
@@ -935,6 +1020,9 @@
         }
         loadTrustConsensus();
         setInterval(loadTrustConsensus, 600000);
+        
+        // Auto-refresh fusion state every 10 seconds
+        setInterval(loadPolicyFusionState, 10000);
     </script>
 </body>
 </html>
