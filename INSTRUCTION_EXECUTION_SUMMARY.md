@@ -313,6 +313,73 @@ Critical Achievement: System now closes observation→prediction→response loop
 
 ---
 
+## Phase XXXVII — MV-CRS Governance Feedback Loop & Policy Influence Engine
+
+**Instructions Executed**:
+1. Feedback Engine (`mvcrs_feedback_engine.py`) — converts MV-CRS integration signals into actionable policy recommendations (threshold shifts, fusion bias, RDGL signals)
+2. Decision Rules — failed→+3% tightening, warning→+1% caution, ok→-1% relaxation; escalation_open always forces fusion_bias="raise"
+3. Confidence Scoring — weighted blend of integration freshness (24h), signal consistency, data completeness (0-1 scale)
+4. CI Workflow (`mvcrs_feedback.yml`) — daily 07:10 UTC, critical failure detection (red governance + mvcrs failed + escalation open)
+5. Portal Integration — MV-CRS Feedback Influence card with threshold shift, fusion bias, RDGL signal, confidence (15s refresh)
+6. Test Suite (7 tests) — ok→relaxation, warning→neutral, failed→penalize, escalation priority, confidence drops, idempotency, fix-branch
+7. Phase XXXVII Documentation — feedback loop architecture, computation model, edge cases, safety guarantees
+
+**Full-Circle Governance Flow**:
+- **Governance → MV-CRS → Feedback → Governance** (closed-loop policy evolution)
+- Threshold shifts feed into ATTE (Autonomous Threshold Tuning Engine)
+- Fusion bias recommendations feed into Policy Fusion
+- RDGL signals feed into Regulatory Drift & Governance Lock
+
+**Feedback Recommendations**:
+- **Threshold Shift**: -1% (ok), +1% (warning), +3% (failed) — advisory only, ATTE-clamped
+- **Fusion Bias**: raise (escalations/failures), steady (yellow governance), lower (healthy)
+- **RDGL Signal**: reinforce (ok), neutral (warning), penalize (failed)
+
+**Confidence Model**:
+- **Freshness Factor**: age ≤24h (1.0×), 12-24h (0.8×), >24h (0.6×)
+- **Consistency Penalty**: contradictory signals (0.4× penalty)
+- **Completeness Penalty**: 0.15× per missing required field
+- **Clamped**: [0, 1] range
+
+**Key Artifacts**:
+- `scripts/mvcrs/mvcrs_feedback_engine.py` — feedback computation engine (550+ lines)
+- `state/mvcrs_feedback.json` — current policy recommendations
+- `logs/mvcrs_feedback_log.jsonl` — append-only feedback audit trail
+- `.github/workflows/mvcrs_feedback.yml` — daily CI workflow
+- `portal/index.html` — MV-CRS Feedback Influence card
+- `tests/mvcrs/test_feedback_engine.py` — 7 comprehensive tests
+
+**Complete CI Chain**:
+- 03:30 UTC: Verifier → Correction (post) → 06:40 UTC: Lifecycle → 06:50 UTC: Integration → **07:10 UTC: Feedback**
+- Critical failure: governance red + mvcrs failed + escalation open → fix branch
+- Success marker: `<!-- MVCRS_FEEDBACK: VERIFIED <UTC> -->`
+- Failure marker: `<!-- MVCRS_FEEDBACK: FAILED <UTC> -->` + fix branch
+
+**Safety Guarantees**:
+- Atomic writes (1s/3s/9s retry pattern)
+- Idempotent audit markers (UPDATED/VERIFIED/FAILED)
+- Recommendations are advisory (governance systems apply final clamping)
+- Confidence transparency prevents blind automation
+- Fix-branch creation on persistent failures
+
+**Validation**:
+- 7/7 feedback tests passing
+- Full MV-CRS suite: 59/59 passing (52 prior + 7 feedback)
+- Portal card renders with live recommendations
+- CI workflow integrates with full governance chain
+
+**Achievement**:
+- **Living governance system**: self-healing policy evolution based on MV-CRS health
+- **Adaptive risk management**: dynamic threshold/fusion adjustments
+- **Full traceability**: confidence scores + audit trails for all recommendations
+- **Human oversight**: low confidence (<0.5) surfaced for review
+
+**Reference**: `PHASE_XXXVII_MVCRS_FEEDBACK.md`
+
+**Summary Last Updated**: 2025-11-15T07:15:00Z
+
+---
+
 ## Phase XXXV — MV-CRS Escalation Lifecycle Orchestration
 
 **Instructions Executed**:

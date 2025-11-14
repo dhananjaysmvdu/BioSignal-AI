@@ -290,6 +290,34 @@
                 </div>
             </div>
             
+            <!-- MV-CRS Feedback Influence Card -->
+            <div class="metric-card">
+                <div class="metric-header">
+                    <span class="metric-title">MV-CRS Feedback Influence</span>
+                    <span class="status-badge" id="feedback-badge">—</span>
+                </div>
+                <div class="metric-value" style="font-size:1.5em;" id="feedback-signal-value">—</div>
+                <div class="metric-label">RDGL Signal</div>
+                <div style="margin-top:20px;">
+                    <div class="metric-detail">
+                        <span class="detail-label">Threshold Shift (%)</span>
+                        <span class="detail-value" id="feedback-threshold-shift">—</span>
+                    </div>
+                    <div class="metric-detail">
+                        <span class="detail-label">Fusion Bias</span>
+                        <span class="detail-value" id="feedback-fusion-bias">—</span>
+                    </div>
+                    <div class="metric-detail">
+                        <span class="detail-label">Feedback Confidence</span>
+                        <span class="detail-value" id="feedback-confidence">—</span>
+                    </div>
+                    <div class="metric-detail">
+                        <span class="detail-label">Last Updated</span>
+                        <span class="detail-value" id="feedback-last-updated">—</span>
+                    </div>
+                </div>
+            </div>
+            
             <!-- Integrity Card -->
             <div class="metric-card">
                 <div class="metric-header">
@@ -1489,6 +1517,63 @@
         }
         loadIntegrationStatus();
         setInterval(loadIntegrationStatus, 15000);
+
+        // Load MV-CRS Feedback Influence
+        async function loadFeedbackStatus(){
+            try{
+                const response = await fetch('../state/mvcrs_feedback.json', {cache:'no-store'});
+                if(!response.ok){
+                    document.getElementById('feedback-signal-value').textContent='—';
+                    document.getElementById('feedback-threshold-shift').textContent='—';
+                    document.getElementById('feedback-fusion-bias').textContent='—';
+                    document.getElementById('feedback-confidence').textContent='—';
+                    document.getElementById('feedback-last-updated').textContent='—';
+                    document.getElementById('feedback-badge').textContent='—';
+                    return;
+                }
+                const data = await response.json();
+                if(data){
+                    const rdglSignal = data.rdgl_signal ?? 'neutral';
+                    const thresholdShift = data.recommended_threshold_shift_pct ?? 0;
+                    const fusionBias = data.recommended_fusion_bias ?? 'steady';
+                    const confidence = data.feedback_confidence ?? 0;
+                    const timestamp = data.timestamp ?? '—';
+                    
+                    document.getElementById('feedback-signal-value').textContent=rdglSignal.toUpperCase();
+                    document.getElementById('feedback-threshold-shift').textContent=(thresholdShift >= 0 ? '+' : '') + thresholdShift.toFixed(1) + '%';
+                    document.getElementById('feedback-fusion-bias').textContent=fusionBias.toUpperCase();
+                    document.getElementById('feedback-confidence').textContent=(confidence * 100).toFixed(1) + '%';
+                    
+                    if(timestamp !== '—'){
+                        const ts = new Date(timestamp);
+                        document.getElementById('feedback-last-updated').textContent=ts.toLocaleString();
+                    } else {
+                        document.getElementById('feedback-last-updated').textContent='—';
+                    }
+                    
+                    // Badge color logic
+                    const badge = document.getElementById('feedback-badge');
+                    if(rdglSignal === 'penalize' || fusionBias === 'raise'){
+                        badge.className='status-badge';
+                        badge.style.background='#ef4444'; badge.style.color='white';
+                        badge.textContent='PENALIZE';
+                    } else if(rdglSignal === 'neutral' || fusionBias === 'steady') {
+                        badge.className='status-badge';
+                        badge.style.background='#f59e0b'; badge.style.color='white';
+                        badge.textContent='NEUTRAL';
+                    } else if(rdglSignal === 'reinforce' || fusionBias === 'lower') {
+                        badge.className='status-badge status-green';
+                        badge.textContent='REINFORCE';
+                    } else {
+                        badge.className='status-badge';
+                        badge.style.background='#6b7280'; badge.style.color='white';
+                        badge.textContent='UNKNOWN';
+                    }
+                }
+            } catch(e){ /* silent */ }
+        }
+        loadFeedbackStatus();
+        setInterval(loadFeedbackStatus, 15000);
 
         // Load Human Approval Status
         async function loadApprovalStatus(){

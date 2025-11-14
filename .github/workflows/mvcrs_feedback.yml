@@ -1,0 +1,89 @@
+name: MV-CRS Feedback Engine
+
+on:
+  schedule:
+    # Daily at 07:10 UTC (after integration at 06:50)
+    - cron: '10 7 * * *'
+  workflow_dispatch:
+
+jobs:
+  mvcrs-feedback:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      
+      - name: Check critical failure conditions
+        id: check_conditions
+        run: |
+          if [ -f state/mvcrs_integration_state.json ]; then
+            governance_risk=$(python -c "import json; data=json.load(open('state/mvcrs_integration_state.json')); print(data.get('governance_risk_level', 'unknown'))")
+            mvcrs_ok=$(python -c "import json; data=json.load(open('state/mvcrs_integration_state.json')); print('true' if data.get('mvcrs_core_ok', False) else 'false')")
+            escalation_open=$(python -c "import json; data=json.load(open('state/mvcrs_integration_state.json')); print('true' if data.get('escalation_open', False) else 'false')")
+            
+            echo "governance_risk=$governance_risk" >> $GITHUB_OUTPUT
+            echo "mvcrs_ok=$mvcrs_ok" >> $GITHUB_OUTPUT
+            echo "escalation_open=$escalation_open" >> $GITHUB_OUTPUT
+            
+            if [ "$governance_risk" = "red" ] && [ "$mvcrs_ok" = "false" ] && [ "$escalation_open" = "true" ]; then
+              echo "critical_failure=true" >> $GITHUB_OUTPUT
+              echo "⚠️ Critical failure detected: RED governance + MV-CRS failure + open escalation"
+            else
+              echo "critical_failure=false" >> $GITHUB_OUTPUT
+            fi
+          else
+            echo "⚠️ Integration state not found"
+            echo "critical_failure=false" >> $GITHUB_OUTPUT
+          fi
+      
+      - name: Run MV-CRS Feedback Engine
+        id: feedback
+        run: |
+          python scripts/mvcrs/mvcrs_feedback_engine.py
+          echo "exit_code=$?" >> $GITHUB_OUTPUT
+      
+      - name: Upload feedback artifacts
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: mvcrs-feedback-artifacts
+          path: |
+            state/mvcrs_feedback.json
+            logs/mvcrs_feedback_log.jsonl
+          retention-days: 90
+      
+      - name: Create fix branch on critical failure
+        if: steps.check_conditions.outputs.critical_failure == 'true' || steps.feedback.outputs.exit_code == '2'
+        run: |
+          timestamp=$(date -u +"%Y%m%dT%H%M%SZ")
+          branch_name="fix/mvcrs-feedback-failure-$timestamp"
+          git checkout -b "$branch_name"
+          echo "<!-- MVCRS_FEEDBACK: FAILED $(date -u +"%Y-%m-%dT%H:%M:%SZ") -->" >> INSTRUCTION_EXECUTION_SUMMARY.md
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add INSTRUCTION_EXECUTION_SUMMARY.md
+          git commit -m "chore(mvcrs): feedback engine critical failure marker"
+          git push origin "$branch_name"
+          echo "✓ Created fix branch: $branch_name"
+      
+      - name: Append success marker
+        if: steps.check_conditions.outputs.critical_failure == 'false' && steps.feedback.outputs.exit_code == '0'
+        run: |
+          echo "<!-- MVCRS_FEEDBACK: VERIFIED $(date -u +"%Y-%m-%dT%H:%M:%SZ") -->" >> INSTRUCTION_EXECUTION_SUMMARY.md
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add INSTRUCTION_EXECUTION_SUMMARY.md
+          git commit -m "chore(mvcrs): feedback engine verification marker"
+          git push
+      
+      - name: Fail workflow on critical conditions
+        if: steps.check_conditions.outputs.critical_failure == 'true' || steps.feedback.outputs.exit_code == '2'
+        run: |
+          echo "❌ Workflow failed due to critical conditions"
+          exit 1
