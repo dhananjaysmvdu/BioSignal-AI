@@ -36,6 +36,30 @@ jobs:
           echo "exit_code=$?" >> $GITHUB_OUTPUT
           cat tuner_output.txt
 
+      - name: Extract RDGL metadata
+        if: steps.tuner.outputs.exit_code == '0'
+        id: rdgl_meta
+        run: |
+          python -c "import json, pathlib; p=pathlib.Path('state/threshold_policy.json'); j=json.loads(p.read_text(encoding='utf-8')) if p.exists() else {}; mode=j.get('rdgl_mode_used','unknown'); scaled=j.get('rdgl_scaled_percent_range',[None,None]); pathlib.Path('state/rdgl_impact.json').write_text(json.dumps({'rdgl_mode_used':mode,'rdgl_scaled_percent_range':scaled}), encoding='utf-8'); print('RDGL mode:', mode); print('RDGL scaled:', scaled)"
+
+      - name: Upload RDGL impact artifact
+        if: steps.tuner.outputs.exit_code == '0'
+        uses: actions/upload-artifact@v4
+        with:
+          name: rdgl-impact-${{ github.run_number }}
+          path: |
+            state/rdgl_impact.json
+          retention-days: 90
+
+      - name: Warn if RDGL locked tuner
+        if: steps.tuner.outputs.exit_code == '0'
+        run: |
+          MODE=$(python -c "import json;print(json.load(open('state/rdgl_impact.json'))['rdgl_mode_used'])")
+          MAX=$(python -c "import json;print(json.load(open('state/rdgl_impact.json'))['rdgl_scaled_percent_range'][1])")
+          if [ "$MODE" = "locked" ] || [ "$MAX" = "0.0" ] || [ "$MAX" = "0" ]; then
+            echo "::warning::RDGL locked tuner shift range (0,0)"
+          fi
+
       - name: Upload tuner artifacts
         uses: actions/upload-artifact@v4
         with:
@@ -70,6 +94,6 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add state/threshold_policy.json state/threshold_tuning_history.jsonl audit_summary.md || true
+          git add state/threshold_policy.json state/threshold_tuning_history.jsonl state/rdgl_impact.json audit_summary.md || true
           git diff --cached --quiet || git commit -m "chore: update autonomous thresholds [skip ci]"
           git push || true

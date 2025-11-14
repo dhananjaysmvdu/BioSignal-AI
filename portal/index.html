@@ -530,6 +530,14 @@
                         <span class="detail-value" id="atte-reputation">—</span>
                     </div>
                     <div class="metric-detail">
+                        <span class="detail-label">Learning Influence</span>
+                        <span class="detail-value"><span class="status-badge" id="atte-learning">—</span></span>
+                    </div>
+                    <div class="metric-detail">
+                        <span class="detail-label">Shift Range</span>
+                        <span class="detail-value" id="atte-shift">—</span>
+                    </div>
+                    <div class="metric-detail">
                         <span class="detail-label">Last Updated</span>
                         <span class="detail-value" id="atte-updated">—</span>
                     </div>
@@ -1142,6 +1150,37 @@
                         badge.className = 'status-badge';
                         badge.style.background = '#6b7280';
                         badge.style.color = 'white';
+                    }
+
+                    // RDGL influence metadata (optional)
+                    const rdglMode = (data.rdgl_mode_used || 'normal').toString();
+                    const rdglScaled = data.rdgl_scaled_percent_range || data.rdgl_shift_percent_range || null;
+                    const rdglBadge = document.getElementById('atte-learning');
+                    rdglBadge.textContent = rdglMode.toUpperCase();
+                    if(rdglMode === 'relaxed'){
+                        rdglBadge.className = 'status-badge status-green';
+                        rdglBadge.style.color = 'white';
+                    } else if(rdglMode === 'normal'){
+                        rdglBadge.className = 'status-badge status-certified';
+                        rdglBadge.style.color = 'white';
+                    } else if(rdglMode === 'tightening'){
+                        rdglBadge.className = 'status-badge';
+                        rdglBadge.style.background = '#f59e0b';
+                        rdglBadge.style.color = 'white';
+                    } else if(rdglMode === 'locked'){
+                        rdglBadge.className = 'status-badge';
+                        rdglBadge.style.background = '#dc2626';
+                        rdglBadge.style.color = 'white';
+                    } else {
+                        rdglBadge.className = 'status-badge';
+                        rdglBadge.style.background = '#6b7280';
+                        rdglBadge.style.color = 'white';
+                    }
+                    const shiftEl = document.getElementById('atte-shift');
+                    if(Array.isArray(rdglScaled) && rdglScaled.length === 2){
+                        shiftEl.textContent = `${rdglScaled[0]}% – ${rdglScaled[1]}%`;
+                    } else {
+                        shiftEl.textContent = '—';
                     }
                 }
             }catch(e){}

@@ -167,7 +167,8 @@ def compute_thresholds(
     forecast_risk_levels: List[str],
     reputation_scores: List[float],
     stability_score: float,
-    current_thresholds: Dict
+    current_thresholds: Dict,
+    max_shift_percent: float = MAX_SHIFT_PERCENT
 ) -> Dict:
     """
     Compute new thresholds based on rolling window analysis.
@@ -204,11 +205,11 @@ def compute_thresholds(
     current_yellow = current_thresholds["integrity"]["yellow"]
     
     if integrity_trend < -5.0:  # Declining quality → tighten
-        new_green = min(current_green + (current_green * MAX_SHIFT_PERCENT / 100), 100.0)
-        new_yellow = min(current_yellow + (current_yellow * MAX_SHIFT_PERCENT / 100), 100.0)
+        new_green = min(current_green + (current_green * max_shift_percent / 100), 100.0)
+        new_yellow = min(current_yellow + (current_yellow * max_shift_percent / 100), 100.0)
     elif integrity_trend > 5.0:  # Improving quality → relax
-        new_green = max(current_green - (current_green * MAX_SHIFT_PERCENT / 100), MIN_INTEGRITY_THRESHOLD)
-        new_yellow = max(current_yellow - (current_yellow * MAX_SHIFT_PERCENT / 100), MIN_INTEGRITY_THRESHOLD)
+        new_green = max(current_green - (current_green * max_shift_percent / 100), MIN_INTEGRITY_THRESHOLD)
+        new_yellow = max(current_yellow - (current_yellow * max_shift_percent / 100), MIN_INTEGRITY_THRESHOLD)
     else:  # Stable → no change
         new_green = current_green
         new_yellow = current_yellow
@@ -224,11 +225,11 @@ def compute_thresholds(
     consensus_variance = statistics.stdev(consensus_values) if len(consensus_values) > 1 else 0
     
     if consensus_variance > 10.0:  # High variance → tighten
-        new_cons_green = min(current_cons_green + (current_cons_green * MAX_SHIFT_PERCENT / 100), 100.0)
-        new_cons_yellow = min(current_cons_yellow + (current_cons_yellow * MAX_SHIFT_PERCENT / 100), 100.0)
+        new_cons_green = min(current_cons_green + (current_cons_green * max_shift_percent / 100), 100.0)
+        new_cons_yellow = min(current_cons_yellow + (current_cons_yellow * max_shift_percent / 100), 100.0)
     elif consensus_variance < 3.0:  # Low variance → relax
-        new_cons_green = max(current_cons_green - (current_cons_green * MAX_SHIFT_PERCENT / 100), MIN_CONSENSUS_THRESHOLD)
-        new_cons_yellow = max(current_cons_yellow - (current_cons_yellow * MAX_SHIFT_PERCENT / 100), MIN_CONSENSUS_THRESHOLD)
+        new_cons_green = max(current_cons_green - (current_cons_green * max_shift_percent / 100), MIN_CONSENSUS_THRESHOLD)
+        new_cons_yellow = max(current_cons_yellow - (current_cons_yellow * max_shift_percent / 100), MIN_CONSENSUS_THRESHOLD)
     else:
         new_cons_green = current_cons_green
         new_cons_yellow = current_cons_yellow
@@ -348,15 +349,77 @@ def run_threshold_tuner(dry_run: bool = False):
         # Compute stability score
         stability_score = compute_stability_score(fusion_log)
         
-        # Compute new thresholds
-        new_thresholds = compute_thresholds(
+        # Default RDGL influence
+        rdgl_mode = "normal"
+        rdgl_range = [1, 2]
+        rdgl_scaled = [1.0, 2.0]
+
+        # Load RDGL adjustments if present
+        rdgl_file = STATE_DIR / "rdgl_policy_adjustments.json"
+        rdgl_data = load_json(rdgl_file) or {}
+        if isinstance(rdgl_data, dict):
+            rdgl_mode = str(rdgl_data.get("mode", rdgl_data.get("rdgl_mode_used", "normal"))).lower() or "normal"
+            if isinstance(rdgl_data.get("shift_percent_range"), list) and len(rdgl_data["shift_percent_range"]) == 2:
+                rdgl_range = [float(rdgl_data["shift_percent_range"][0]), float(rdgl_data["shift_percent_range"][1])]
+
+        # Map RDGL modes to scaling factors
+        scale_map = {"relaxed": 1.2, "normal": 1.0, "tightening": 0.7, "locked": 0.0}
+        factor = scale_map.get(rdgl_mode, 1.0)
+
+        # Apply scaling and clamp to MAX_SHIFT_PERCENT
+        def clamp(v: float, lo: float, hi: float) -> float:
+            return max(lo, min(hi, v))
+
+        scaled_min = rdgl_range[0] * factor
+        scaled_max = rdgl_range[1] * factor
+        final_min = clamp(scaled_min, 0.0, MAX_SHIFT_PERCENT)
+        final_max = clamp(scaled_max, 0.0, MAX_SHIFT_PERCENT)
+        if final_max < final_min:
+            final_max = final_min
+        rdgl_scaled = [round(final_min, 3), round(final_max, 3)]
+
+        # Safety gates from current fusion state
+        fusion_state = load_json(POLICY_FUSION_STATE) or {}
+        inputs = fusion_state.get("inputs", {}) if isinstance(fusion_state, dict) else {}
+        fusion_level = str(fusion_state.get("fusion_level", "")).upper()
+        trust_locked = bool(inputs.get("trust_locked", False))
+        safety_brake = bool(inputs.get("safety_brake_engaged", False))
+
+        # If RDGL locked or safety gates active or fusion RED → no updates
+        rdgl_locked = (rdgl_mode == "locked") or (rdgl_scaled == [0.0, 0.0])
+        if rdgl_locked or trust_locked or safety_brake or fusion_level == "FUSION_RED":
+            new_thresholds = current_policy.copy()
+            new_thresholds["status"] = "locked"
+            reasons = []
+            if rdgl_locked:
+                reasons.append("rdgl_locked")
+            if trust_locked:
+                reasons.append("trust_locked")
+            if safety_brake:
+                reasons.append("safety_brake")
+            if fusion_level == "FUSION_RED":
+                reasons.append("fusion_red")
+            new_thresholds["reason"] = ",".join(reasons)
+            # annotate RDGL metadata
+            new_thresholds["rdgl_mode_used"] = rdgl_mode
+            new_thresholds["rdgl_shift_range_used"] = rdgl_range
+            new_thresholds["rdgl_scaled_percent_range"] = rdgl_scaled
+        else:
+            # Compute new thresholds with RDGL-influenced max shift (use upper bound)
+            effective_max_shift = rdgl_scaled[1]
+            new_thresholds = compute_thresholds(
             integrity_scores,
             consensus_values,
             forecast_risk_levels,
             reputation_scores,
             stability_score,
-            current_policy
-        )
+                current_policy,
+                max_shift_percent=effective_max_shift
+            )
+            # annotate RDGL metadata
+            new_thresholds["rdgl_mode_used"] = rdgl_mode
+            new_thresholds["rdgl_shift_range_used"] = rdgl_range
+            new_thresholds["rdgl_scaled_percent_range"] = rdgl_scaled
         
         # Update metadata
         new_thresholds["last_updated"] = datetime.now(timezone.utc).isoformat()
@@ -373,6 +436,7 @@ def run_threshold_tuner(dry_run: bool = False):
             atomic_write_json(THRESHOLD_POLICY, new_thresholds)
             append_threshold_history(new_thresholds)
             append_audit_marker()
+            append_rdgl_integration_marker()
         
         return 0
     
@@ -438,6 +502,22 @@ def append_audit_marker():
     # Write back
     with AUDIT_FILE.open("w", encoding="utf-8") as f:
         f.write("\n".join(filtered_lines) + "\n")
+
+
+def append_rdgl_integration_marker():
+    """Append idempotent RDGL integration audit marker."""
+    if not AUDIT_FILE.exists():
+        return
+    prefix = "<!-- ATTE_RDGL_INTEGRATION: USED "
+    ts = datetime.now(timezone.utc).isoformat()
+    new_marker = f"{prefix}{ts} -->"
+    with AUDIT_FILE.open("r", encoding="utf-8", errors="replace") as f:
+        content = f.read()
+    lines = content.splitlines()
+    filtered = [ln for ln in lines if not ln.strip().startswith(prefix)]
+    filtered.append(new_marker)
+    with AUDIT_FILE.open("w", encoding="utf-8") as f:
+        f.write("\n".join(filtered) + "\n")
 
 
 def create_fix_branch(error_msg: str, thresholds: Dict):

@@ -73,12 +73,22 @@
 **Artifacts**:
 - `state/rdgl_policy_adjustments.json` — score/mode/shift/trend
 - `state/rdgl_reward_log.jsonl` — daily rewards + breakdown
+- `state/rdgl_impact.json` — extracted mode + scaled range for CI
 - `.github/workflows/rdgl_training.yml` — CI orchestration
 - `portal/index.html` — RDGL card with 15s refresh
 - `tests/learning/test_rdgl_engine.py` — 6 tests
 
 **Validation**:
 - 6/6 tests passing; dry-run OK
+
+### RDGL → ATTE Integration (v2.8.1)
+- ATTE ingests RDGL (mode + range), maps: relaxed×1.2, normal×1.0, tightening×0.7, locked×0.0
+- Clamps to max 3.0% and ensures max≥min; uses upper bound as effective daily cap
+- Safety gates: no updates if trust lock, safety brake, or fusion RED
+- Emits `rdgl_mode_used`, `rdgl_shift_range_used`, `rdgl_scaled_percent_range`
+- Audit marker `ATTE_RDGL_INTEGRATION: USED …` (idempotent)
+- Portal shows Learning Influence badge + actual shift range
+- CI uploads `rdgl_impact.json` and warns if RDGL locked tuner
 
 **Summary Last Updated**: 2025-11-14T18:05:00+00:00
 
