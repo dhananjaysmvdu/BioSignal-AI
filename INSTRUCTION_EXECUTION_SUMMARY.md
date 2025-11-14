@@ -198,6 +198,35 @@ Artifacts/Directories:
 - scripts/forensics/adaptive_response_engine.py (autonomous response engine, 489 lines)
 - forensics/response_history.jsonl (response audit log)
 - forensics/reversible_actions_ledger.jsonl (undo instruction ledger)
+
+---
+
+## Phase XXX — Multi-Verifier Challenge-Response System (MV-CRS) Baseline
+
+**Instructions Executed (Baseline Scaffolding)**:
+1. Added scaffolding modules `scripts/mvcrs/` (challenge_engine, verifiers, challenge_utils)
+2. Created state artifacts (`state/challenge_events.jsonl`, `state/challenges_chain_meta.json`, `state/challenge_summary.json`, `state/mvcrs_config.json`)
+3. Added portal view `portal/challenges.html` + JS stub
+4. Added CI workflow `.github/workflows/mvcrs_challenge.yml` (daily schedule + manual dispatch)
+5. Implemented `challenge_utils.py` (atomic_write_json, append_jsonl, compute_chain_hash, update meta/summary, audit marker)
+6. Added deterministic chain integrity tests (`tests/mvcrs/test_challenge_chain.py`) and stub suite (5 tests passing)
+7. Enhanced `challenge_engine.py` with argparse dry-run simulator (`--dry-run --simulate baseline`)
+8. Ran integrity scripts (README + documentation provenance) and appended audit marker `MVCRS_BASELINE`
+
+**Current Status**:
+- Baseline dry-run prints placeholder JSON without persistence.
+- Chain hash deterministic; updates on append (verified by tests).
+- No verifier logic or escalation implemented yet.
+
+**Next Planned Steps**:
+- Implement distinct verifier algorithms (primary, secondary, tertiary) with confidence outputs.
+- Add deviation classification & escalation artifact creation.
+- Integrate meta + summary update calls into engine run path.
+- Expand tests for escalation thresholds and audit marker idempotency.
+
+**Audit Marker Added**: `<!-- MVCRS_BASELINE: CREATED 2025-11-15T00:00:00Z -->`
+
+**Summary Last Updated**: 2025-11-15T00:00:00Z
 - forensics/safety_brake_state.json (rate limiter state)
 
 Workflows:
