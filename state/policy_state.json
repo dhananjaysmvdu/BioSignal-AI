@@ -1,0 +1,21 @@
+{
+  "policy": "RED",
+  "evaluated_at": "2025-11-14T06:55:16.464707+00:00",
+  "inputs": {
+    "trust_locked": false,
+    "integrity_score": 97.5,
+    "consensus_pct": 100.0,
+    "reputation_score": 100.0,
+    "forecast_risk": "high",
+    "recent_responses": 10
+  },
+  "thresholds": {
+    "red_integrity": 90.0,
+    "red_consensus": 85.0,
+    "red_responses": 8,
+    "yellow_integrity": 95.0,
+    "yellow_consensus": 90.0,
+    "yellow_reputation": 80.0,
+    "yellow_responses": 4
+  }
+}
