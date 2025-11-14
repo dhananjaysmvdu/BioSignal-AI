@@ -25,7 +25,7 @@ import os
 import sys
 import time
 import datetime as _dt
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Tuple
 
 try:  # Support both module and script execution contexts
     from .challenge_utils import (
@@ -43,9 +43,12 @@ MANDATORY_FILES = [
     "state/challenges_chain_meta.json",
 ]
 OPTIONAL_FILES = [
-    "federation/provenance_consensus.json",  # may be absent initially
-    "state/rdgl_policy_adjustments.json",    # expected once RDGL integrated
-    "state/adaptive_response_history.jsonl", # expected once adaptive response history mirrored
+    "federation/provenance_consensus.json",  # provenance consensus summary
+    "state/rdgl_policy_adjustments.json",    # RDGL adjustments (mode, score, shift range)
+    "forensics/response_history.jsonl",      # adaptive response actions
+    "state/policy_fusion_state.json",        # policy fusion state
+    "state/policy_state.json",               # policy state
+    "state/trust_lock_state.json",           # trust lock info
 ]
 REQUIRED_FILES = MANDATORY_FILES + OPTIONAL_FILES
 
@@ -105,29 +108,184 @@ def count_recent_events(events_path: str, days: int = 7) -> int:
                 recent += 1
     return recent
 
-def build_deviation_framework() -> List[Dict[str, Any]]:
-    # Placeholder: empty list; structure defined for future population.
-    return []
+def _severity_from_counts(struct_corrupt: bool, mismatch_count: int, forecast_issues: int, action_conflicts: int) -> Tuple[str, Dict[str,int]]:
+    if struct_corrupt or mismatch_count > 3:
+        return "high", {"mismatches": mismatch_count, "forecast": forecast_issues, "actions": action_conflicts}
+    if mismatch_count or forecast_issues:
+        if mismatch_count <= 3 or forecast_issues > 0:
+            return "medium", {"mismatches": mismatch_count, "forecast": forecast_issues, "actions": action_conflicts}
+    if action_conflicts:
+        return "low", {"mismatches": mismatch_count, "forecast": forecast_issues, "actions": action_conflicts}
+    return "low", {"mismatches": mismatch_count, "forecast": forecast_issues, "actions": action_conflicts}
 
-def compute_status(missing: List[str]) -> str:
-    # Failure only if multiple mandatory artifacts missing
-    mand_missing = [m for m in missing if m in MANDATORY_FILES]
-    if len(mand_missing) >= 2:
+def build_deviations(artifacts: Dict[str, Any], missing: List[str]) -> List[Dict[str, Any]]:
+    deviations: List[Dict[str, Any]] = []
+    ts_now = utc_iso()
+    struct_corrupt = False
+
+    # TYPE_A_STRUCTURE: missing artifacts & JSONL corruption
+    for m in missing:
+        if m in MANDATORY_FILES:
+            deviations.append({
+                "type": "TYPE_A_STRUCTURE",
+                "severity": "high",
+                "metric": "artifact_presence",
+                "expected": "present",
+                "observed": "missing",
+                "details": {"path": m},
+                "timestamp": ts_now,
+            })
+            struct_corrupt = True
+        else:
+            deviations.append({
+                "type": "TYPE_A_STRUCTURE",
+                "severity": "low",
+                "metric": "artifact_presence",
+                "expected": "present",
+                "observed": "missing",
+                "details": {"path": m},
+                "timestamp": ts_now,
+            })
+
+    events_path = "state/challenge_events.jsonl"
+    if os.path.isfile(events_path):
+        with open(events_path, "r", encoding="utf-8") as f:
+            line_no = 0
+            for raw in f:
+                line_no += 1
+                ln = raw.strip()
+                if not ln:
+                    continue
+                try:
+                    json.loads(ln)
+                except json.JSONDecodeError as e:
+                    deviations.append({
+                        "type": "TYPE_A_STRUCTURE",
+                        "severity": "high",
+                        "metric": "jsonl_integrity",
+                        "expected": "valid_json",
+                        "observed": "parse_error",
+                        "details": {"line": line_no, "error": str(e)},
+                        "timestamp": utc_iso(),
+                    })
+                    struct_corrupt = True
+
+    # TYPE_B_CONSISTENCY: simplified placeholder checks
+    mismatch_count = 0
+    rdgl = artifacts.get("state/rdgl_policy_adjustments.json")
+    fusion = artifacts.get("state/policy_fusion_state.json")
+    policy_state = artifacts.get("state/policy_state.json")
+    if rdgl and isinstance(rdgl, dict) and fusion and isinstance(fusion, dict):
+        rdgl_mode = rdgl.get("mode")
+        fusion_policy = fusion.get("inputs", {}).get("policy")
+        if rdgl_mode and fusion_policy and rdgl_mode.lower().startswith("locked") and fusion_policy != "RED":
+            deviations.append({
+                "type": "TYPE_B_CONSISTENCY",
+                "severity": "medium",
+                "metric": "rdgl_mode_vs_policy",
+                "expected": "policy RED when rdgl locked",
+                "observed": f"policy {fusion_policy} with rdgl_mode {rdgl_mode}",
+                "details": {},
+                "timestamp": utc_iso(),
+            })
+            mismatch_count += 1
+    if fusion and isinstance(fusion, dict):
+        consensus_pct = fusion.get("inputs", {}).get("weighted_consensus_pct")
+        if isinstance(consensus_pct, (int, float)) and consensus_pct < 90:
+            deviations.append({
+                "type": "TYPE_B_CONSISTENCY",
+                "severity": "medium",
+                "metric": "weighted_consensus_pct",
+                "expected": ">=90",
+                "observed": consensus_pct,
+                "details": {},
+                "timestamp": utc_iso(),
+            })
+            mismatch_count += 1
+
+    # TYPE_C_FORECAST
+    forecast_issues = 0
+    if policy_state and isinstance(policy_state, dict):
+        risk = policy_state.get("inputs", {}).get("forecast_risk")
+        responses_24h = policy_state.get("inputs", {}).get("recent_responses")
+        if risk == "high" and isinstance(responses_24h, int) and responses_24h < 2:
+            deviations.append({
+                "type": "TYPE_C_FORECAST",
+                "severity": "medium",
+                "metric": "high_risk_low_responses",
+                "expected": "responsive_actions>=2",
+                "observed": responses_24h,
+                "details": {"risk": risk},
+                "timestamp": utc_iso(),
+            })
+            forecast_issues += 1
+        if risk == "low" and isinstance(responses_24h, int) and responses_24h > 5:
+            deviations.append({
+                "type": "TYPE_C_FORECAST",
+                "severity": "medium",
+                "metric": "low_risk_high_responses",
+                "expected": "responses<=5",
+                "observed": responses_24h,
+                "details": {"risk": risk},
+                "timestamp": utc_iso(),
+            })
+            forecast_issues += 1
+
+    # TYPE_D_UNEXPECTED_ACTION
+    action_conflicts = 0
+    trust_lock = artifacts.get("state/trust_lock_state.json")
+    responses_log_path = "forensics/response_history.jsonl"
+    if trust_lock and isinstance(trust_lock, dict) and trust_lock.get("locked") is True and os.path.isfile(responses_log_path):
+        with open(responses_log_path, "r", encoding="utf-8") as f:
+            for raw in f:
+                ln = raw.strip()
+                if not ln:
+                    continue
+                try:
+                    obj = json.loads(ln)
+                except json.JSONDecodeError:
+                    continue
+                if obj.get("event_type") == "ADAPTIVE_RESPONSE":
+                    deviations.append({
+                        "type": "TYPE_D_UNEXPECTED_ACTION",
+                        "severity": "low",
+                        "metric": "action_during_trust_lock",
+                        "expected": "no_adaptive_response",
+                        "observed": obj.get("status"),
+                        "details": {"response_id": obj.get("response_id")},
+                        "timestamp": utc_iso(),
+                    })
+                    action_conflicts += 1
+
+    aggregate_severity, _agg_details = _severity_from_counts(struct_corrupt, mismatch_count, forecast_issues, action_conflicts)
+    if aggregate_severity == "high":
+        for d in deviations:
+            if d["severity"] in ("medium", "low") and d["type"] != "TYPE_D_UNEXPECTED_ACTION":
+                d["severity"] = "high"
+    elif aggregate_severity == "medium":
+        for d in deviations:
+            if d["severity"] == "low" and d["type"] != "TYPE_D_UNEXPECTED_ACTION":
+                d["severity"] = "medium"
+    return deviations
+
+def compute_status_from_deviations(devs: List[Dict[str, Any]]) -> str:
+    if any(d["severity"] == "high" for d in devs):
         return "failed"
-    if missing:
+    if any(d["severity"] == "medium" for d in devs):
         return "warning"
     return "ok"
 
-def update_audit_marker(marker_line: str) -> None:
-    # Remove prior MVCRS_VERIFIER markers then append new one.
+def update_audit_marker(marker_line: str, escalation_marker: str | None = None) -> None:
     lines: List[str] = []
     if os.path.isfile(AUDIT_SUMMARY):
         with open(AUDIT_SUMMARY, "r", encoding="utf-8") as f:
             for l in f:
-                if "MVCRS_VERIFIER:" in l:
+                if "MVCRS_VERIFIER:" in l or "MVCRS_ESCALATION:" in l:
                     continue
                 lines.append(l.rstrip("\n"))
     lines.append(marker_line)
+    if escalation_marker:
+        lines.append(escalation_marker)
     tmp = AUDIT_SUMMARY + ".tmp"
     with open(tmp, "w", encoding="utf-8") as f:
         f.write("\n".join(lines) + "\n")
@@ -148,44 +306,74 @@ def load_all():
             artifacts[path] = {"exists": True, "size": os.path.getsize(path)}
     return artifacts, missing
 
-def update_summary(verifier_status: str) -> Dict[str, Any]:
+def update_summary(verifier_status: str, deviations: List[Dict[str, Any]], escalation_created: bool, escalation_ts: str | None) -> Dict[str, Any]:
     total_events = count_events("state/challenge_events.jsonl")
     recent_events = count_recent_events("state/challenge_events.jsonl", days=7)
-    deviation_counts = {
-        "TYPE_A_STRUCTURE": {"low": 0, "medium": 0, "high": 0},
-        "TYPE_B_CONSISTENCY": {"low": 0, "medium": 0, "high": 0},
-        "TYPE_C_FORECAST": {"low": 0, "medium": 0, "high": 0},
-        "TYPE_D_UNEXPECTED_ACTION": {"low": 0, "medium": 0, "high": 0},
-    }
+    deviation_counts = {t: {"low": 0, "medium": 0, "high": 0} for t in DEVIATION_TYPES}
+    severity_totals = {"low": 0, "medium": 0, "high": 0}
+    for d in deviations:
+        deviation_counts[d["type"]][d["severity"]] += 1
+        severity_totals[d["severity"]] += 1
     summary = {
         "total_events": total_events,
         "recent_window_events": recent_events,
         "deviation_counts": deviation_counts,
+        "severity_totals": severity_totals,
         "verifier_status": verifier_status,
+        "escalation_triggered": escalation_created,
+        "last_escalation_ts": escalation_ts,
         "last_updated": utc_iso(),
     }
     atomic_write_json(SUMMARY_PATH, summary)
     return summary
 
+def create_escalation(deviations: List[Dict[str, Any]], artifacts: Dict[str, Any]) -> Dict[str, Any]:
+    high_devs = [d for d in deviations if d["severity"] == "high"]
+    ts = utc_iso()
+    recommended = "force_response_review"
+    types = {d["type"] for d in high_devs}
+    if any(t == "TYPE_A_STRUCTURE" for t in types):
+        recommended = "trigger_self_healing"
+    elif any(t == "TYPE_B_CONSISTENCY" for t in types):
+        recommended = "force_threshold_recompute"
+    elif any(t in {"TYPE_C_FORECAST", "TYPE_D_UNEXPECTED_ACTION"} for t in types):
+        recommended = "force_response_review"
+    payload = {
+        "id": f"escalation-{ts.replace(':','').replace('-','')}",
+        "timestamp": ts,
+        "recommended_action": recommended,
+        "high_severity_deviations": high_devs,
+        "snapshot": {"artifact_keys": list(artifacts.keys())},
+    }
+    atomic_write_json("state/mvcrs_escalation.json", payload)
+    return payload
+
 def main(argv=None) -> int:
     artifacts, missing = load_all()
-    status = compute_status(missing)
-    deviations = build_deviation_framework()
+    deviations = build_deviations(artifacts, missing)
+    status = compute_status_from_deviations(deviations)
+    escalation_payload = None
+    escalation_marker = None
+    escalation_ts = None
+    if status == "failed":
+        escalation_payload = create_escalation(deviations, artifacts)
+        escalation_ts = escalation_payload["timestamp"]
+        escalation_marker = f"<!-- MVCRS_ESCALATION: CREATED {escalation_ts} -->"
     result = {
         "status": status,
-        "expected": {},  # placeholder
-        "observed": {},  # placeholder
+        "expected": {},
+        "observed": {},
         "deviations": deviations,
         "missing_artifacts": missing,
         "timestamp": utc_iso(),
     }
     atomic_write_json(STATE_PATH, result)
     append_jsonl(LOG_PATH, result)
-    summary = update_summary(status)
+    summary = update_summary(status, deviations, escalation_payload is not None, escalation_ts)
     marker = f"<!-- MVCRS_VERIFIER: UPDATED {utc_iso()} -->"
-    update_audit_marker(marker)
-    # Emit JSON to stdout for CI evaluation
-    print(json.dumps({"result": result, "summary": summary}, separators=(",", ":")))
+    update_audit_marker(marker, escalation_marker)
+    output = {"result": result, "summary": summary, "escalation": escalation_payload}
+    print(json.dumps(output, separators=(",", ":")))
     return 2 if status == "failed" else 0
 
 if __name__ == "__main__":  # pragma: no cover
