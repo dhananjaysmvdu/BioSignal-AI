@@ -255,6 +255,28 @@ Integration:
 
 Critical Achievement: System now closes observation→prediction→response loop with autonomous action capability while maintaining safety guardrails and human oversight.
 
+---
+
+## Phase XXXI — MV-CRS Integration into Mainline Governance
+
+**Summary**:
+- Integrated MV-CRS Verifier and Correction Engine into the production governance chain.
+- Added escalation artifacts and idempotent audit markers across verifier, escalation, and correction stages.
+- Introduced comprehensive test suites: 32 verifier/escalation tests and 8 correction engine tests.
+- CI sequencing established: verifier workflow runs on schedule/manual; correction workflow triggers on verifier completion.
+
+**Artifacts**:
+- `scripts/mvcrs/challenge_verifier.py`, `scripts/mvcrs/mvcrs_correction_engine.py`
+- `state/challenge_verifier_state.json`, `state/mvcrs_escalation.json`, `state/mvcrs_last_correction.json`, `state/mvcrs_correction_log.jsonl`
+- Workflows: `.github/workflows/mvcrs_challenge.yml`, `.github/workflows/mvcrs_correction.yml`
+
+**Validation**:
+- All tests passing locally: 40/40 (32 verifier/escalation + 8 correction).
+- CI chain configured with `workflow_run` hook and manual dispatch support.
+
+**Audit Marker**:
+<!-- MVCRS_CHAIN: INTEGRATED 2025-11-15T00:00:00Z -->
+
 ## Phase XXIII — Predictive Forensic Intelligence
 
 Instructions executed:

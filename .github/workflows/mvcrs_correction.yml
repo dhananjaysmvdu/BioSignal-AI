@@ -2,9 +2,16 @@ name: MVCRS Correction Engine
 
 on:
   workflow_run:
-    workflows: ["MVCRS Challenge Verifier"]
+    # Trigger after the MVCRS verifier workflow completes
+    workflows: ["MVCRS Challenge"]
     types: ["completed"]
-  workflow_dispatch: {}
+  workflow_dispatch:
+    inputs:
+      simulate_failure:
+        description: "Force a simulated filesystem failure to validate fix-branch logic"
+        required: false
+        default: false
+        type: boolean
 
 jobs:
   correction:
@@ -22,6 +29,11 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install pytest
+
+      - name: Optional simulation flags
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.simulate_failure }}
+        run: |
+          echo "MVCRS_FORCE_CORRECTION_FS_FAILURE=true" >> $GITHUB_ENV
 
       - name: Read verifier state
         id: verifier
