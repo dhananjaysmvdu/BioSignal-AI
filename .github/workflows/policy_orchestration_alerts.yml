@@ -1,0 +1,82 @@
+name: Policy Orchestration Alerts
+
+on:
+  schedule:
+    - cron: '15 5 * * *'  # Daily at 05:15 UTC (30 min after orchestration)
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  issues: write
+
+jobs:
+  monitor-policy-alerts:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Run policy monitoring
+        id: alerts
+        continue-on-error: true
+        run: |
+          python scripts/monitoring/policy_orchestration_alerts.py > alert_output.txt 2>&1
+          echo "exit_code=$?" >> $GITHUB_OUTPUT
+
+      - name: Upload alert artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: policy-alerts-${{ github.run_number }}
+          path: |
+            reports/policy_orchestration_alerts.json
+            logs/policy_orchestration_alerts.jsonl
+            alert_output.txt
+          retention-days: 90
+
+      - name: Create GitHub issue for critical alerts
+        if: steps.alerts.outputs.exit_code == '1'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const report = JSON.parse(fs.readFileSync('reports/policy_orchestration_alerts.json', 'utf8'));
+            
+            const criticalAlerts = report.alerts.filter(a => a.severity === 'critical' || a.severity === 'high');
+            
+            if (criticalAlerts.length > 0) {
+              const body = `## 🚨 Policy Orchestration Alert
+            
+            **Generated**: ${report.generated_at}
+            **Alert Count**: ${criticalAlerts.length}
+            
+            ${criticalAlerts.map(a => `
+            ### ${a.type} (${a.severity})
+            - **Message**: ${a.message}
+            - **Action**: ${a.action}
+            `).join('\n')}
+            
+            See workflow run for full details: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+            `;
+            
+              await github.rest.issues.create({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                title: `[ALERT] Policy Orchestration - ${criticalAlerts[0].type}`,
+                body: body,
+                labels: ['policy-alert', 'automated']
+              });
+            }
+
+      - name: Commit alert state
+        if: always()
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add reports/policy_orchestration_alerts.json logs/policy_orchestration_alerts.jsonl audit_summary.md || true
+          git diff --cached --quiet || git commit -m "chore: update policy orchestration alerts [skip ci]"
+          git push || true
