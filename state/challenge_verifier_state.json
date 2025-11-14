@@ -1,0 +1,1 @@
+{"deviations":[],"expected":{},"missing_artifacts":["federation/provenance_consensus.json","state/rdgl_policy_adjustments.json","state/adaptive_response_history.jsonl"],"observed":{},"status":"warning","timestamp":"2025-11-14T19:41:41Z"}
