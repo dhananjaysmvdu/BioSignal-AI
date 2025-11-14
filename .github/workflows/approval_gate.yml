@@ -1,0 +1,53 @@
+name: Approval Gate
+
+"on":
+  workflow_dispatch:
+    inputs:
+      approval_id:
+        description: 'Approval ID (UUID from approval request)'
+        required: true
+        type: string
+      protected_job:
+        description: 'Protected job to run if approved'
+        required: false
+        type: string
+        default: 'echo Protected operation would run here'
+
+jobs:
+  verify-approval:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      
+      - name: Verify Approval
+        id: verify
+        run: |
+          python scripts/supervision/verify_approval.py --id "${{ github.event.inputs.approval_id }}" --ttl 72
+        env:
+          SIGNING_SECRET: ${{ secrets.SIGNING_SECRET }}
+          SIGNING_KEY: ${{ secrets.SIGNING_KEY }}
+      
+      - name: Run Protected Job
+        if: success()
+        run: |
+          ${{ github.event.inputs.protected_job }}
+      
+      - name: Commit Approval Audit
+        if: success()
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add state/approval_requests.jsonl
+          git commit -m "chore(supervision): approval gate passed for ${{ github.event.inputs.approval_id }} [skip ci]" || echo "No changes"
+          git push || echo "Push failed (no changes or conflict)"
+      
+      - name: Fail on Invalid Approval
+        if: failure()
+        run: |
+          echo "::error::Approval verification failed for ${{ github.event.inputs.approval_id }}"
+          exit 1

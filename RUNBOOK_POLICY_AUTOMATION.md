@@ -323,7 +323,106 @@ cp mirrors/anchor_chain.json.backup mirrors/anchor_chain.json
 
 ---
 
-## 12. Contact & Escalation
+## 12. Human-in-the-Loop Approvals
+
+### Overview
+Phase XXIX introduces a formal approval gate for sensitive governance actions. All approvals are cryptographically signed, rate-limited, and auditable.
+
+### Quick Commands
+
+**Check Status:**
+```bash
+python scripts/supervision/human_approval_cli.py status
+```
+
+**Request Approval:**
+```bash
+python scripts/supervision/human_approval_cli.py request \
+  --requester "your-name" \
+  --reason "Emergency threshold override required"
+```
+Save the `approval_id` from output.
+
+**Grant Approval:**
+```bash
+export SIGNING_SECRET="your-signing-secret"
+python scripts/supervision/human_approval_cli.py grant \
+  --id "91d95678-11e6-4d0c-b09c-72c5b42bc54b" \
+  --approver "approver-name"
+```
+
+**Verify Approval:**
+```bash
+python scripts/supervision/verify_approval.py \
+  --id "91d95678-11e6-4d0c-b09c-72c5b42bc54b" \
+  --ttl 72
+```
+
+### Approval Workflow
+1. **Request**: Requester creates approval via CLI or portal
+2. **Review**: Approver reviews reason and context
+3. **Grant**: Approver signs approval (HMAC-SHA256 or PGP)
+4. **Verify**: CI gate validates approval before protected action
+5. **Audit**: All steps logged to `state/approval_requests.jsonl`
+
+### Emergency Override
+For critical production issues:
+```bash
+export OVERRIDE_KEY="emergency-override-key"
+python scripts/supervision/human_approval_cli.py override \
+  --key "$OVERRIDE_KEY" \
+  --id "new-uuid-1234" \
+  --requester "system" \
+  --reason "Critical production fix"
+```
+
+**Warning**: Override usage is logged and should be reviewed immediately.
+
+### Portal Management
+Navigate to `portal/approval.html` for web interface:
+- View pending approvals
+- Request new approvals
+- Grant approvals (requires backend integration)
+- Auto-refreshes every 15 seconds
+
+### Rate Limits & Safety
+- **Daily Grant Limit**: 5 approvals per approver per day
+- **TTL**: Approvals expire after 72 hours (configurable)
+- **Signature Required**: All grants must be cryptographically signed
+- **Atomic Operations**: All state changes use atomic write-then-rename
+- **Fix Branches**: Persistent failures create diagnostic branches
+
+### Troubleshooting
+
+**"Daily approval limit exceeded"**
+- Solution: Use different approver or wait until next day
+- Check: `state/approval_highwater.json`
+
+**"Signature verification failed"**
+- Solution: Verify `SIGNING_SECRET` environment variable
+- Check: Signature method in `approval_requests.jsonl`
+
+**"Approval expired"**
+- Solution: Request new approval
+- Check: Grant timestamp vs current time
+
+**Fix Branch Created**
+- Location: `fix/trust-approval-<timestamp>/`
+- Action: Review `diag.json` for error details
+
+### State Files
+- `state/approval_state.json`: Current approval status
+- `state/approval_requests.jsonl`: Append-only request log
+- `state/approval_highwater.json`: Daily grant counts per approver
+
+### Documentation
+- **API Reference**: `docs/supervision/APPROVAL_API.md`
+- **Test Suite**: `tests/supervision/` (36 tests)
+- **Workflow**: `.github/workflows/approval_gate.yml`
+
+---
+
+## 13. Contact & Escalation
 
 **Automated Alerts**: GitHub Issues created for high-priority conditions
 
@@ -332,6 +431,7 @@ cp mirrors/anchor_chain.json.backup mirrors/anchor_chain.json
 2. Check CI workflow artifacts
 3. Examine fix branches for detailed logs
 4. Consult Phase XXV documentation: `PHASE_XXV_COMPLETION_REPORT.md`
+5. For approval issues: Check `docs/supervision/APPROVAL_API.md`
 
 ---
 

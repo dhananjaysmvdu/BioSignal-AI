@@ -577,6 +577,35 @@
                     </div>
                 </div>
             </div>
+
+            <!-- Human Approval Card -->
+            <div class="card">
+                <h3 style="margin-top: 0; display: flex; align-items: center; gap: 8px;">
+                    🔐 Human Approval
+                    <span class="status-badge" id="approval-status-badge" style="margin-left: auto;">Loading</span>
+                </h3>
+                <div class="card-content">
+                    <div class="metric-detail">
+                        <span class="detail-label">Current Status</span>
+                        <span class="detail-value" id="approval-current-status">—</span>
+                    </div>
+                    <div class="metric-detail">
+                        <span class="detail-label">Active Approval ID</span>
+                        <span class="detail-value" id="approval-active-id">—</span>
+                    </div>
+                    <div class="metric-detail">
+                        <span class="detail-label">Approver</span>
+                        <span class="detail-value" id="approval-approver">—</span>
+                    </div>
+                    <div class="metric-detail">
+                        <span class="detail-label">Last Updated</span>
+                        <span class="detail-value" id="approval-updated">—</span>
+                    </div>
+                    <div style="margin-top: 15px; text-align: center;">
+                        <a href="approval.html" style="color: #667eea; text-decoration: none; font-weight: 600;">→ Manage Approvals</a>
+                    </div>
+                </div>
+            </div>
         </div>
         
         <div class="info-section">
@@ -1238,6 +1267,57 @@
         }
         loadRDGL();
         setInterval(loadRDGL, 15000);
+
+        // Load Human Approval Status
+        async function loadApprovalStatus(){
+            try{
+                const response = await fetch('../state/approval_state.json', {cache:'no-store'});
+                if(!response.ok){
+                    document.getElementById('approval-status-badge').textContent = 'No Data';
+                    document.getElementById('approval-current-status').textContent = 'unlocked';
+                    document.getElementById('approval-active-id').textContent = '—';
+                    document.getElementById('approval-approver').textContent = '—';
+                    document.getElementById('approval-updated').textContent = '—';
+                    return;
+                }
+                const data = await response.json();
+                if(data){
+                    const status = data.status ?? 'unlocked';
+                    const approvalId = data.approval_id ?? '—';
+                    const approver = data.approver ?? '—';
+                    const updated = data.last_updated ?? '—';
+
+                    document.getElementById('approval-current-status').textContent = status;
+                    document.getElementById('approval-active-id').textContent = approvalId === '—' ? '—' : approvalId.substring(0,8);
+                    document.getElementById('approval-approver').textContent = approver;
+                    
+                    if(updated !== '—'){
+                        const ts = new Date(updated);
+                        document.getElementById('approval-updated').textContent = ts.toLocaleString();
+                    } else {
+                        document.getElementById('approval-updated').textContent = '—';
+                    }
+
+                    const badge = document.getElementById('approval-status-badge');
+                    if(status === 'approved'){
+                        badge.textContent = 'APPROVED';
+                        badge.className = 'status-badge status-green';
+                        badge.style.color = 'white';
+                    } else if(status === 'pending_approval'){
+                        badge.textContent = 'PENDING';
+                        badge.className = 'status-badge';
+                        badge.style.background = '#fbbf24';
+                        badge.style.color = 'white';
+                    } else {
+                        badge.textContent = 'UNLOCKED';
+                        badge.className = 'status-badge status-certified';
+                        badge.style.color = 'white';
+                    }
+                }
+            }catch(e){}
+        }
+        loadApprovalStatus();
+        setInterval(loadApprovalStatus, 15000);
     </script>
 </body>
 </html>

@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Approval Management - BioSignal-AI</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: #333;
+      padding: 20px;
+      margin: 0;
+    }
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+      background: white;
+      border-radius: 10px;
+      padding: 30px;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.15);
+    }
+    h1 {
+      color: #667eea;
+      margin-top: 0;
+    }
+    .status-badge {
+      display: inline-block;
+      padding: 4px 12px;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 600;
+      text-transform: uppercase;
+    }
+    .status-requested { background: #fef3c7; color: #92400e; }
+    .status-granted { background: #d1fae5; color: #065f46; }
+    .status-expired { background: #fee2e2; color: #991b1b; }
+    
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+    }
+    th, td {
+      text-align: left;
+      padding: 12px;
+      border-bottom: 1px solid #e5e7eb;
+    }
+    th {
+      background: #f9fafb;
+      font-weight: 600;
+      color: #374151;
+    }
+    button {
+      background: #667eea;
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: 500;
+    }
+    button:hover {
+      background: #5568d3;
+    }
+    button:disabled {
+      background: #d1d5db;
+      cursor: not-allowed;
+    }
+    .error {
+      background: #fee2e2;
+      color: #991b1b;
+      padding: 12px;
+      border-radius: 6px;
+      margin-top: 10px;
+    }
+    .form-group {
+      margin-bottom: 15px;
+    }
+    label {
+      display: block;
+      font-weight: 500;
+      margin-bottom: 5px;
+    }
+    input[type="text"] {
+      width: 100%;
+      padding: 8px;
+      border: 1px solid #d1d5db;
+      border-radius: 6px;
+      font-size: 14px;
+    }
+    .back-link {
+      display: inline-block;
+      margin-bottom: 20px;
+      color: #667eea;
+      text-decoration: none;
+      font-weight: 500;
+    }
+    .back-link:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <a href="index.html" class="back-link">← Back to Dashboard</a>
+    
+    <h1>Approval Management</h1>
+    
+    <h2>Request New Approval</h2>
+    <div class="form-group">
+      <label for="requester">Requester:</label>
+      <input type="text" id="requester" placeholder="your.name">
+    </div>
+    <div class="form-group">
+      <label for="reason">Reason:</label>
+      <input type="text" id="reason" placeholder="e.g., Emergency threshold override">
+    </div>
+    <button onclick="requestApproval()">Request Approval</button>
+    <div id="request-result"></div>
+    
+    <h2>Pending Approvals</h2>
+    <div id="approval-list">Loading...</div>
+  </div>
+  
+  <script>
+    const API_BASE = '../scripts/supervision';
+    let requests = [];
+    
+    async function loadApprovals() {
+      try {
+        const resp = await fetch('../state/approval_requests.jsonl');
+        if (!resp.ok) {
+          document.getElementById('approval-list').innerHTML = '<p>No approvals yet.</p>';
+          return;
+        }
+        
+        const text = await resp.text();
+        const lines = text.split('\n').filter(ln => ln.trim() && !ln.startsWith('<!--'));
+        requests = lines.map(ln => JSON.parse(ln));
+        
+        renderApprovals();
+      } catch (err) {
+        document.getElementById('approval-list').innerHTML = `<div class="error">Failed to load approvals: ${err.message}</div>`;
+      }
+    }
+    
+    function renderApprovals() {
+      if (requests.length === 0) {
+        document.getElementById('approval-list').innerHTML = '<p>No approvals yet.</p>';
+        return;
+      }
+      
+      const html = `
+        <table>
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Requester</th>
+              <th>Reason</th>
+              <th>Status</th>
+              <th>Approver</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${requests.reverse().map(renderRow).join('')}
+          </tbody>
+        </table>
+      `;
+      
+      document.getElementById('approval-list').innerHTML = html;
+    }
+    
+    function renderRow(req) {
+      const statusClass = req.status === 'granted' ? 'status-granted' : 'status-requested';
+      const canGrant = req.status === 'requested';
+      
+      return `
+        <tr>
+          <td><code>${req.approval_id.substring(0, 8)}</code></td>
+          <td>${req.requester}</td>
+          <td>${req.reason}</td>
+          <td><span class="status-badge ${statusClass}">${req.status}</span></td>
+          <td>${req.approver || '—'}</td>
+          <td>
+            ${canGrant ? `<button onclick="grantApproval('${req.approval_id}')">Grant</button>` : '—'}
+          </td>
+        </tr>
+      `;
+    }
+    
+    async function requestApproval() {
+      const requester = document.getElementById('requester').value.trim();
+      const reason = document.getElementById('reason').value.trim();
+      
+      if (!requester || !reason) {
+        document.getElementById('request-result').innerHTML = '<div class="error">Please fill all fields</div>';
+        return;
+      }
+      
+      try {
+        // Call CLI via server (in production, use REST API)
+        const result = await callCLI('request', { requester, reason });
+        
+        document.getElementById('request-result').innerHTML = `
+          <div style="background: #d1fae5; color: #065f46; padding: 12px; border-radius: 6px; margin-top: 10px;">
+            ✓ Approval requested: ${result.approval_id}
+          </div>
+        `;
+        
+        document.getElementById('requester').value = '';
+        document.getElementById('reason').value = '';
+        
+        setTimeout(loadApprovals, 1000);
+      } catch (err) {
+        document.getElementById('request-result').innerHTML = `<div class="error">Error: ${err.message}</div>`;
+      }
+    }
+    
+    async function grantApproval(id) {
+      const approver = prompt('Enter your name as approver:');
+      if (!approver) return;
+      
+      try {
+        await callCLI('grant', { id, approver });
+        alert(`✓ Approval granted: ${id}`);
+        loadApprovals();
+      } catch (err) {
+        alert(`Error: ${err.message}`);
+      }
+    }
+    
+    async function callCLI(command, params) {
+      // In production, replace with REST API calls to human_approval_api.py
+      // For now, this is a stub - actual implementation requires backend server
+      console.log('CLI call:', command, params);
+      
+      // Simulate API response
+      if (command === 'request') {
+        return {
+          approval_id: crypto.randomUUID(),
+          status: 'requested',
+          message: 'Simulated request (implement REST API)'
+        };
+      }
+      
+      throw new Error('CLI calls require backend implementation - use CLI directly for now');
+    }
+    
+    // Auto-refresh every 15 seconds
+    loadApprovals();
+    setInterval(loadApprovals, 15000);
+  </script>
+</body>
+</html>
