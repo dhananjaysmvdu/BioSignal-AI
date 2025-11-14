@@ -1,0 +1,67 @@
+name: Emergency Override Validation
+
+on:
+  schedule:
+    - cron: '50 3 * * *' # Daily 03:50 UTC
+  workflow_dispatch: {}
+
+jobs:
+  override-validation:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+      - name: Run Override Tests
+        id: run_tests
+        continue-on-error: true
+        run: |
+          pytest -q tests/api/test_emergency_override_api.py 2>&1 | tee override_test_output.txt
+          echo "exit_code=$?" >> $GITHUB_OUTPUT
+      - name: Evaluate Result
+        id: eval
+        run: |
+          EC="${{ steps.run_tests.outputs.exit_code }}"
+          TS=$(date -u +%Y-%m-%dT%H-%M-%SZ)
+          echo "timestamp=$TS" >> $GITHUB_OUTPUT
+          if [ "$EC" != "0" ]; then echo "status=failure" >> $GITHUB_OUTPUT; else echo "status=pass" >> $GITHUB_OUTPUT; fi
+      - name: Failure Branch + PR
+        if: steps.eval.outputs.status == 'failure'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          BRANCH="fix/override-${{ steps.eval.outputs.timestamp }}"
+          git checkout -b "$BRANCH"
+          mkdir -p failure_artifacts
+          cp override_test_output.txt failure_artifacts/
+          cp -r state failure_artifacts/state || true
+          git add failure_artifacts override_test_output.txt || true
+          git commit -m "chore: capture emergency override failure artifacts"
+          git push origin "$BRANCH"
+          FAILING=$(grep -oP 'FAILED.*' override_test_output.txt || true)
+          BODY="Emergency override validation failure on ${{ steps.eval.outputs.timestamp }}\n\nTests:\n$FAILING\n\nReproduction:\n\`pytest -q tests/api/test_emergency_override_api.py\`\n"
+          echo "$BODY" > pr_body.txt
+          gh pr create --title "Emergency Override Failure ${{ steps.eval.outputs.timestamp }}" --body-file pr_body.txt --base main || true
+      - name: Append Audit Marker
+        run: |
+          TS="${{ steps.eval.outputs.timestamp }}"
+          if [ "${{ steps.eval.outputs.status }}" = "pass" ]; then
+            echo "<!-- OVERRIDE_TESTS: PASS $TS -->" >> audit_summary.md
+          else
+            echo "<!-- OVERRIDE_TESTS: FAIL $TS -->" >> audit_summary.md
+          fi
+          git config user.name "github-actions"
+          git config user.email "github-actions@users.noreply.github.com"
+          git add audit_summary.md
+          git commit -m "audit: append override test marker (${{ steps.eval.outputs.status }})" || true
+          git push origin HEAD:${{ github.ref_name }} || true

@@ -12,6 +12,7 @@ Includes safety brake (rate limiter) and reversible actions ledger.
 from __future__ import annotations
 
 import json
+import os
 import subprocess
 import sys
 import uuid
@@ -524,6 +525,13 @@ def respond_to_forecast(forecast: dict[str, Any]) -> dict[str, Any]:
 def main() -> None:
     """Main execution: read forecast and respond adaptively."""
     print("Adaptive Response Engine: Starting...")
+
+    # Bypass mode: invoked by emergency override API to simulate response without actions
+    if os.getenv("ADAPTIVE_BYPASS") == "1":
+        marker = f"<!-- ADAPTIVE_RESPONSE: BYPASS {utc_now_iso()} -->"
+        append_audit_marker(marker, ROOT)
+        print("Adaptive Response Engine running in BYPASS MODE (override active).")
+        return
     
     # Load forecast
     forecast = load_forecast()
