@@ -1095,3 +1095,45 @@ Artifacts:
 
 Workflow:
 - .github/workflows/forensic_regression.yml
+
+---
+
+## Trust Guard — Multi-Layer Locking Controller (2025-11-14)
+
+**Instructions Executed**:
+- Chaos Drills test harness and CI workflow (fault injections, assertions, JSONL drill outputs)
+- Emergency Override API (`activate`/`deactivate`/`status`) with portal UI and tests; adaptive BYPASS via env
+- Multi-Layer Trust Guard: default policy, controller with retries and idempotent audit markers, API endpoints, portal dashboard
+
+**Safety Guarantees**:
+- Atomic writes (tmp + replace), mkdir with `exist_ok=True`
+- Exponential retries (1s, 3s, 9s); fix-branch on FS error
+- Override bypass respected; manual unlock daily limits; auto-unlock scheduling
+- Idempotent audit marker block replacement (`TRUST_GUARD`)
+
+**Key Artifacts**:
+- `policy/trust_guard_policy.json`
+- `scripts/trust/trust_guard_controller.py`
+- `api/trust_guard_api.py`, `api/emergency_override_api.py`
+- `portal/trust_guard.html`, `portal/override.html`, `portal/index.html`
+- `tests/trust/test_trust_guard_controller.py`, `tests/api/test_trust_guard_api.py`, `tests/ui/test_trust_guard_portal_fetch.py`
+
+**Workflows**:
+- `.github/workflows/chaos_drills.yml`
+- `.github/workflows/emergency_override_validation.yml`
+- `.github/workflows/trust_guard_validation.yml`
+
+**Validation**:
+- All local tests passing (controller, API, UI)
+- Portal fetches use relative paths; status/limits render correctly
+
+**Operational Outcomes**:
+- Controller enforcement run; summary committed (`trust_guard_run_summary.json`)
+- CI audit marker appended (`CI_GREEN`)
+- Annotated tag `v2.4.2-trust-guard` created and pushed
+- Documentation integrity/provenance rebuilt; artifacts committed
+
+**Reference**:
+- `docs/PHASE_XXI_TRUST_GUARD.md` — overview of thresholds, policies, markers, safety, and usage
+
+**Summary Last Updated**: 2025-11-14T12:10:00+00:00
