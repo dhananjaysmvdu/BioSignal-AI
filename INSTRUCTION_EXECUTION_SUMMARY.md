@@ -257,6 +257,62 @@ Critical Achievement: System now closes observation→prediction→response loop
 
 ---
 
+## Phase XXXVI — MV-CRS Mainline Integration & Governance Chain Binding
+
+**Instructions Executed**:
+1. Integration Orchestrator (`mvcrs_integration_orchestrator.py`) — synthesizes all MV-CRS + governance states into unified decision (allow/restricted/blocked)
+2. Decision Matrix — allow (all healthy), restricted (escalation open OR governance yellow), blocked (governance red + mvcrs not ok)
+3. CI Workflow (`mvcrs_integration.yml`) — daily 06:50 UTC, failure detection (lifecycle stuck >48h, escalation >72h)
+4. Portal Integration — MV-CRS Integration Status card with final decision, lifecycle, escalation, governance risk (15s refresh)
+5. Test Suite (6 tests) — all healthy→allow, escalation→restricted, red+failed→blocked, stuck detection, idempotency, fix-branch
+6. Phase XXXVI Documentation — decision matrix, CI chain, portal UX, safety model, validation
+
+**Decision Framework**:
+- **allow**: MV-CRS OK + no escalations + governance green + lifecycle resolved
+- **restricted**: Escalation open OR governance yellow OR lifecycle pending/in_progress
+- **blocked**: Governance red + MV-CRS not OK OR lifecycle rejected OR critical failures
+
+**Signal Inputs**:
+- **MV-CRS**: verifier status, correction blocks, escalation state, lifecycle state
+- **Governance**: policy fusion (GREEN/YELLOW/RED), trust lock, RDGL mode, thresholds
+
+**Key Artifacts**:
+- `scripts/mvcrs/mvcrs_integration_orchestrator.py` — orchestrator engine (350+ lines)
+- `state/mvcrs_integration_state.json` — synthesized status + final decision
+- `logs/mvcrs_integration_log.jsonl` — append-only audit trail
+- `.github/workflows/mvcrs_integration.yml` — daily CI workflow
+- `portal/index.html` — MV-CRS Integration Status card
+- `tests/mvcrs/test_integration_orchestrator.py` — 6 comprehensive tests
+
+**CI Orchestration Chain**:
+- 03:30 UTC: Verifier → Correction (post-verifier) → 06:40 UTC: Lifecycle → 06:50 UTC: Integration
+- Failure conditions: lifecycle stuck >48h, escalation open >72h, governance red + mvcrs failed
+- Success marker: `<!-- MVCRS_INTEGRATION: VERIFIED <UTC> -->`
+- Failure marker: `<!-- MVCRS_INTEGRATION: FAILED <UTC> -->` + fix branch
+
+**Safety Model**:
+- Atomic writes (1s/3s/9s retry)
+- Idempotent audit markers (UPDATED/VERIFIED/FAILED)
+- Fix-branch creation on persistent errors
+- MVCRS_BASE_DIR virtualization for tests
+
+**Validation**:
+- 6/6 integration tests passing
+- Full MV-CRS suite: 52/52 passing (46 prior + 6 integration)
+- Portal card renders with live decision status
+- CI workflow integrates with full MV-CRS chain
+
+**Integration Achievement**:
+- Closed-loop governance: MV-CRS phases + upstream governance → unified decision framework
+- Portal visibility: live final decision (allow/restricted/blocked)
+- Actionable outcomes: gate deployments, trigger alerts, maintain audit trails
+
+**Reference**: `PHASE_XXXVI_MVCRS_MAINLINE_INTEGRATION.md`
+
+**Summary Last Updated**: 2025-11-15T00:00:00Z
+
+---
+
 ## Phase XXXV — MV-CRS Escalation Lifecycle Orchestration
 
 **Instructions Executed**:

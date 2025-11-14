@@ -262,6 +262,34 @@
                 </div>
             </div>
             
+            <!-- MV-CRS Integration Status Card -->
+            <div class="metric-card">
+                <div class="metric-header">
+                    <span class="metric-title">MV-CRS Integration Status</span>
+                    <span class="status-badge" id="integration-badge">—</span>
+                </div>
+                <div class="metric-value" style="font-size:1.8em;" id="integration-decision-value">—</div>
+                <div class="metric-label">Final Decision</div>
+                <div style="margin-top:20px;">
+                    <div class="metric-detail">
+                        <span class="detail-label">Lifecycle State</span>
+                        <span class="detail-value" id="integration-lifecycle">—</span>
+                    </div>
+                    <div class="metric-detail">
+                        <span class="detail-label">Escalation Open</span>
+                        <span class="detail-value" id="integration-escalation-open">—</span>
+                    </div>
+                    <div class="metric-detail">
+                        <span class="detail-label">Governance Risk</span>
+                        <span class="detail-value" id="integration-governance-risk">—</span>
+                    </div>
+                    <div class="metric-detail">
+                        <span class="detail-label">Last Updated</span>
+                        <span class="detail-value" id="integration-last-updated">—</span>
+                    </div>
+                </div>
+            </div>
+            
             <!-- Integrity Card -->
             <div class="metric-card">
                 <div class="metric-header">
@@ -1421,6 +1449,46 @@
         }
         loadLifecycleStatus();
         setInterval(loadLifecycleStatus, 15000);
+
+        // MV-CRS Integration Status Loader
+        async function loadIntegrationStatus(){
+            try {
+                const resp = await fetch('../state/mvcrs_integration_state.json', {cache:'no-store'});
+                if(!resp.ok){ return; }
+                const data = await resp.json();
+                const decision = data.final_decision || 'unknown';
+                const lifecycleState = data.lifecycle_state || 'unknown';
+                const escalationOpen = data.escalation_open ? 'Yes' : 'No';
+                const govRisk = data.governance_risk_level || 'unknown';
+                const lastUpdated = data.timestamp || '—';
+                
+                document.getElementById('integration-decision-value').textContent = decision.toUpperCase();
+                document.getElementById('integration-lifecycle').textContent = lifecycleState.toUpperCase().replace(/_/g, ' ');
+                document.getElementById('integration-escalation-open').textContent = escalationOpen;
+                document.getElementById('integration-governance-risk').textContent = govRisk.toUpperCase();
+                document.getElementById('integration-last-updated').textContent = lastUpdated;
+                
+                const badge = document.getElementById('integration-badge');
+                if(decision === 'allow'){
+                    badge.className='status-badge status-green';
+                    badge.textContent='ALLOW';
+                } else if(decision === 'restricted') {
+                    badge.className='status-badge';
+                    badge.style.background='#f59e0b'; badge.style.color='white';
+                    badge.textContent='RESTRICTED';
+                } else if(decision === 'blocked') {
+                    badge.className='status-badge';
+                    badge.style.background='#ef4444'; badge.style.color='white';
+                    badge.textContent='BLOCKED';
+                } else {
+                    badge.className='status-badge';
+                    badge.style.background='#6b7280'; badge.style.color='white';
+                    badge.textContent='UNKNOWN';
+                }
+            } catch(e){ /* silent */ }
+        }
+        loadIntegrationStatus();
+        setInterval(loadIntegrationStatus, 15000);
 
         // Load Human Approval Status
         async function loadApprovalStatus(){

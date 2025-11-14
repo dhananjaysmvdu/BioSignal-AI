@@ -1,0 +1,181 @@
+name: MVCRS Integration Orchestrator
+
+on:
+  schedule:
+    # Daily 06:50 UTC - after lifecycle workflow
+    - cron: '50 6 * * *'
+  workflow_dispatch:
+    inputs:
+      force_fix_branch:
+        description: "Force fix-branch creation to test failure path"
+        required: false
+        default: false
+        type: boolean
+
+jobs:
+  integration:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install minimal deps
+        run: |
+          python -m pip install --upgrade pip
+          pip install pytest
+
+      - name: Check failure conditions
+        id: failure_check
+        run: |
+          # Initialize failure flags
+          LIFECYCLE_STUCK=false
+          ESCALATION_PROLONGED=false
+          CRITICAL_FAILURE=false
+          
+          # Check lifecycle stuck >48h
+          if [ -f state/mvcrs_escalation_lifecycle.json ]; then
+            LIFECYCLE_CHECK=$(python -c "
+          import json
+          from datetime import datetime, timezone, timedelta
+          with open('state/mvcrs_escalation_lifecycle.json') as f:
+              data = json.load(f)
+          entered = datetime.fromisoformat(data['entered_current_state_at'].replace('Z', '+00:00'))
+          now = datetime.now(timezone.utc)
+          elapsed_hours = (now - entered).total_seconds() / 3600
+          state = data['current_state']
+          if elapsed_hours > 48 and state in ['pending', 'in_progress']:
+              print('STUCK')
+          else:
+              print('OK')
+          " 2>/dev/null || echo "MISSING")
+            
+            if [ "$LIFECYCLE_CHECK" = "STUCK" ]; then
+              LIFECYCLE_STUCK=true
+              echo "⚠️ Lifecycle stuck in pending/in_progress for >48h" >> $GITHUB_STEP_SUMMARY
+            fi
+          fi
+          
+          # Check escalation open >72h
+          if [ -f state/mvcrs_escalation_lifecycle.json ]; then
+            ESCALATION_CHECK=$(python -c "
+          import json
+          from datetime import datetime, timezone, timedelta
+          with open('state/mvcrs_escalation_lifecycle.json') as f:
+              data = json.load(f)
+          ts = datetime.fromisoformat(data['timestamp'].replace('Z', '+00:00'))
+          now = datetime.now(timezone.utc)
+          elapsed_hours = (now - ts).total_seconds() / 3600
+          if elapsed_hours > 72 and data.get('escalation_open', False):
+              print('PROLONGED')
+          else:
+              print('OK')
+          " 2>/dev/null || echo "OK")
+            
+            if [ "$ESCALATION_CHECK" = "PROLONGED" ]; then
+              ESCALATION_PROLONGED=true
+              echo "⚠️ Escalation open for >72h" >> $GITHUB_STEP_SUMMARY
+            fi
+          fi
+          
+          # Export flags
+          echo "lifecycle_stuck=$LIFECYCLE_STUCK" >> $GITHUB_OUTPUT
+          echo "escalation_prolonged=$ESCALATION_PROLONGED" >> $GITHUB_OUTPUT
+
+      - name: Run integration orchestrator
+        id: integration
+        run: |
+          set -e
+          python scripts/mvcrs/mvcrs_integration_orchestrator.py
+          
+          if [ -f state/mvcrs_integration_state.json ]; then
+            FINAL_DECISION=$(python -c "import json; print(json.load(open('state/mvcrs_integration_state.json'))['final_decision'])")
+            GOVERNANCE_RISK=$(python -c "import json; print(json.load(open('state/mvcrs_integration_state.json'))['governance_risk_level'])")
+            MVCRS_CORE_OK=$(python -c "import json; print(json.load(open('state/mvcrs_integration_state.json'))['mvcrs_core_ok'])")
+            
+            echo "final_decision=$FINAL_DECISION" >> $GITHUB_OUTPUT
+            echo "governance_risk=$GOVERNANCE_RISK" >> $GITHUB_OUTPUT
+            echo "mvcrs_core_ok=$MVCRS_CORE_OK" >> $GITHUB_OUTPUT
+            
+            echo "### MV-CRS Integration Status" >> $GITHUB_STEP_SUMMARY
+            echo "**Final Decision:** $FINAL_DECISION" >> $GITHUB_STEP_SUMMARY
+            echo "**Governance Risk:** $GOVERNANCE_RISK" >> $GITHUB_STEP_SUMMARY
+            echo "**MV-CRS Core OK:** $MVCRS_CORE_OK" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "final_decision=unknown" >> $GITHUB_OUTPUT
+            echo "governance_risk=unknown" >> $GITHUB_OUTPUT
+            echo "mvcrs_core_ok=false" >> $GITHUB_OUTPUT
+            echo "⚠️ Integration state file missing" >> $GITHUB_STEP_SUMMARY
+          fi
+
+      - name: Upload integration artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: mvcrs-integration-artifacts
+          path: |
+            state/mvcrs_integration_state.json
+            logs/mvcrs_integration_log.jsonl
+            docs/audit_summary.md
+          retention-days: 90
+
+      - name: Check critical failure conditions
+        id: critical_check
+        run: |
+          SHOULD_FAIL=false
+          
+          # Fail if lifecycle stuck >48h
+          if [ "${{ steps.failure_check.outputs.lifecycle_stuck }}" = "true" ]; then
+            SHOULD_FAIL=true
+            echo "❌ FAIL: Lifecycle stuck in non-terminal state for >48 hours" >> $GITHUB_STEP_SUMMARY
+          fi
+          
+          # Fail if escalation open >72h
+          if [ "${{ steps.failure_check.outputs.escalation_prolonged }}" = "true" ]; then
+            SHOULD_FAIL=true
+            echo "❌ FAIL: Escalation open for >72 hours" >> $GITHUB_STEP_SUMMARY
+          fi
+          
+          # Fail if governance red + mvcrs_core_ok=false
+          if [ "${{ steps.integration.outputs.governance_risk }}" = "red" ] && [ "${{ steps.integration.outputs.mvcrs_core_ok }}" = "False" ]; then
+            SHOULD_FAIL=true
+            echo "❌ FAIL: Governance risk RED + MV-CRS core not OK" >> $GITHUB_STEP_SUMMARY
+          fi
+          
+          echo "should_fail=$SHOULD_FAIL" >> $GITHUB_OUTPUT
+          
+          if [ "$SHOULD_FAIL" = "true" ]; then
+            exit 1
+          fi
+
+      - name: Append success marker
+        if: success()
+        run: |
+          echo '<!-- MVCRS_INTEGRATION: VERIFIED '"$(date -u +%Y-%m-%dT%H:%M:%SZ)"' -->' >> docs/audit_summary.md
+          git config user.name 'ci-bot'
+          git config user.email 'ci-bot@example.com'
+          git add docs/audit_summary.md
+          git commit -m "chore(mvcrs): append integration verified marker" || true
+          git push origin HEAD || true
+
+      - name: Handle integration failure
+        if: failure() || (github.event_name == 'workflow_dispatch' && inputs.force_fix_branch)
+        run: |
+          TS=$(date -u +"%Y%m%dT%H%M%SZ")
+          BR=fix/mvcrs-integration-$TS
+          
+          git config user.name 'ci-bot'
+          git config user.email 'ci-bot@example.com'
+          git checkout -b "$BR"
+          
+          echo '<!-- MVCRS_INTEGRATION: FAILED '"$TS"' -->' >> docs/audit_summary.md
+          
+          git add state/mvcrs_integration_state.json logs/mvcrs_integration_log.jsonl docs/audit_summary.md || true
+          git commit -m "chore(mvcrs): integration failure diagnostics [$TS]" || true
+          git push origin "$BR" || true
+          
+          echo "Created fix branch: $BR" >> $GITHUB_STEP_SUMMARY
