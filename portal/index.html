@@ -206,6 +206,33 @@
         </header>
         
         <div class="metrics-grid">
+            <!-- Correction Engine Status Card -->
+            <div class="metric-card">
+                <div class="metric-header">
+                    <span class="metric-title">Correction Engine Status</span>
+                    <span class="status-badge" id="correction-badge">—</span>
+                </div>
+                <div class="metric-value" style="font-size:2.2em;" id="correction-type-value">—</div>
+                <div class="metric-label">Last Correction</div>
+                <div style="margin-top:20px;">
+                    <div class="metric-detail">
+                        <span class="detail-label">Timestamp</span>
+                        <span class="detail-value" id="correction-last-ts">—</span>
+                    </div>
+                    <div class="metric-detail">
+                        <span class="detail-label">Hard (24h)</span>
+                        <span class="detail-value" id="correction-hard-count">0</span>
+                    </div>
+                    <div class="metric-detail">
+                        <span class="detail-label">Trust Lock Blocked</span>
+                        <span class="detail-value" id="correction-trust-block">—</span>
+                    </div>
+                    <div class="metric-detail">
+                        <span class="detail-label">Safety Brake Blocked</span>
+                        <span class="detail-value" id="correction-brake-block">—</span>
+                    </div>
+                </div>
+            </div>
             <!-- Integrity Card -->
             <div class="metric-card">
                 <div class="metric-header">
@@ -1267,6 +1294,43 @@
         }
         loadRDGL();
         setInterval(loadRDGL, 15000);
+
+        // Correction Engine Status Loader
+        async function loadCorrectionStatus(){
+            try {
+                const resp = await fetch('../state/mvcrs_last_correction.json', {cache:'no-store'});
+                if(!resp.ok){ return; }
+                const data = await resp.json();
+                const type = data.correction_type || 'none';
+                const ts = data.timestamp || '—';
+                const hard24 = data.hard_count_24h ?? 0;
+                const trustBlocked = data.blocked_by_trust_lock ? 'YES' : 'NO';
+                const brakeBlocked = data.blocked_by_safety_brake ? 'YES' : 'NO';
+                document.getElementById('correction-type-value').textContent = type.toUpperCase();
+                document.getElementById('correction-last-ts').textContent = ts;
+                document.getElementById('correction-hard-count').textContent = hard24;
+                document.getElementById('correction-trust-block').textContent = trustBlocked;
+                document.getElementById('correction-brake-block').textContent = brakeBlocked;
+                const badge = document.getElementById('correction-badge');
+                if(type === 'none'){
+                    badge.className='status-badge status-green';
+                    badge.textContent='NO ACTION';
+                } else if(type.startsWith('soft')) {
+                    badge.className='status-badge status-certified';
+                    badge.textContent='SOFT';
+                } else if(type === 'hard') {
+                    badge.className='status-badge';
+                    badge.style.background='#ef4444'; badge.style.color='white';
+                    badge.textContent='HARD';
+                } else {
+                    badge.className='status-badge';
+                    badge.style.background='#6b7280'; badge.style.color='white';
+                    badge.textContent= type.toUpperCase();
+                }
+            } catch(e){ /* silent */ }
+        }
+        loadCorrectionStatus();
+        setInterval(loadCorrectionStatus, 10000);
 
         // Load Human Approval Status
         async function loadApprovalStatus(){
