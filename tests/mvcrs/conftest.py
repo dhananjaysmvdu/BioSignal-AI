@@ -18,6 +18,14 @@ def temp_artifact_dir():
 
 
 @pytest.fixture
+def lifecycle_sandbox():
+    """Create isolated sandbox for lifecycle testing with cleanup."""
+    tmpdir = Path(tempfile.mkdtemp(prefix="mvcrs_lifecycle_"))
+    yield tmpdir
+    shutil.rmtree(tmpdir, ignore_errors=True)
+
+
+@pytest.fixture
 def mock_env_with_basedir(temp_artifact_dir, monkeypatch):
     """Set MVCRS_BASE_DIR to isolated temp directory."""
     monkeypatch.setenv("MVCRS_BASE_DIR", temp_artifact_dir)

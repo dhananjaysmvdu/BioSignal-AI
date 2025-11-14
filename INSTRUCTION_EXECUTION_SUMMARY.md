@@ -257,6 +257,61 @@ Critical Achievement: System now closes observation→prediction→response loop
 
 ---
 
+## Phase XXXV — MV-CRS Escalation Lifecycle Orchestration
+
+**Instructions Executed**:
+1. Escalation Lifecycle Engine (`mvcrs_escalation_lifecycle.py`) — deterministic state machine (pending → in_progress → corrective_action_applied → awaiting_validation → resolved/rejected)
+2. Auto-Transition Rules — 24h threshold, correction detection, validation outcomes
+3. CI Workflow (`mvcrs_escalation_lifecycle.yml`) — daily 06:40 UTC, stuck detection (>72h), fix-branch creation
+4. Portal Integration — Escalation Lifecycle card with time-in-stage, transition history, resolved/rejected counters (15s refresh)
+5. Test Suite (6 tests) — auto-creation, time transitions, correction detection, validation outcomes, idempotency
+6. Phase XXXV Documentation — state machine diagram, transition rules, safety model, validation instructions
+
+**State Machine**:
+- **pending**: Escalation created, awaiting review
+- **in_progress**: Active investigation (auto-escalated after 24h)
+- **awaiting_validation**: Correction applied, validation pending
+- **resolved**: Validation passed, escalation closed
+- **rejected**: Validation failed, escalation rejected
+
+**Transition Logic**:
+- Verifier `status: failed` → create escalation (`pending`)
+- Pending >24h → auto-escalate to `in_progress`
+- Correction artifact detected → `awaiting_validation`
+- Verifier `status: ok` → `resolved`
+- Verifier still failing → `rejected`
+
+**Key Artifacts**:
+- `scripts/mvcrs/mvcrs_escalation_lifecycle.py` — lifecycle engine (400+ lines)
+- `state/mvcrs_escalation_lifecycle.json` — current state + counters
+- `state/mvcrs_escalation_lifecycle_log.jsonl` — append-only audit trail
+- `.github/workflows/mvcrs_escalation_lifecycle.yml` — daily CI workflow
+- `portal/index.html` — Escalation Lifecycle card
+- `tests/mvcrs/test_escalation_lifecycle.py` — 6 comprehensive tests
+
+**Safety Model**:
+- Atomic writes (1s/3s/9s retry)
+- Idempotent audit markers
+- Fix-branch creation on persistent errors
+- Stuck detection (>72h in non-terminal state)
+- MVCRS_BASE_DIR virtualization for tests
+
+**Validation**:
+- 6/6 lifecycle tests passing
+- Full MV-CRS suite: 46/46 passing (40 verifier/correction + 6 lifecycle)
+- Portal card renders with live status
+- CI workflow integrates with verifier + correction chain
+
+**Integration**:
+- Verifier (03:30 UTC) → Correction (post-verifier) → Lifecycle (06:40 UTC)
+- Closed-loop governance: detection → correction → validation → resolution
+
+**Reference**: `PHASE_XXXV_ESCALATION_LIFECYCLE.md`
+
+**Summary Last Updated**: 2025-11-15T00:00:00Z
+
+---
+
 ## Phase XXXI — MV-CRS Integration into Mainline Governance
 
 **Summary**:

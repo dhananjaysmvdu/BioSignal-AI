@@ -233,6 +233,35 @@
                     </div>
                 </div>
             </div>
+            
+            <!-- Escalation Lifecycle Card -->
+            <div class="metric-card">
+                <div class="metric-header">
+                    <span class="metric-title">Escalation Lifecycle</span>
+                    <span class="status-badge" id="lifecycle-badge">—</span>
+                </div>
+                <div class="metric-value" style="font-size:1.8em;" id="lifecycle-state-value">—</div>
+                <div class="metric-label">Current Stage</div>
+                <div style="margin-top:20px;">
+                    <div class="metric-detail">
+                        <span class="detail-label">Time in Stage</span>
+                        <span class="detail-value" id="lifecycle-time-in-stage">—</span>
+                    </div>
+                    <div class="metric-detail">
+                        <span class="detail-label">Last Transition</span>
+                        <span class="detail-value" id="lifecycle-last-transition">—</span>
+                    </div>
+                    <div class="metric-detail">
+                        <span class="detail-label">Resolved Count</span>
+                        <span class="detail-value" id="lifecycle-resolved-count">0</span>
+                    </div>
+                    <div class="metric-detail">
+                        <span class="detail-label">Rejected Count</span>
+                        <span class="detail-value" id="lifecycle-rejected-count">0</span>
+                    </div>
+                </div>
+            </div>
+            
             <!-- Integrity Card -->
             <div class="metric-card">
                 <div class="metric-header">
@@ -1331,6 +1360,67 @@
         }
         loadCorrectionStatus();
         setInterval(loadCorrectionStatus, 10000);
+
+        // Escalation Lifecycle Status Loader
+        async function loadLifecycleStatus(){
+            try {
+                const resp = await fetch('../state/mvcrs_escalation_lifecycle.json', {cache:'no-store'});
+                if(!resp.ok){ return; }
+                const data = await resp.json();
+                const state = data.current_state || 'unknown';
+                const entered = data.entered_current_state_at || '';
+                const lastTs = data.timestamp || '—';
+                const resolved = data.resolved_count ?? 0;
+                const rejected = data.rejected_count ?? 0;
+                
+                // Compute time in stage
+                let timeInStage = '—';
+                if(entered){
+                    try{
+                        const enteredDate = new Date(entered);
+                        const now = new Date();
+                        const diffMs = now - enteredDate;
+                        const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+                        const diffDays = Math.floor(diffHours / 24);
+                        const remHours = diffHours % 24;
+                        if(diffDays > 0){
+                            timeInStage = `${diffDays}d ${remHours}h`;
+                        } else {
+                            timeInStage = `${diffHours}h`;
+                        }
+                    }catch(e){}
+                }
+                
+                document.getElementById('lifecycle-state-value').textContent = state.toUpperCase().replace(/_/g, ' ');
+                document.getElementById('lifecycle-time-in-stage').textContent = timeInStage;
+                document.getElementById('lifecycle-last-transition').textContent = lastTs;
+                document.getElementById('lifecycle-resolved-count').textContent = resolved;
+                document.getElementById('lifecycle-rejected-count').textContent = rejected;
+                
+                const badge = document.getElementById('lifecycle-badge');
+                if(state === 'resolved'){
+                    badge.className='status-badge status-green';
+                    badge.textContent='RESOLVED';
+                } else if(state === 'rejected') {
+                    badge.className='status-badge';
+                    badge.style.background='#ef4444'; badge.style.color='white';
+                    badge.textContent='REJECTED';
+                } else if(state === 'pending') {
+                    badge.className='status-badge';
+                    badge.style.background='#f59e0b'; badge.style.color='white';
+                    badge.textContent='PENDING';
+                } else if(state === 'awaiting_validation') {
+                    badge.className='status-badge status-certified';
+                    badge.textContent='VALIDATING';
+                } else {
+                    badge.className='status-badge';
+                    badge.style.background='#6b7280'; badge.style.color='white';
+                    badge.textContent=state.toUpperCase();
+                }
+            } catch(e){ /* silent */ }
+        }
+        loadLifecycleStatus();
+        setInterval(loadLifecycleStatus, 15000);
 
         // Load Human Approval Status
         async function loadApprovalStatus(){
