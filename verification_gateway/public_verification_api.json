@@ -1,5 +1,5 @@
 {
-  "timestamp": "2025-11-13T18:00:00+00:00",
+  "timestamp": "2025-11-14T03:29:30+00:00",
   "doi": "10.5281/zenodo.14173152",
   "release": "v1.0.0-Whitepaper",
   "release_date": "2025-11-11",
@@ -9,16 +9,48 @@
   "forecast_bias": 0.5,
   "fdi": 0.0,
   "cs": 2.1,
+  "bias_score": null,
+  "fairness_status": "pending",
+  "ethics_last_checked": null,
+  "decision_trace_id": null,
+  "ethics_report_hash": null,
   "capsule_hash_proofs": [
     {
       "path": "exports/governance_reproducibility_capsule_2025-11-11.zip",
       "sha256": "e8cf3e3fd735ce0f7bda3a46b4a0a13f0800372138ef6721940f9848ebb9329e",
       "size": 42050
+    },
+    {
+      "path": "GOVERNANCE_TRANSPARENCY.md",
+      "sha256": "3e1457ce7fb091da08c35c3d604854b7ce1049e6e1e589b4b06ed1f520c0c1e8",
+      "size": 5976
+    },
+    {
+      "path": "archives/transparency_snapshots/README.md",
+      "sha256": "3dc21d918ff37e94e6a632b611dbc224a99d19400069389f7d621dc75b2a21e8",
+      "size": 3523
+    },
+    {
+      "path": "badges/integrity_status.json",
+      "sha256": "1d33ee13bb02bbec348f79830b139553fd6b8fd82070e073072c87fe710b9dae",
+      "size": 105
+    },
+    {
+      "path": "badges/reproducibility_status.json",
+      "sha256": "3583b9eff91fd30d1688cc8f0f29cf6633535d1049a078b7547b93262c54fa2b",
+      "size": 111
+    },
+    {
+      "path": "docs/GOVERNANCE_WHITEPAPER.md",
+      "sha256": "2f1ea9373287e17ff543da126d98eeb4acf668310ba79452f17b37b4ef27a613",
+      "size": 22654
     }
   ],
   "verification_endpoints": {
     "portal_metrics": "https://raw.githubusercontent.com/dhananjaysmvdu/BioSignal-AI/main/portal/metrics.json",
     "capsule_manifest": "https://raw.githubusercontent.com/dhananjaysmvdu/BioSignal-AI/main/exports/capsule_manifest.json",
+    "ethics_portal": "https://raw.githubusercontent.com/dhananjaysmvdu/BioSignal-AI/main/portal/ethics.html",
+    "decision_trace": "https://raw.githubusercontent.com/dhananjaysmvdu/BioSignal-AI/main/exports/decision_trace_log.jsonl",
     "doi_link": "https://doi.org/10.5281/zenodo.14173152"
   }
 }
