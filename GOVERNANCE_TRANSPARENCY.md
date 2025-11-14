@@ -1,6 +1,6 @@
 # Governance Transparency Manifest
 
-Generated: 2025-11-11T14:46:37+00:00
+Generated: 2025-11-14T03:44:35+00:00
 
 - Integrity Score: 97.5% — Violations: 0
 
@@ -8,17 +8,17 @@ Generated: 2025-11-11T14:46:37+00:00
 
 Name | Status | Updated (UTC) | Size | Notes
 ---|---|---:|---:|---
-Audit Summary | present | 2025-11-11T14:45:22+00:00 | 6075 | Consolidated audit run markers and notes
-Reflex Integrity | present | 2025-11-11T14:00:33+00:00 | 181 | Integrity score, violations, and warnings
-Reflex Self-Audit | present | 2025-11-11T13:59:23+00:00 | 840 | Comprehensive reflex health and classification
-Reflex Reinforcement | present | 2025-11-11T10:26:37+00:00 | 427 | Reinforcement index and alignment
-Confidence Adaptation | present | 2025-11-11T10:26:32+00:00 | 101 | Confidence-weighted adaptation details
+Audit Summary | present | 2025-11-14T03:44:34+00:00 | 7047 | Consolidated audit run markers and notes
+Reflex Integrity | present | 2025-11-14T03:44:34+00:00 | 173 | Integrity score, violations, and warnings
+Reflex Self-Audit | present | 2025-11-14T03:44:34+00:00 | 802 | Comprehensive reflex health and classification
+Reflex Reinforcement | present | 2025-11-14T03:44:34+00:00 | 408 | Reinforcement index and alignment
+Confidence Adaptation | present | 2025-11-14T03:44:34+00:00 | 97 | Confidence-weighted adaptation details
 Governance Health | missing |  | 0 | Composite Governance Health Score (GHS)
-Health Timeline CSV | present | 2025-11-11T14:29:51+00:00 | 288 | Reflex health timeline export
-Health Dashboard | present | 2025-11-11T14:29:51+00:00 | 11360 | HTML dashboard with reflex health charts
-Integrity Metrics Registry | present | 2025-11-11T14:30:08+00:00 | 517 | Longitudinal integrity metrics for analytics
-Provenance Dashboard | present | 2025-11-10T20:57:52+00:00 | 22958 | Governance pulse dashboard
-Governance Policy | present | 2025-11-10T22:36:22+00:00 | 652 | Adaptive governance coefficients and thresholds
+Health Timeline CSV | present | 2025-11-14T03:44:33+00:00 | 283 | Reflex health timeline export
+Health Dashboard | present | 2025-11-14T03:44:34+00:00 | 11015 | HTML dashboard with reflex health charts
+Integrity Metrics Registry | present | 2025-11-14T03:44:33+00:00 | 568 | Longitudinal integrity metrics for analytics
+Provenance Dashboard | present | 2025-11-14T03:44:34+00:00 | 22958 | Governance pulse dashboard
+Governance Policy | present | 2025-11-14T03:44:33+00:00 | 630 | Adaptive governance coefficients and thresholds
 
 ## Integrity Metrics Registry (last 10)
 
@@ -31,10 +31,18 @@ timestamp | integrity_score | violations | warnings | health_score | rri | mpi |
 2025-11-11T14:00:33+00:00 | 97.5 | 0 | 1 | 69.3 | 15.1 | 86.0 | 0.850 | ok
 2025-11-11T14:00:33+00:00 | 97.5 | 0 | 1 | 69.3 | 15.1 | 86.0 | 0.850 | ok
 2025-11-11T14:00:33+00:00 | 97.5 | 0 | 1 | 69.3 | 15.1 | 86.0 | 0.850 | ok
+2025-11-11T14:00:33+00:00 | 97.5 | 0 | 1 | 69.3 | 15.1 | 86.0 | 0.850 | ok
 
 ## Audit Markers Snapshot
 
 ```
+<!-- FEDERATION_RECOVERY:BEGIN -->
+<!-- FEDERATION_RECOVERY:END -->
+<!-- AUTO_RECOVERY: SUCCESS -->
+<!-- HASH_GUARDRAIL:BEGIN -->
+<!-- HASH_GUARDRAIL:END -->
+<!-- WORKFLOW_RECOVERY:BEGIN -->
+<!-- WORKFLOW_RECOVERY:END -->
 <!-- TRUST_CORRELATION:BEGIN -->
 <!-- TRUST_CORRELATION:END -->
 <!-- TRUST_CORRELATION_CONTROL:BEGIN -->
@@ -92,6 +100,8 @@ timestamp | integrity_score | violations | warnings | health_score | rri | mpi |
 <!-- INTEGRITY_REGISTRY:END -->
 <!-- INTEGRITY_REGISTRY_SCHEMA:BEGIN -->
 <!-- INTEGRITY_REGISTRY_SCHEMA:END -->
+<!-- HASH_GUARDRAIL:BEGIN -->
+<!-- HASH_GUARDRAIL:END -->
 <!-- TRANSPARENCY_MANIFEST:BEGIN -->
 <!-- TRANSPARENCY_MANIFEST:END -->
 <!-- SCHEMA_PROVENANCE:BEGIN -->
@@ -104,90 +114,9 @@ integrity_metrics_registry.csv:  timestamp, integrity_score, violations, warning
 audit_summary.md markers:  REFLEX_POLICY, REFLEX_META, REFLEX_FORECAST, CONFIDENCE_ADAPTATION, REFLEX_REINFORCEMENT, REFLEX_SELF_AUDIT, REFLEX_INTEGRITY, REFLEX_HEALTH_DASHBOARD, INTEGRITY_REGISTRY, INTEGRITY_REGISTRY_SCHEMA, TRANSPARENCY_MANIFEST
 Schema hash: 6eb446f7cca747bf7bc4c3473c6b1d2a0bfb61a338740b521a74159aa82f5cfb
 
-## Forecast Risk Metrics
-
-### Forecast Deviation Index (FDI)
-**Definition**: Measures prediction accuracy as the absolute percentage difference between predicted and actual values.
-
-**Formula**: `FDI = |predicted - actual| / predicted × 100`
-
-**Thresholds**:
-- **Excellent** (FDI < 5%): Strong model performance, predictions within 5% of actuals
-- **Good** (FDI < 10%): Acceptable accuracy, predictions within 10% of actuals
-- **Drifting** (FDI ≥ 10%): Significant deviation, model may require recalibration
-- **Critical** (FDI ≥ 15%): High deviation, immediate recalibration recommended
-
-**Current Status**: FDI = 0.0% (Excellent) — Baseline period with no historical actuals for comparison
-
-### Confidence Stability (CS)
-**Definition**: Measures forecast confidence variance over time as a rolling standard deviation.
-
-**Formula**: `CS = rolling_std(confidence_scores, window=10)`
-
-**Thresholds**:
-- **Stable** (CS < 3.0): Consistent confidence levels, low variance
-- **Moderate** (CS < 5.0): Acceptable variance, monitor for trends
-- **Unstable** (CS ≥ 5.0): High variance, review model inputs and features
-
-**Current Status**: CS = 2.1 (Stable) — Confidence variance well within acceptable range
-
-**Risk Assessment**: Overall risk level = **Low**
-- Prediction accuracy risk: Low (FDI 0.0%)
-- Confidence variance risk: Low (CS 2.1)
-- Data sufficiency: Moderate (7/30 historical data points collected)
-
-**Next Evaluation**: 2025-11-17T00:30:00+00:00 (Tuesday predictive engine run)
-
 ## API Endpoints
 - badges/integrity_status.json — current mean integrity score (for external dashboards)
 - exports/schema_provenance_ledger.jsonl — schema history (immutable ledger)
-- portal/metrics.json — live governance metrics API with forecast analytics
-  - integrity: score, violations, warnings, health, status
-  - reproducibility: status, checks_passed, checks_total, doi, capsule_sha256
-  - provenance: release, release_date, maintenance_branch, baseline_tag
-  - forecast_metrics: fdi (value, status, thresholds), cs (value, status, thresholds), predicted_integrity (mean, range, confidence), last_prediction, next_update
-  - last_updated: ISO 8601 timestamp
-
-## Verification Channels
-- **Public Verification Gateway (PVG)**: verification_gateway/public_verification_api.json
-  - DOI, release, integrity/reproducibility status
-  - Calibration error (CE), forecast bias (FB), FDI, CS
-  - **Ethics compliance**: bias_score, fairness_status, ethics_last_checked
-  - **Governance traceability**: latest decision_trace_id, ethics_report_hash
-  - SHA-256 capsule hash proofs for external reproducibility validation
-  - Automated nightly updates at 02:15 UTC
-  - Available for third-party verification and cross-instance audit
-
-## Public Compliance Verification
-The Public Verification Gateway harmonizes governance, ethics, and reproducibility data into a single machine-readable API for external auditors and researchers:
-
-**Ethics Integration**:
-- `bias_score`: Latest Bias Score (BS) from fairness analysis
-- `fairness_status`: CERTIFIED, UNDER_REVIEW, or PENDING
-- `ethics_last_checked`: ISO 8601 timestamp of last ethics compliance run
-- `ethics_report_hash`: SHA-256 hash of quarterly ethics report for integrity verification
-
-**Decision Traceability**:
-- `decision_trace_id`: ID of most recent autonomous governance action
-- Linked to `exports/decision_trace_log.jsonl` for full decision history
-
-**Access**: `https://raw.githubusercontent.com/dhananjaysmvdu/BioSignal-AI/main/verification_gateway/public_verification_api.json`
-
-## Portal Features
-**Live Dashboard** (portal/index.html):
-- Real-time metrics: Integrity, Reproducibility, Provenance, Forecast Accuracy
-- Interactive Risk Meter: Visual FDI/CS gauges with color-coded thresholds
-- Predicted Integrity: Q1 2026 forecasts with confidence intervals
-- Auto-refresh: Metrics reload every 5 minutes from JSON API
-- Forecast updates: Twice weekly (Tuesday/Friday 00:30 UTC via Meta-Forecast 2.0)
-- Error Monitoring Dashboard (portal/errors.html): Federation recoveries, workflow retries, self-healing interventions, and schema hash recalculations with live JSONL sourcing
-
-## Resilience & Recovery Automation
-- **Fault-Tolerant Federation Sync**: `scripts/federation/run_federation_sync.ps1` wraps Python execution with interpreter discovery, inline escaping, and template regeneration. Recovery events logged to `federation/federation_error_log.jsonl`.
-- **Self-Healing Kernel**: `scripts/self_healing/self_healing_kernel.py` restores files from git history after repeated hash mismatches, generates `self_healing_status.json`, and appends `<!-- AUTO_RECOVERY: SUCCESS -->` markers to audit reports.
-- **Schema Hash Guardrail**: `scripts/tools/hash_guardrail.ps1` enforces canonical headers from `templates/integrity_registry_schema.json`, retries inline hashing with temp `_hash_eval.py`, and appends hash results to `federation_status.json`.
-- **Workflow Smart Retry**: `.github/workflows/federation_sync.yml` and `.github/workflows/self_healing_monitor.yml` implement `MAX_ATTEMPTS=3` with exponential backoff (5s → 15s → 45s), auto-install dependencies before final retry, and log persistent failures to `logs/workflow_failures.jsonl`.
-- **Error Observatory**: `portal/errors.html` visualizes recovery telemetry sourced from federation logs, workflow retries, self-healing status, and schema hash events; summary metrics published via `portal/errors.json`.
 
 ## Citation & Research Export
 
@@ -203,23 +132,5 @@ If you use or build on this governance reflex architecture, please cite:
 - badges/integrity_status.json — nightly integrity score (for dashboards)
 - GOVERNANCE_TRANSPARENCY.md — human-readable system manifest
 
-## Governance Decision Traceability
-
-**GOVERNANCE_TRACE**: All autonomous governance actions are logged to `exports/decision_trace_log.jsonl` with full context:
-- **Timestamp**: ISO 8601 with timezone
-- **Action**: Type (e.g., adaptive_lr_update, forecast_recalibration, bias_escalation)
-- **Parameter Change**: Old → New values
-- **Trigger**: Condition that initiated the action
-- **Reason**: Human-readable justification
-- **Audit Reference**: Link to related audit marker or report
-
-**Purpose**: Enable transparent AI autonomy with auditable decision history. Each entry is immutable and append-only.
-
-**Visualization**: Latest 5 governance decisions displayed on `portal/accountability.html`.
-
 ---
 This file is auto-generated; do not edit manually.
-
-<!-- ETHICS_SYNC: UPDATED 2025-11-13T20:13:16.218415+00:00 -->
-
-<!-- ETHICS_SYNC: UPDATED 2025-11-13T20:13:17.605520+00:00 -->
