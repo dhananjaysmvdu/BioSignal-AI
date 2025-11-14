@@ -57,6 +57,12 @@ LOG_PATH = "state/challenge_verifier_log.jsonl"
 SUMMARY_PATH = "state/challenge_summary.json"
 AUDIT_SUMMARY = "docs/audit_summary.md"
 
+# Optional base directory override for tests/sandboxing
+BASE_DIR = os.environ.get("MVCRS_BASE_DIR", "").strip()
+
+def _p(path: str) -> str:
+    return os.path.join(BASE_DIR, path) if BASE_DIR else path
+
 DEVIATION_TYPES = [
     "TYPE_A_STRUCTURE",      # malformed/missing data
     "TYPE_B_CONSISTENCY",    # mismatch between consensus/rdgl/tuner
@@ -80,6 +86,7 @@ def safe_load_json(path: str) -> Any:
         return None
 
 def count_events(events_path: str) -> int:
+    events_path = _p(events_path)
     if not os.path.isfile(events_path):
         return 0
     count = 0
@@ -90,6 +97,7 @@ def count_events(events_path: str) -> int:
     return count
 
 def count_recent_events(events_path: str, days: int = 7) -> int:
+    events_path = _p(events_path)
     if not os.path.isfile(events_path):
         return 0
     cutoff = time.time() - days * 86400
@@ -147,7 +155,7 @@ def build_deviations(artifacts: Dict[str, Any], missing: List[str]) -> List[Dict
                 "timestamp": ts_now,
             })
 
-    events_path = "state/challenge_events.jsonl"
+    events_path = _p("state/challenge_events.jsonl")
     if os.path.isfile(events_path):
         with open(events_path, "r", encoding="utf-8") as f:
             line_no = 0
@@ -234,7 +242,7 @@ def build_deviations(artifacts: Dict[str, Any], missing: List[str]) -> List[Dict
     # TYPE_D_UNEXPECTED_ACTION
     action_conflicts = 0
     trust_lock = artifacts.get("state/trust_lock_state.json")
-    responses_log_path = "forensics/response_history.jsonl"
+    responses_log_path = _p("forensics/response_history.jsonl")
     if trust_lock and isinstance(trust_lock, dict) and trust_lock.get("locked") is True and os.path.isfile(responses_log_path):
         with open(responses_log_path, "r", encoding="utf-8") as f:
             for raw in f:
@@ -248,7 +256,7 @@ def build_deviations(artifacts: Dict[str, Any], missing: List[str]) -> List[Dict
                 if obj.get("event_type") == "ADAPTIVE_RESPONSE":
                     deviations.append({
                         "type": "TYPE_D_UNEXPECTED_ACTION",
-                        "severity": "low",
+                        "severity": "medium",
                         "metric": "action_during_trust_lock",
                         "expected": "no_adaptive_response",
                         "observed": obj.get("status"),
@@ -277,8 +285,9 @@ def compute_status_from_deviations(devs: List[Dict[str, Any]]) -> str:
 
 def update_audit_marker(marker_line: str, escalation_marker: str | None = None) -> None:
     lines: List[str] = []
-    if os.path.isfile(AUDIT_SUMMARY):
-        with open(AUDIT_SUMMARY, "r", encoding="utf-8") as f:
+    audit_path = _p(AUDIT_SUMMARY)
+    if os.path.isfile(audit_path):
+        with open(audit_path, "r", encoding="utf-8") as f:
             for l in f:
                 if "MVCRS_VERIFIER:" in l or "MVCRS_ESCALATION:" in l:
                     continue
@@ -286,24 +295,25 @@ def update_audit_marker(marker_line: str, escalation_marker: str | None = None) 
     lines.append(marker_line)
     if escalation_marker:
         lines.append(escalation_marker)
-    tmp = AUDIT_SUMMARY + ".tmp"
+    os.makedirs(os.path.dirname(audit_path), exist_ok=True)
+    tmp = audit_path + ".tmp"
     with open(tmp, "w", encoding="utf-8") as f:
         f.write("\n".join(lines) + "\n")
-    os.replace(tmp, AUDIT_SUMMARY)
+    os.replace(tmp, audit_path)
 
 def load_all():
     artifacts = {}
     missing = []
     for path in REQUIRED_FILES:
-        if not os.path.isfile(path):
+        rp = _p(path)
+        if not os.path.isfile(rp):
             missing.append(path)
             artifacts[path] = None
             continue
         if path.endswith(".json"):
-            artifacts[path] = safe_load_json(path)
+            artifacts[path] = safe_load_json(rp)
         else:
-            # For .jsonl or other text logs, store minimal metadata
-            artifacts[path] = {"exists": True, "size": os.path.getsize(path)}
+            artifacts[path] = {"exists": True, "size": os.path.getsize(rp)}
     return artifacts, missing
 
 def update_summary(verifier_status: str, deviations: List[Dict[str, Any]], escalation_created: bool, escalation_ts: str | None) -> Dict[str, Any]:
@@ -324,7 +334,7 @@ def update_summary(verifier_status: str, deviations: List[Dict[str, Any]], escal
         "last_escalation_ts": escalation_ts,
         "last_updated": utc_iso(),
     }
-    atomic_write_json(SUMMARY_PATH, summary)
+    atomic_write_json(_p(SUMMARY_PATH), summary)
     return summary
 
 def create_escalation(deviations: List[Dict[str, Any]], artifacts: Dict[str, Any]) -> Dict[str, Any]:
@@ -345,7 +355,7 @@ def create_escalation(deviations: List[Dict[str, Any]], artifacts: Dict[str, Any
         "high_severity_deviations": high_devs,
         "snapshot": {"artifact_keys": list(artifacts.keys())},
     }
-    atomic_write_json("state/mvcrs_escalation.json", payload)
+    atomic_write_json(_p("state/mvcrs_escalation.json"), payload)
     return payload
 
 def main(argv=None) -> int:
@@ -367,8 +377,8 @@ def main(argv=None) -> int:
         "missing_artifacts": missing,
         "timestamp": utc_iso(),
     }
-    atomic_write_json(STATE_PATH, result)
-    append_jsonl(LOG_PATH, result)
+    atomic_write_json(_p(STATE_PATH), result)
+    append_jsonl(_p(LOG_PATH), result)
     summary = update_summary(status, deviations, escalation_payload is not None, escalation_ts)
     marker = f"<!-- MVCRS_VERIFIER: UPDATED {utc_iso()} -->"
     update_audit_marker(marker, escalation_marker)
