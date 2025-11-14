@@ -356,5 +356,145 @@ python scripts/policy/policy_orchestrator.py --run
 
 ---
 
+## Phase XXV-B: Operational Automation
+
+### 1. Policy Response Runner
+
+**File**: `scripts/response/run_policy_responses.py`
+
+**Purpose**: Execute automated responses based on policy level with safety gates.
+
+**Modes**:
+- **Dry-Run** (default): Generates preview without execution
+- **Apply** (requires `--apply` flag): Executes real actions with undo files
+
+**Safety Gates** (checked before execution):
+1. Trust Guard unlocked
+2. Safety brake OFF
+3. Response rate limit not exceeded (default: 10/24h)
+4. Manual unlock count within limit (default: 3/day)
+
+**Actions by Policy**:
+
+**YELLOW** (soft, read-only):
+- Integrity schema check
+- CSV schema validation
+
+**RED** (hard, includes reversible):
+- Full integrity check
+- Cold storage verification
+- Integrity anchor mirror regeneration (reversible with undo file)
+
+**Outputs**:
+- Dry-run: `state/policy_response_preview.json`
+- Apply: `state/policy_response_log.jsonl`, `state/policy_response_undo_*.json`
+- Blocked: `reports/policy_response_blocked.json`
+
+---
+
+### 2. Response Runner CI Workflow
+
+**File**: `.github/workflows/policy_response_runner.yml`
+
+**Trigger**: 
+- `workflow_run` after `policy_orchestration.yml` success
+- Manual dispatch with `auto_apply` input (default: false)
+
+**Steps**:
+1. Fetch policy from `policy_state.json`
+2. Execute `run_policy_responses.py` with `POLICY_AUTO_APPLY` env control
+3. Upload artifacts (preview/log/blocked reports)
+4. On failure: Create fix branch, commit logs, append audit marker
+5. On success: Commit state updates with `[skip ci]`
+
+**Safety**: `POLICY_AUTO_APPLY` defaults to `false` (dry-run), requires explicit `true` for real actions.
+
+---
+
+### 3. Operational Runbook
+
+**File**: `RUNBOOK_POLICY_AUTOMATION.md`
+
+**Sections**:
+1. Manual workflow triggers
+2. Dry-run mode usage
+3. Apply mode with safety gates
+4. Rollback procedures (undo files)
+5. Reset safety mechanisms (brake, unlock counter)
+6. Policy actions by level
+7. Monitoring & alerts
+8. Troubleshooting
+9. Emergency procedures
+10. Quick command reference
+11. Operational metrics
+12. Contact & escalation
+
+**Key Commands**:
+```bash
+# Preview responses (dry-run)
+python scripts/response/run_policy_responses.py --policy RED
+
+# Execute responses (apply)
+python scripts/response/run_policy_responses.py --policy RED --apply
+
+# Force unlock trust guard
+python scripts/trust/trust_guard_controller.py --force-unlock --reason "manual-override"
+
+# List undo files
+ls state/policy_response_undo_*.json
+
+# Execute undo (example)
+cp mirrors/anchor_chain.json.backup mirrors/anchor_chain.json
+```
+
+---
+
+### 4. Test Coverage
+
+**File**: `tests/response/test_run_policy_responses.py`
+
+**Tests**: 8/8 PASSED
+
+**Coverage**:
+- Dry-run preview generation
+- Trust lock blocking
+- Safety brake blocking
+- Rate limit blocking
+- Apply mode subprocess execution
+- Undo file creation for reversible actions
+- GREEN policy no-op
+- Audit marker on blocked execution
+
+---
+
+### 5. Integration Validation
+
+**Pre-flight checks**: 21/21 core tests passed
+- Policy orchestrator: 8/8
+- Trust guard: 8/8
+- Trust API: 3/3
+- UI components: 2/2
+
+**Portal verification**: Policy state card fetching `../state/policy_state.json` with 15s refresh
+
+**Workflow chaining**: `policy_orchestration.yml` → `policy_response_runner.yml` via `workflow_run` trigger
+
+---
+
+### 6. Operational Status
+
+**Status**: ✅ OPERATIONAL (Dry-Run Default)
+
+**Next Steps**:
+1. E2E dry-run validation with forced RED policy
+2. Controlled apply test (single soft action)
+3. Tag release: `v2.5.1-policy-auto`
+4. Monitoring & alerts setup
+
+**Safety Gates**: ACTIVE — Auto-apply requires explicit `POLICY_AUTO_APPLY=true` in CI or `--apply` flag locally.
+
+---
+
 **Report Generated**: 2025-11-14T12:30:00+00:00  
-**Phase XXV Status**: ✅ CERTIFIED
+**Phase XXV Status**: ✅ CERTIFIED  
+**Phase XXV-B Status**: ✅ OPERATIONAL (DRY-RUN)
