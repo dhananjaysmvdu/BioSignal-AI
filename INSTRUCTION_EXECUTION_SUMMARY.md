@@ -43,6 +43,47 @@
 
 ---
 
+## Phase XXVIII — Reinforcement-Driven Governance Learning (RDGL)
+
+**Instructions Executed**:
+1. RDGL Engine (`reinforcement_governance_learning.py`) — computes daily reward and updates `policy_score` with LR=0.05
+2. Metrics Helper (`rdgl_metrics.py`) — `compute_daily_reward`, `compute_trend`, `compute_confidence_state`, `summarize_learning_window`
+3. CI Workflow (`rdgl_training.yml`) — 06:20 UTC, after ATTE success, artifact upload + audit marker
+4. Portal Integration — “Learning Engine (RDGL)” card with score, reward, trend, mode, update time
+5. Regression Tests (6) — rewards, penalties, score clamp, modes, fix-branch, idempotent marker
+6. Documentation — `PHASE_XXVIII_COMPLETION_REPORT.md`
+7. Tag `v2.8.0-reinforcement-learning` (pending)
+
+**Reward Signals**:
+- +1.0: Forecast accuracy improvement
+- +2.0: Reduced high-risk days
+- +1.5 each: Self-healing events
+- +3.0: Avoided RED escalation
+- −1.0 each: Unnecessary responses
+- −5.0 each: Safety brake engagement
+- −3.0 each: Manual unlocks
+
+**Score Update**:
+- `new_score = clamp(old_score + reward × 0.05, 0, 100)`
+- Modes: >70 Relaxed (2–3%), 40–70 Normal (1–2%), <40 Tightening (3–5%), <20 Locked (ALERT_LOW_CONFIDENCE)
+
+**Safety**:
+- Atomic writes 1s/3s/9s, fix branch `fix/rdgl-<ts>`, idempotent audit marker `<!-- RDGL: UPDATED ... -->`
+
+**Artifacts**:
+- `state/rdgl_policy_adjustments.json` — score/mode/shift/trend
+- `state/rdgl_reward_log.jsonl` — daily rewards + breakdown
+- `.github/workflows/rdgl_training.yml` — CI orchestration
+- `portal/index.html` — RDGL card with 15s refresh
+- `tests/learning/test_rdgl_engine.py` — 6 tests
+
+**Validation**:
+- 6/6 tests passing; dry-run OK
+
+**Summary Last Updated**: 2025-11-14T18:05:00+00:00
+
+---
+
 ## Phase XXVI — System-Wide Policy Fusion & Tier-2 Autonomy
 
 **Instructions Executed**:

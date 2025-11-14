@@ -538,6 +538,37 @@
                     </div>
                 </div>
             </div>
+
+            <!-- Learning Engine (RDGL) Card -->
+            <div class="metric-card">
+                <div class="metric-header">
+                    <span class="metric-title">Learning Engine (RDGL)</span>
+                    <span class="status-badge" id="rdgl-trend-badge">—</span>
+                </div>
+                <div class="metric-value" style="font-size: 2.0em;" id="rdgl-score">—</div>
+                <div class="metric-label">Current Policy Score</div>
+                <div style="margin-top: 20px;">
+                    <div class="metric-detail">
+                        <span class="detail-label">24h Reward</span>
+                        <span class="detail-value" id="rdgl-reward">—</span>
+                    </div>
+                    <div class="metric-detail">
+                        <span class="detail-label">Mode</span>
+                        <span class="detail-value" id="rdgl-mode">—</span>
+                    </div>
+                    <div class="metric-detail">
+                        <span class="detail-label">Shift Range</span>
+                        <span class="detail-value" id="rdgl-shift">—</span>
+                    </div>
+                    <div class="metric-detail">
+                        <span class="detail-label">Last Update</span>
+                        <span class="detail-value" id="rdgl-updated">—</span>
+                    </div>
+                    <div style="margin-top: 15px; text-align: center;">
+                        <a href="../state/rdgl_policy_adjustments.json" style="color: #667eea; text-decoration: none; font-weight: 600;" target="_blank">→ View RDGL Policy</a>
+                    </div>
+                </div>
+            </div>
         </div>
         
         <div class="info-section">
@@ -1119,6 +1150,55 @@
         loadAdaptiveThresholds();
         // Auto-refresh thresholds every 15 seconds
         setInterval(loadAdaptiveThresholds, 15000);
+
+        // Load RDGL Learning Engine
+        async function loadRDGL(){
+            try{
+                const response = await fetch('../state/rdgl_policy_adjustments.json', {cache:'no-store'});
+                if(!response.ok) throw new Error('Failed to fetch RDGL policy');
+                const data = await response.json();
+                if(data){
+                    const score = data.policy_score ?? data.score ?? 50.0;
+                    const reward = data.reward_24h ?? 0.0;
+                    const mode = data.mode ?? '—';
+                    const shift = data.shift_percent_range ?? [0,0];
+                    const updated = data.last_updated ?? '—';
+                    const trend = (data.trend || 'Stable').toString();
+
+                    document.getElementById('rdgl-score').textContent = score.toFixed ? score.toFixed(2) : score;
+                    document.getElementById('rdgl-reward').textContent = (reward.toFixed ? reward.toFixed(3) : reward) + ' pts';
+                    document.getElementById('rdgl-mode').textContent = mode.toUpperCase();
+                    document.getElementById('rdgl-shift').textContent = `${shift[0]}% – ${shift[1]}%`;
+
+                    if(updated !== '—'){
+                        const date = new Date(updated);
+                        document.getElementById('rdgl-updated').textContent = date.toISOString().slice(0,16).replace('T',' ');
+                    } else {
+                        document.getElementById('rdgl-updated').textContent = '—';
+                    }
+
+                    const badge = document.getElementById('rdgl-trend-badge');
+                    badge.textContent = trend.toUpperCase();
+                    if(trend === 'Improving'){
+                        badge.className = 'status-badge status-green';
+                        badge.style.color = 'white';
+                    } else if(trend === 'Stable'){
+                        badge.className = 'status-badge status-certified';
+                        badge.style.color = 'white';
+                    } else if(trend === 'Degrading'){
+                        badge.className = 'status-badge';
+                        badge.style.background = '#ef4444';
+                        badge.style.color = 'white';
+                    } else {
+                        badge.className = 'status-badge';
+                        badge.style.background = '#6b7280';
+                        badge.style.color = 'white';
+                    }
+                }
+            }catch(e){}
+        }
+        loadRDGL();
+        setInterval(loadRDGL, 15000);
     </script>
 </body>
 </html>
