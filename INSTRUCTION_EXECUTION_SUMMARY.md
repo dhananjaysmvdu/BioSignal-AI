@@ -1,3 +1,45 @@
+## Phase XXV — Autonomous Policy Orchestration
+
+**Instructions Executed**:
+1. Policy Orchestrator Engine (`policy_orchestrator.py`) — aggregates Trust Guard, integrity, consensus, reputation, forecast, and response signals
+2. CI Workflow (`policy_orchestration.yml`) — daily 04:45 UTC execution with failure branch creation
+3. Portal Integration — System Policy Status card with 15-second auto-refresh
+4. Regression Test Suite (8 tests) — GREEN/YELLOW/RED paths, log structure, atomic writes, fix-branch
+5. Phase XXV Documentation — comprehensive completion report
+6. Tag release `v2.5.0-policy-orchestration`
+
+**Policy Logic**:
+- **GREEN**: All healthy (integrity ≥95%, consensus ≥90%, trust unlocked, forecast low, responses <4)
+- **YELLOW**: Moderate risk (integrity 90-95%, consensus 85-90%, reputation <80%, forecast medium, responses 4-7)
+- **RED**: Critical state (integrity <90%, consensus <85%, trust locked, forecast high, responses ≥8)
+
+**Key Artifacts**:
+- `scripts/policy/policy_orchestrator.py` — policy engine with CLI `--run`
+- `state/policy_state.json` — current policy state
+- `state/policy_state_log.jsonl` — append-only audit trail
+- `.github/workflows/policy_orchestration.yml` — daily CI workflow
+- `portal/index.html` — System Policy Status card
+- `tests/policy/test_policy_orchestrator.py` — 8 regression tests
+
+**Safety Guarantees**:
+- Atomic writes (tmp → rename)
+- 3-step retry (1s, 3s, 9s)
+- Fix-branch on persistent FS errors
+- Idempotent audit markers
+- Read-only upstream inputs
+
+**Validation**:
+- 8/8 tests passing
+- Policy state artifacts committed
+- Portal card renders with live updates
+- CI workflow validated
+
+**Reference**: `PHASE_XXV_COMPLETION_REPORT.md`
+
+**Summary Last Updated**: 2025-11-14T12:45:00+00:00
+
+---
+
 ## Phase XXIV — Adaptive Forensic Response Intelligence
 
 Instructions executed:

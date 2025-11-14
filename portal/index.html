@@ -453,6 +453,33 @@
                     </div>
                 </div>
             </div>
+
+            <!-- System Policy Status Card -->
+            <div class="metric-card">
+                <div class="metric-header">
+                    <span class="metric-title">System Policy Status</span>
+                    <span class="status-badge" id="policy-badge">—</span>
+                </div>
+                <div class="metric-value" style="font-size: 2.5em;" id="policy-level">—</div>
+                <div class="metric-label">Current Policy Level</div>
+                <div style="margin-top: 20px;">
+                    <div class="metric-detail">
+                        <span class="detail-label">Last Evaluation</span>
+                        <span class="detail-value" id="policy-timestamp">—</span>
+                    </div>
+                    <div class="metric-detail">
+                        <span class="detail-label">Trust Lock</span>
+                        <span class="detail-value" id="policy-trust">—</span>
+                    </div>
+                    <div class="metric-detail">
+                        <span class="detail-label">Forecast Risk</span>
+                        <span class="detail-value" id="policy-forecast">—</span>
+                    </div>
+                    <div style="margin-top: 15px; text-align: center;">
+                        <a href="../state/policy_state.json" style="color: #667eea; text-decoration: none; font-weight: 600;" target="_blank">→ View Policy Details</a>
+                    </div>
+                </div>
+            </div>
         </div>
         
         <div class="info-section">
@@ -834,9 +861,58 @@
                     }
                 }
             }catch(e){}
+
+            // Load policy orchestration state
+            try{
+                const policy = await fetch('../state/policy_state.json', {cache:'no-store'});
+                if(policy.ok){
+                    const p = await policy.json();
+                    const level = p.policy || '—';
+                    const timestamp = p.evaluated_at || '—';
+                    const inputs = p.inputs || {};
+                    
+                    document.getElementById('policy-level').textContent = level;
+                    
+                    // Format timestamp
+                    if(timestamp !== '—'){
+                        const date = new Date(timestamp);
+                        document.getElementById('policy-timestamp').textContent = 
+                            date.toISOString().slice(0,16).replace('T', ' ');
+                    } else {
+                        document.getElementById('policy-timestamp').textContent = '—';
+                    }
+                    
+                    // Trust lock status
+                    document.getElementById('policy-trust').textContent = 
+                        inputs.trust_locked ? '🔒 LOCKED' : '🔓 Unlocked';
+                    
+                    // Forecast risk
+                    document.getElementById('policy-forecast').textContent = 
+                        (inputs.forecast_risk || 'unknown').toUpperCase();
+                    
+                    // Update badge color
+                    const badge = document.getElementById('policy-badge');
+                    badge.textContent = level;
+                    if(level === 'RED'){
+                        badge.className = 'status-badge';
+                        badge.style.background = '#ef4444';
+                        badge.style.color = 'white';
+                    } else if(level === 'YELLOW'){
+                        badge.className = 'status-badge';
+                        badge.style.background = '#f59e0b';
+                        badge.style.color = 'white';
+                    } else if(level === 'GREEN'){
+                        badge.className = 'status-badge status-green';
+                    } else {
+                        badge.className = 'status-badge';
+                        badge.style.background = '#6b7280';
+                        badge.style.color = 'white';
+                    }
+                }
+            }catch(e){}
         }
         loadForensicsInsights();
-        setInterval(loadForensicsInsights, 600000);
+        setInterval(loadForensicsInsights, 15000); // Refresh policy every 15 seconds
 
                 if(prov.ok){
                     const j = await prov.json();
