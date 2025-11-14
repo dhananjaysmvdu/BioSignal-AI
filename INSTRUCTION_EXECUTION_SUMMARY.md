@@ -1,4 +1,95 @@
 ## Phase XXV — Autonomous Policy Orchestration
+## Phase XXVII — Autonomous Threshold Tuning Engine (ATTE)
+
+**Instructions Executed**:
+1. ATTE Engine (`autonomous_threshold_tuner.py`) — 21-day rolling window analysis, moving medians, max 3% shift/24h, stability-based locking
+2. CI Workflow (`autonomous_threshold_tuning.yml`) — daily 06:00 UTC chained after orchestration/response/fusion
+3. Portal Integration — Adaptive Thresholds card with 15s auto-refresh, status badges (stable/rising/falling/locked)
+4. Regression Test Suite (7 tests) — tuning logic, safety clamps, stability lock, fix-branch, audit markers
+5. Phase XXVII Documentation — comprehensive completion report
+6. Tag release `v2.7.0-autonomous-thresholding` (pending)
+
+**Tuning Logic**:
+- **Integrity:** Recent 7d vs older 14d → declining (<-5%) tighten 3%, improving (>5%) relax 3%
+- **Consensus:** Variance >10% tighten, <3% relax
+- **Forecast:** High-risk >30% lower threshold, <10% raise threshold
+- **Reputation:** Median <70 raise minimum, >95 lower minimum
+- **Stability Lock:** Score <0.85 freezes all thresholds
+
+**Safety Mechanisms**:
+- **Max Shift:** 3% per 24h prevents oscillations
+- **Clamps:** integrity≥85%, consensus≥90%, forecast≥5, reputation≥50
+- **Stability Lock:** No changes when system unstable (score <0.85)
+- **Fix-Branch:** Persistent FS failures create `fix/threshold-tuner-{timestamp}`
+- **Atomic Writes:** 1s/3s/7s retry + idempotent audit markers
+
+**Key Artifacts**:
+- `scripts/policy/autonomous_threshold_tuner.py` — ATTE engine (450+ lines)
+- `state/threshold_policy.json` — current threshold policy
+- `state/threshold_tuning_history.jsonl` — append-only tuning log
+- `.github/workflows/autonomous_threshold_tuning.yml` — daily CI workflow
+- `portal/index.html` — Adaptive Thresholds card
+- `tests/policy/test_autonomous_threshold_tuner.py` — 7 regression tests
+
+**Validation**:
+- 7/7 tests passing (0.30s)
+- Dry-run pending
+- Portal card renders with auto-refresh
+- CI workflow chained properly
+
+**Reference**: `PHASE_XXVII_COMPLETION_REPORT.md`
+
+**Summary Last Updated**: 2025-11-14T18:00:00+00:00
+
+---
+
+## Phase XXVI — System-Wide Policy Fusion & Tier-2 Autonomy
+
+**Instructions Executed**:
+1. Policy Fusion Engine (`policy_fusion_engine.py`) — synthesizes 6 subsystem signals (policy, trust, consensus, brake, responses) into FUSION_GREEN/YELLOW/RED
+2. CI Workflow (`policy_fusion.yml`) — daily 05:30 UTC after orchestration
+3. Portal Integration — Policy Fusion Status card with 10s auto-refresh
+4. Regression Test Suite (10 tests) — 8 fusion engine + 2 UI tests
+5. Phase XXVI Documentation — comprehensive completion report + Tier-2 design notes
+6. Tier-2 Autonomy Design (`TIER2_AUTONOMY_NOTES.md`) — 5 proposed engines, approval gates, safety constraints
+7. Tag release `v2.6.0-policy-fusion`
+
+**Fusion Logic**:
+- **FUSION_RED**: Policy=RED OR safety brake ON OR (policy=YELLOW AND trust locked) OR (policy=YELLOW AND consensus <92%)
+- **FUSION_YELLOW**: Policy=YELLOW (unlocked, consensus ≥92%) OR (policy=GREEN AND consensus <92%)
+- **FUSION_GREEN**: Policy=GREEN AND consensus ≥92% AND brake OFF AND trust unlocked
+
+**Safety Guarantees**:
+- Safety brake override (always escalates to RED)
+- Consensus escalation (low consensus promotes YELLOW→RED)
+- Trust lock escalation (YELLOW+locked→RED)
+- Atomic writes with 3-retry (1s/1s/1s)
+- Fix-branch creation on persistent failures
+- Idempotent audit markers
+
+**Key Artifacts**:
+- `scripts/policy/policy_fusion_engine.py` — fusion engine (342 lines)
+- `state/policy_fusion_state.json` — current fusion state
+- `state/policy_fusion_log.jsonl` — append-only fusion log
+- `.github/workflows/policy_fusion.yml` — daily CI workflow
+- `portal/index.html` — Policy Fusion Status card
+- `tests/policy/test_policy_fusion_engine.py` — 8 engine tests
+- `tests/ui/test_policy_fusion_portal.py` — 2 UI tests
+- `design/TIER2_AUTONOMY_NOTES.md` — Tier-2 autonomy design (303 lines)
+
+**Validation**:
+- 10/10 tests passing (8 engine + 2 UI)
+- Fusion state artifacts committed
+- Portal card renders with live updates
+- CI workflow validated
+
+**Reference**: `PHASE_XXVI_COMPLETION_REPORT.md`, `design/TIER2_AUTONOMY_NOTES.md`
+
+**Summary Last Updated**: 2025-11-14T17:30:00+00:00
+
+---
+
+## Phase XXV — Autonomous Policy Orchestration
 
 **Instructions Executed**:
 1. Policy Orchestrator Engine (`policy_orchestrator.py`) — aggregates Trust Guard, integrity, consensus, reputation, forecast, and response signals

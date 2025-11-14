@@ -507,6 +507,37 @@
                     </div>
                 </div>
             </div>
+
+            <!-- Adaptive Thresholds (ATTE) Card -->
+            <div class="metric-card">
+                <div class="metric-header">
+                    <span class="metric-title">Adaptive Thresholds (ATTE)</span>
+                    <span class="status-badge" id="atte-badge">—</span>
+                </div>
+                <div class="metric-value" style="font-size: 2.0em;" id="atte-status">—</div>
+                <div class="metric-label">Threshold Status</div>
+                <div style="margin-top: 20px;">
+                    <div class="metric-detail">
+                        <span class="detail-label">Integrity Threshold</span>
+                        <span class="detail-value" id="atte-integrity">—</span>
+                    </div>
+                    <div class="metric-detail">
+                        <span class="detail-label">Consensus Threshold</span>
+                        <span class="detail-value" id="atte-consensus">—</span>
+                    </div>
+                    <div class="metric-detail">
+                        <span class="detail-label">Reputation Minimum</span>
+                        <span class="detail-value" id="atte-reputation">—</span>
+                    </div>
+                    <div class="metric-detail">
+                        <span class="detail-label">Last Updated</span>
+                        <span class="detail-value" id="atte-updated">—</span>
+                    </div>
+                    <div style="margin-top: 15px; text-align: center;">
+                        <a href="../state/threshold_policy.json" style="color: #667eea; text-decoration: none; font-weight: 600;" target="_blank">→ View Threshold Policy</a>
+                    </div>
+                </div>
+            </div>
         </div>
         
         <div class="info-section">
@@ -1023,6 +1054,71 @@
         
         // Auto-refresh fusion state every 10 seconds
         setInterval(loadPolicyFusionState, 10000);
+        
+        // Load Adaptive Thresholds (ATTE)
+        async function loadAdaptiveThresholds(){
+            try{
+                const response = await fetch('../state/threshold_policy.json');
+                if(!response.ok) throw new Error('Failed to fetch threshold policy');
+                const data = await response.json();
+                
+                if(data){
+                    const status = data.status || '—';
+                    const integrity = data.integrity || {};
+                    const consensus = data.consensus || {};
+                    const reputation = data.reputation || {};
+                    const lastUpdated = data.last_updated || '—';
+                    
+                    document.getElementById('atte-status').textContent = status.toUpperCase();
+                    
+                    // Format thresholds
+                    document.getElementById('atte-integrity').textContent = 
+                        `Green: ${integrity.green?.toFixed(1) || '—'}% / Yellow: ${integrity.yellow?.toFixed(1) || '—'}%`;
+                    
+                    document.getElementById('atte-consensus').textContent = 
+                        `Green: ${consensus.green?.toFixed(1) || '—'}% / Yellow: ${consensus.yellow?.toFixed(1) || '—'}%`;
+                    
+                    document.getElementById('atte-reputation').textContent = 
+                        reputation.min_peer_score?.toFixed(1) + ' pts' || '—';
+                    
+                    // Format timestamp
+                    if(lastUpdated !== '—'){
+                        const date = new Date(lastUpdated);
+                        document.getElementById('atte-updated').textContent = 
+                            date.toISOString().slice(0,16).replace('T', ' ');
+                    } else {
+                        document.getElementById('atte-updated').textContent = '—';
+                    }
+                    
+                    // Update badge color
+                    const badge = document.getElementById('atte-badge');
+                    badge.textContent = status.toUpperCase();
+                    if(status === 'rising'){
+                        badge.className = 'status-badge';
+                        badge.style.background = '#f59e0b';
+                        badge.style.color = 'white';
+                    } else if(status === 'falling'){
+                        badge.className = 'status-badge';
+                        badge.style.background = '#3b82f6';
+                        badge.style.color = 'white';
+                    } else if(status === 'locked'){
+                        badge.className = 'status-badge';
+                        badge.style.background = '#dc2626';
+                        badge.style.color = 'white';
+                    } else if(status === 'stable'){
+                        badge.className = 'status-badge status-green';
+                    } else {
+                        badge.className = 'status-badge';
+                        badge.style.background = '#6b7280';
+                        badge.style.color = 'white';
+                    }
+                }
+            }catch(e){}
+        }
+        
+        loadAdaptiveThresholds();
+        // Auto-refresh thresholds every 15 seconds
+        setInterval(loadAdaptiveThresholds, 15000);
     </script>
 </body>
 </html>
