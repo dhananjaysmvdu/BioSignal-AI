@@ -1,0 +1,7 @@
+{
+  "response_id": "013aba60-61d4-43d7-8141-004c64f3b56a",
+  "timestamp": "2025-11-14T07:13:10.910399+00:00",
+  "policy": "RED",
+  "blocked": true,
+  "reason": "safety_brake_engaged"
+}
