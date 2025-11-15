@@ -1,0 +1,16 @@
+{
+  "result": "MARGINAL_NO_MERGE",
+  "final_fusion_level": "YELLOW",
+  "final_confidence": 0.15,
+  "members_reactivated": [],
+  "consolidation_probes": [
+    {"fusion_level": "YELLOW", "confidence": 0.15, "weight_health": "NORMALIZED", "alignment": "ALIGNED"},
+    {"fusion_level": "YELLOW", "confidence": 0.15, "weight_health": "NORMALIZED", "alignment": "ALIGNED"},
+    {"fusion_level": "YELLOW", "confidence": 0.15, "weight_health": "NORMALIZED", "alignment": "ALIGNED"}
+  ],
+  "rollback_triggered": false,
+  "provenance": {
+    "branch": "release/green-attempt-20251116T101500Z",
+    "timestamp": "2025-11-16T10:17:00Z"
+  }
+}
