@@ -106,6 +106,7 @@ timestamp | integrity_score | violations | warnings | health_score | rri | mpi |
 <!-- TRANSPARENCY_MANIFEST:END -->
 <!-- SCHEMA_PROVENANCE:BEGIN -->
 <!-- SCHEMA_PROVENANCE:END -->
+<!-- MVCRS_CHAIN: INTEGRATED 2025-11-15T00:00:00Z -->
 ```
 
 ---

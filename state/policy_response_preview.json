@@ -1,0 +1,41 @@
+{
+  "response_id": "cc7710a2-72a7-4cbb-a1d5-d68842479a99",
+  "timestamp": "2025-11-14T07:13:37.782261+00:00",
+  "policy": "RED",
+  "mode": "dry-run",
+  "safety_gates_passed": true,
+  "actions_planned": 3,
+  "actions_succeeded": 3,
+  "results": [
+    {
+      "action": "full_integrity_check",
+      "command": "python scripts/workflow_utils/validate_governance_schemas.py",
+      "success": true,
+      "reversible": false,
+      "undo_instruction": null,
+      "stdout": "[DRY-RUN] Would execute: python scripts/workflow_utils/validate_governance_schemas.py",
+      "stderr": "",
+      "duration": 0.0
+    },
+    {
+      "action": "cold_storage_verification",
+      "command": "python scripts/forensics/verify_cold_storage.py",
+      "success": true,
+      "reversible": false,
+      "undo_instruction": null,
+      "stdout": "[DRY-RUN] Would execute: python scripts/forensics/verify_cold_storage.py",
+      "stderr": "",
+      "duration": 0.0
+    },
+    {
+      "action": "integrity_anchor_mirror",
+      "command": "python scripts/forensics/mirror_integrity_anchor.py",
+      "success": true,
+      "reversible": true,
+      "undo_instruction": "Restore previous anchor_chain.json from mirrors/anchor_chain.json.backup",
+      "stdout": "[DRY-RUN] Would execute: python scripts/forensics/mirror_integrity_anchor.py",
+      "stderr": "",
+      "duration": 0.0
+    }
+  ]
+}

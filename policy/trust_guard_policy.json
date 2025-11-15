@@ -1,0 +1,10 @@
+{
+  "thresholds": {
+    "integrity": 90,
+    "weighted_consensus": 92,
+    "reputation_index": 85
+  },
+  "lock_window_minutes": 60,
+  "auto_unlock_after_minutes": 1440,
+  "max_manual_unlocks_per_day": 2
+}

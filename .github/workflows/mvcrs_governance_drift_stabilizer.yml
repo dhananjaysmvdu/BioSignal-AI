@@ -1,0 +1,33 @@
+name: MVCRS Governance Drift Stabilization Engine (GDSE)
+
+on:
+  schedule:
+    - cron: '0 9 * * *'
+  workflow_dispatch: {}
+
+jobs:
+  gdse-run:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install deps
+        run: |
+          pip install -r requirements.txt || true
+      - name: Run GDSE engine
+        run: |
+          python scripts/stabilization/mvcrs_governance_drift_stabilizer.py || exit $? 
+      - name: Evaluate gating
+        run: |
+          python -c "import json,sys,pathlib,datetime,subprocess; p=pathlib.Path('state/mvcrs_stabilization_profile.json');\nif not p.exists(): print('Missing stabilization profile state file, failing.'); sys.exit(1);\nprof=json.loads(p.read_text()); intensity=prof.get('stabilization_intensity'); conf=prof.get('final_confidence',0.0);\nif intensity=='high' and conf>0.75:\n    summary=pathlib.Path('INSTRUCTION_EXECUTION_SUMMARY.md');\n    if summary.exists():\n        content=summary.read_text().split('\\n');\n        lines=[ln for ln in content if not ln.strip().startswith('<!-- MVCRS_GDSE:')];\n        ts=datetime.datetime.utcnow().isoformat()+'Z';\n        lines.append(f'<!-- MVCRS_GDSE: FAILED {ts} -->');\n        summary.write_text('\\n'.join(lines));\n    b='fix/mvcrs-gdse-'+datetime.datetime.utcnow().strftime('%Y%m%dT%H%M%SZ');\n    subprocess.run(['git','checkout','-b',b]);\n    print(f'GDSE gating failure: intensity={intensity} confidence={conf}');\n    sys.exit(2);\nprint(f'GDSE OK: intensity={intensity} confidence={conf}')"
+      - name: Upload artifacts (90 days logs/state)
+        uses: actions/upload-artifact@v4
+        with:
+          name: gdse-artifacts
+          path: |
+            state/mvcrs_stabilization_profile.json
+            logs/mvcrs_gdse_log.jsonl

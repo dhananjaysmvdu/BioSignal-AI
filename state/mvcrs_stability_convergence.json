@@ -1,0 +1,20 @@
+{
+  "convergence_score": 0.466,
+  "alignment_status": "aligned",
+  "confidence_adjust": 0.8,
+  "potential_gating_risk": false,
+  "ensemble_confidence": 0.68,
+  "signals": {
+    "drift": 0.65,
+    "coherence": 0.7,
+    "ensemble": 0.68,
+    "rdgl": 0.6
+  },
+  "sources_present": {
+    "drift": true,
+    "coherence": true,
+    "ensemble": true,
+    "rdgl": true
+  },
+  "timestamp": "2025-11-15T08:47:06.707907+00:00Z"
+}

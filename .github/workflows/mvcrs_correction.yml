@@ -1,0 +1,77 @@
+name: MVCRS Correction Engine
+
+on:
+  workflow_run:
+    # Trigger after the MVCRS verifier workflow completes
+    workflows: ["MVCRS Challenge"]
+    types: ["completed"]
+  workflow_dispatch:
+    inputs:
+      simulate_failure:
+        description: "Force a simulated filesystem failure to validate fix-branch logic"
+        required: false
+        default: false
+        type: boolean
+
+jobs:
+  correction:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install minimal deps
+        run: |
+          python -m pip install --upgrade pip
+          pip install pytest
+
+      - name: Optional simulation flags
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.simulate_failure }}
+        run: |
+          echo "MVCRS_FORCE_CORRECTION_FS_FAILURE=true" >> $GITHUB_ENV
+
+      - name: Read verifier state
+        id: verifier
+        run: |
+          if [ -f state/challenge_verifier_state.json ]; then
+            echo "verifier_state_present=true" >> $GITHUB_OUTPUT
+            STATUS=$(python -c "import json;print(json.load(open('state/challenge_verifier_state.json'))['status'])")
+            echo "status=$STATUS" >> $GITHUB_OUTPUT
+          else
+            echo "verifier_state_present=false" >> $GITHUB_OUTPUT
+            echo "status=missing" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Run correction engine (conditional)
+        if: steps.verifier.outputs.verifier_state_present == 'true' && steps.verifier.outputs.status != 'ok'
+        id: correction
+        run: |
+          python scripts/mvcrs/mvcrs_correction_engine.py || echo "CORRECTION_EXIT=$?" >> $GITHUB_OUTPUT
+          if [ -f state/mvcrs_last_correction.json ]; then cat state/mvcrs_last_correction.json; fi
+
+      - name: Upload correction artifacts
+        if: steps.verifier.outputs.verifier_state_present == 'true' && steps.verifier.outputs.status != 'ok'
+        uses: actions/upload-artifact@v4
+        with:
+          name: mvcrs-correction-artifacts
+          path: |
+            state/mvcrs_correction_log.jsonl
+            state/mvcrs_last_correction.json
+            docs/audit_summary.md
+          retention-days: 90
+
+      - name: Handle correction failure branch
+        if: steps.verifier.outputs.verifier_state_present == 'true' && steps.verifier.outputs.status != 'ok' && failure()
+        run: |
+          TS=$(date -u +"%Y%m%dT%H%M%SZ")
+          BR=fix/mvcrs-correction-$TS
+          git checkout -b "$BR"
+          echo '<!-- MVCRS_CORRECTION: FAILED '"$TS"' -->' >> docs/audit_summary.md
+          git add docs/audit_summary.md
+          git commit -m "chore: add failed correction marker"
+          git push origin "$BR"

@@ -1,0 +1,29 @@
+{
+  "status": "success",
+  "forecast_generated_at": "2025-11-14T00:14:17.751318+00:00",
+  "historical_summary": {
+    "days_analyzed": 4,
+    "date_range": {
+      "first": "2025-11-11",
+      "last": "2025-11-14"
+    },
+    "total_anomalies": 230,
+    "avg_daily_anomalies": 57.5
+  },
+  "predicted_anomalies_7d": [
+    57.02,
+    57.02,
+    57.02,
+    57.02,
+    57.02,
+    57.02,
+    57.02
+  ],
+  "risk_level": "high",
+  "risk_rationale": "Forecasted average: 57.02 anomalies/day. Threshold: low<10, medium<25, high>=25.",
+  "model_parameters": {
+    "algorithm": "exponential_smoothing",
+    "alpha": 0.3,
+    "forecast_horizon_days": 7
+  }
+}

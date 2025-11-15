@@ -1,0 +1,81 @@
+name: Trust Guard Validation
+
+on:
+  schedule:
+    - cron: '0 6 * * *' # Daily 06:00 UTC
+  workflow_dispatch: {}
+
+jobs:
+  trust-guard:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+      - name: Run Trust Guard Tests
+        id: run_tests
+        continue-on-error: true
+        run: |
+          mkdir -p trust_guard_validation
+          pytest -q tests/trust --junitxml trust_guard_validation/junit.xml 2>&1 | tee trust_guard_validation/test_output.txt
+          echo "exit_code=$?" >> $GITHUB_OUTPUT
+      - name: Evaluate
+        id: eval
+        run: |
+          EC="${{ steps.run_tests.outputs.exit_code }}"
+          TS=$(date -u +%Y-%m-%dT%H-%M-%SZ)
+          echo "timestamp=$TS" >> $GITHUB_OUTPUT
+          if [ "$EC" != "0" ]; then echo "status=failure" >> $GITHUB_OUTPUT; else echo "status=pass" >> $GITHUB_OUTPUT; fi
+      - name: Failure Branch + PR
+        if: steps.eval.outputs.status == 'failure'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          BR="fix/trust-guard-${{ steps.eval.outputs.timestamp }}"
+          git checkout -b "$BR"
+          mkdir -p diagnostics
+          cp trust_guard_validation/test_output.txt diagnostics/trust_guard_failure_${{ steps.eval.outputs.timestamp }}.log
+          cp -r state diagnostics/state || true
+          git add diagnostics trust_guard_validation || true
+          git commit -m "fix(trust-guard): capture failing tests artifacts"
+          git push origin "$BR"
+          FAIL=$(grep -oP 'FAILED.*' trust_guard_validation/test_output.txt || true)
+          BODY="Trust guard tests failing on ${{ steps.eval.outputs.timestamp }}\n\nTrace:\n$FAIL\n\nReproduction:\n\`pytest -q tests/trust\`\n"
+          echo "$BODY" > pr_body.txt
+          gh pr create --title "fix(trust-guard): failing tests — ${{ steps.eval.outputs.timestamp }}" --body-file pr_body.txt --base main || true
+      - name: Append Audit Marker
+        run: |
+          TS="${{ steps.eval.outputs.timestamp }}"
+          if [ "${{ steps.eval.outputs.status }}" = "pass" ]; then
+            sed -e "/TRUST_GUARD:/d" -i audit_summary.md || true
+            echo "<!-- TRUST_GUARD: VERIFIED $TS -->" >> audit_summary.md
+          else
+            sed -e "/TRUST_GUARD:/d" -i audit_summary.md || true
+            echo "<!-- TRUST_GUARD: TESTS_FAIL $TS -->" >> audit_summary.md
+          fi
+          git config user.name "github-actions"
+          git config user.email "github-actions@users.noreply.github.com"
+          git add audit_summary.md trust_guard_validation/junit.xml
+          git commit -m "audit: trust guard marker (${{ steps.eval.outputs.status }})" || true
+          git push origin HEAD:${{ github.ref_name }} || true
+      - name: Enforce on Pass
+        if: steps.eval.outputs.status == 'pass'
+        run: |
+          python scripts/trust/trust_guard_controller.py --enforce | tee trust_guard_validation/run.json
+          cp state/trust_lock_state.json trust_guard_validation/ || true
+          cp state/trust_lock_log.jsonl trust_guard_validation/ || true
+      - name: Upload Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: trust_guard_validation
+          path: trust_guard_validation

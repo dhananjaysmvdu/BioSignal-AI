@@ -1,0 +1,95 @@
+name: Chaos Drills
+
+on:
+  schedule:
+    - cron: '10 5 * * 0' # Sunday 05:10 UTC
+  workflow_dispatch: {}
+
+jobs:
+  chaos-drills:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+      issues: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install deps
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Run Chaos Drill Tests
+        id: run_tests
+        continue-on-error: true
+        run: |
+          mkdir -p logs
+          pytest -q tests/drills/chaos_drills.py 2>&1 | tee chaos_drill_test_output.txt
+          echo "exit_code=$?" >> $GITHUB_OUTPUT
+
+      - name: Evaluate Result & Prepare Metadata
+        id: eval
+        run: |
+          EC="${{ steps.run_tests.outputs.exit_code }}"
+          TS=$(date -u +%Y-%m-%dT%H-%M-%SZ)
+          echo "timestamp=$TS" >> $GITHUB_OUTPUT
+          if [ "$EC" != "0" ]; then
+            echo "status=failure" >> $GITHUB_OUTPUT
+          else
+            echo "status=success" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Archive Logs
+        if: always()
+        run: |
+          zip -r chaos_failures_${{ steps.eval.outputs.timestamp }}.zip logs || true
+        continue-on-error: true
+
+      - name: Failure Branch + PR + Issue
+        if: steps.eval.outputs.status == 'failure'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          sudo apt-get update && sudo apt-get install -y git zip
+          BRANCH="fix/chaos-${{ steps.eval.outputs.timestamp }}"
+          git checkout -b "$BRANCH"
+          mkdir -p reproduction
+          cat chaos_drill_test_output.txt > reproduction/test_output.txt
+          printf "#!/usr/bin/env bash\nset -euo pipefail\npython -m pip install --upgrade pip\npip install -r requirements.txt\npytest -q tests/drills/chaos_drills.py\n" > reproduce_chaos_failure.py
+          git add logs chaos_drill_test_output.txt reproduce_chaos_failure.py reproduction/test_output.txt || true
+          git commit -m "chore: capture chaos drill failure artifacts"
+          git push origin "$BRANCH"
+          FAILING=$(grep -oP 'FAILED.*' chaos_drill_test_output.txt || true)
+          BODY="Chaos drill failure on ${{ steps.eval.outputs.timestamp }}\n\nTests:\n$FAILING\n\nReproduction:\n\`bash reproduce_chaos_failure.py\`\n\nLogs attached as artifact chaos_failures_${{ steps.eval.outputs.timestamp }}.zip"
+          echo "$BODY" > pr_body.txt
+          gh pr create --title "Chaos Drill Failure ${{ steps.eval.outputs.timestamp }}" --body-file pr_body.txt --base main || true
+          gh issue create --title "chaos-drill-failure ${{ steps.eval.outputs.timestamp }}" --body "$BODY" || true
+
+      - name: Upload Artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: chaos_failures_${{ steps.eval.outputs.timestamp }}
+          path: chaos_failures_${{ steps.eval.outputs.timestamp }}.zip
+          if-no-files-found: ignore
+
+      - name: Append Audit Marker
+        run: |
+          TS="${{ steps.eval.outputs.timestamp }}"
+          if [ "${{ steps.eval.outputs.status }}" = "success" ]; then
+            echo "<!-- CHAOS_DRILLS: PASS $TS -->" >> audit_summary.md
+          else
+            echo "<!-- CHAOS_DRILLS: FAIL $TS -->" >> audit_summary.md
+          fi
+          git config user.name "github-actions"
+          git config user.email "github-actions@users.noreply.github.com"
+          git add audit_summary.md
+          git commit -m "audit: append chaos drill marker (${{ steps.eval.outputs.status }})" || true
+          git push origin HEAD:${{ github.ref_name }} || true

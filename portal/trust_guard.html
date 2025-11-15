@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Trust Guard Status</title>
+  <style>
+    body { font-family: system-ui, Arial, sans-serif; background:#0f172a; color:#e5e7eb; margin:0; padding:20px; }
+    .banner { padding:15px; border-radius:8px; margin-bottom:20px; font-weight:700; text-align:center; }
+    .locked { background:#ef4444; color:#fff; }
+    .unlocked { background:#10b981; color:#fff; }
+    .bypass { background:#f59e0b; color:#fff; }
+    .grid { display:grid; grid-template-columns: repeat(auto-fit, minmax(220px,1fr)); gap:12px; }
+    .tile { background:#1f2937; padding:12px; border-radius:8px; }
+    .label { color:#9ca3af; font-size:0.9em; }
+    .value { font-size:1.6em; font-weight:700; }
+    button { padding:10px 16px; margin:5px; border:none; border-radius:6px; font-weight:600; cursor:pointer; }
+    .btn { background:#3b82f6; color:#fff; }
+    .status { margin-top:10px; }
+    .log { margin-top:16px; background:#111827; padding:12px; border-radius:8px; max-height:240px; overflow:auto; }
+    .modal { display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.6); align-items:center; justify-content:center; }
+    .modal-content { background:#1f2937; padding:20px; border-radius:8px; width:320px; }
+    input, textarea { width:100%; padding:8px; border-radius:6px; border:1px solid #374151; background:#111827; color:#e5e7eb; margin-top:8px; }
+  </style>
+</head>
+<body>
+  <h1>🔐 Multi-Layer Trust Guard</h1>
+  <div id="banner" class="banner unlocked">System UNLOCKED</div>
+
+  <div class="grid">
+    <div class="tile"><div class="label">Integrity</div><div class="value" id="m-integrity">—</div><div class="label">Threshold</div><div id="t-integrity">—</div></div>
+    <div class="tile"><div class="label">Weighted Consensus</div><div class="value" id="m-consensus">—</div><div class="label">Threshold</div><div id="t-consensus">—</div></div>
+    <div class="tile"><div class="label">Reputation Index</div><div class="value" id="m-reputation">—</div><div class="label">Threshold</div><div id="t-reputation">—</div></div>
+    <div class="tile"><div class="label">Locked At</div><div class="value" id="locked-at">—</div><div class="label">Unlock Scheduled</div><div id="unlock-scheduled">—</div></div>
+    <div class="tile"><div class="label">Manual Unlocks Today</div><div class="value" id="manual-count">0</div></div>
+  </div>
+
+  <div class="status">
+    <button class="btn" onclick="openModal()">Request Manual Unlock</button>
+  </div>
+
+  <div class="log">
+    <div class="label">Recent Events</div>
+    <pre id="log-tail">Loading…</pre>
+  </div>
+
+  <div id="modal" class="modal" onclick="closeModal()">
+    <div class="modal-content" onclick="event.stopPropagation()">
+      <h3>Request Manual Unlock</h3>
+      <label class="label">Reason</label>
+      <textarea id="unlock-reason" rows="3" placeholder="Provide justification"></textarea>
+      <label class="label">Actor</label>
+      <input id="unlock-actor" placeholder="Your name" />
+      <div style="margin-top:10px; text-align:right;">
+        <button class="btn" onclick="submitUnlock()">Submit</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    async function fetchJSON(url){ try{ const r = await fetch(url,{cache:'no-store'}); if(!r.ok) throw new Error('HTTP '+r.status); return await r.json(); } catch(e){ return null; } }
+    function openModal(){ document.getElementById('modal').style.display='flex'; }
+    function closeModal(){ document.getElementById('modal').style.display='none'; }
+    async function submitUnlock(){ const reason = document.getElementById('unlock-reason').value || 'unspecified'; const actor = document.getElementById('unlock-actor').value || 'unknown'; try{ const r = await fetch('/trust/force-unlock', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({reason, actor})}); if(r.status === 200){ alert('Unlock requested'); } else if(r.status === 403){ alert('Daily manual unlock limit reached'); } else { alert('Unlock failed'); } } catch(e){ alert('API unreachable'); } closeModal(); await refresh(); }
+    async function refresh(){
+      const statusResp = await fetch('/trust/status', {cache:'no-store'});
+      const status = statusResp.ok ? await statusResp.json() : null;
+      const policyResp = await fetch('/policy/trust_guard_policy.json', {cache:'no-store'});
+      const policy = policyResp.ok ? await policyResp.json() : null;
+      if(status){
+        const locked = !!status.locked;
+        const bypass = !!status.bypass;
+        const banner = document.getElementById('banner');
+        banner.className = 'banner ' + (bypass ? 'bypass' : (locked ? 'locked' : 'unlocked'));
+        banner.textContent = bypass ? 'System BYPASS' : (locked ? 'System LOCKED' : 'System UNLOCKED');
+        document.getElementById('locked-at').textContent = status.locked_at || '—';
+        document.getElementById('unlock-scheduled').textContent = status.unlock_scheduled_at || '—';
+        document.getElementById('manual-count').textContent = status.manual_unlocks_today ?? 0;
+        const m = status.metrics || {};
+        document.getElementById('m-integrity').textContent = (m.integrity ?? '—');
+        document.getElementById('m-consensus').textContent = (m.consensus ?? '—');
+        document.getElementById('m-reputation').textContent = (m.reputation ?? '—');
+      }
+      if(policy){
+        const t = policy.thresholds || {};
+        document.getElementById('t-integrity').textContent = t.integrity ?? '—';
+        document.getElementById('t-consensus').textContent = t.weighted_consensus ?? '—';
+        document.getElementById('t-reputation').textContent = t.reputation_index ?? '—';
+      }
+      // Log tail
+      try{
+        const r = await fetch('/state/trust_lock_log.jsonl', {cache:'no-store'});
+        const txt = await r.text();
+        const lines = txt.trim().split('\n').slice(-5);
+        document.getElementById('log-tail').textContent = lines.join('\n');
+      }catch(e){ document.getElementById('log-tail').textContent = 'No log available'; }
+    }
+    refresh();
+    setInterval(refresh, 10000);
+  </script>
+</body>
+</html>

@@ -1,0 +1,533 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Predictive Forensics - BioSignal-AI</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: #333;
+        }
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+            padding: 30px;
+        }
+        h1 {
+            color: #f5576c;
+            margin-top: 0;
+            border-bottom: 3px solid #f5576c;
+            padding-bottom: 10px;
+        }
+        .header-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin: 20px 0;
+        }
+        .card {
+            background: #fff;
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        .card h2 {
+            color: #495057;
+            font-size: 18px;
+            margin-top: 0;
+            border-bottom: 2px solid #dee2e6;
+            padding-bottom: 8px;
+        }
+        .risk-meter {
+            width: 200px;
+            height: 200px;
+            margin: 20px auto;
+            position: relative;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 36px;
+            font-weight: bold;
+            color: white;
+            text-transform: uppercase;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        }
+        .risk-low { background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%); }
+        .risk-medium { background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); }
+        .risk-high { background: linear-gradient(135deg, #eb3349 0%, #f45c43 100%); }
+        .metric {
+            font-size: 32px;
+            font-weight: bold;
+            color: #f5576c;
+            margin: 10px 0;
+        }
+        .chart-container {
+            width: 100%;
+            height: 350px;
+            margin: 20px 0;
+        }
+        .forecast-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+        .forecast-table th {
+            background: #f8f9fa;
+            padding: 12px;
+            text-align: left;
+            border-bottom: 2px solid #dee2e6;
+            font-weight: 600;
+        }
+        .forecast-table td {
+            padding: 10px 12px;
+            border-bottom: 1px solid #e9ecef;
+        }
+        .forecast-table tr:hover {
+            background: #f8f9fa;
+        }
+        .alert {
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 8px;
+            border-left: 4px solid;
+        }
+        .alert-high {
+            background: #f8d7da;
+            border-color: #dc3545;
+            color: #721c24;
+        }
+        .alert-medium {
+            background: #fff3cd;
+            border-color: #ffc107;
+            color: #856404;
+        }
+        .alert-low {
+            background: #d1ecf1;
+            border-color: #17a2b8;
+            color: #0c5460;
+        }
+        .info-box {
+            padding: 15px;
+            background: #e7f3ff;
+            border-left: 4px solid #2196F3;
+            border-radius: 4px;
+            margin: 15px 0;
+        }
+        .info-box strong {
+            color: #1976D2;
+        }
+        .timestamp {
+            color: #6c757d;
+            font-size: 12px;
+        }
+        .refresh-indicator {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #28a745;
+            margin-right: 5px;
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
+        .back-link {
+            display: inline-block;
+            margin-bottom: 20px;
+            color: #f5576c;
+            text-decoration: none;
+            font-weight: 600;
+        }
+        .back-link:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <a href="index.html" class="back-link">← Back to Dashboard</a>
+        
+        <h1>🔮 Predictive Forensic Intelligence</h1>
+        
+        <div class="header-info">
+            <div>
+                <strong>7-Day Anomaly Forecast</strong><br>
+                <span class="timestamp" id="lastUpdate">Loading...</span>
+            </div>
+            <div>
+                <span class="refresh-indicator"></span>
+                Auto-refresh: 10 minutes
+            </div>
+        </div>
+
+        <div class="grid">
+            <!-- Risk Meter Card -->
+            <div class="card">
+                <h2>🎯 Current Risk Level</h2>
+                <div id="riskMeter" class="risk-meter risk-low">
+                    <span id="riskLabel">LOW</span>
+                </div>
+                <div id="riskRationale" class="info-box">
+                    Loading risk assessment...
+                </div>
+            </div>
+
+            <!-- Summary Metrics -->
+            <div class="card">
+                <h2>📊 Forecast Summary</h2>
+                <div>
+                    <strong>Days Analyzed:</strong>
+                    <div class="metric" id="daysAnalyzed">-</div>
+                </div>
+                <div style="margin-top: 20px;">
+                    <strong>Avg. Daily Forecast:</strong>
+                    <div class="metric" id="avgForecast">-</div>
+                </div>
+                <div style="margin-top: 20px;">
+                    <strong>Forecast Status:</strong>
+                    <div id="forecastStatus" style="margin-top: 10px; font-weight: 600;">-</div>
+                </div>
+            </div>
+
+            <!-- Model Info -->
+            <div class="card">
+                <h2>⚙️ Model Parameters</h2>
+                <div style="line-height: 2;">
+                    <strong>Algorithm:</strong> <span id="algorithm">-</span><br>
+                    <strong>Smoothing (α):</strong> <span id="alpha">-</span><br>
+                    <strong>Horizon:</strong> <span id="horizon">-</span> days<br>
+                    <strong>Min. Data:</strong> 3 days
+                </div>
+                <div style="margin-top: 15px; padding: 10px; background: #f8f9fa; border-radius: 4px; font-size: 14px;">
+                    <strong>Thresholds:</strong><br>
+                    Low: &lt;10 anomalies/day<br>
+                    Medium: 10-25 anomalies/day<br>
+                    High: &gt;25 anomalies/day
+                </div>
+            </div>
+        </div>
+
+        <!-- Alerts -->
+        <div id="alertContainer"></div>
+
+        <!-- Forecast Chart -->
+        <div class="card">
+            <h2>📈 7-Day Anomaly Projection</h2>
+            <div class="chart-container">
+                <canvas id="forecastChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Forecast Table -->
+        <div class="card">
+            <h2>📅 Daily Forecast Breakdown</h2>
+            <table class="forecast-table">
+                <thead>
+                    <tr>
+                        <th>Day</th>
+                        <th>Date</th>
+                        <th>Predicted Anomalies</th>
+                        <th>Risk Indicator</th>
+                    </tr>
+                </thead>
+                <tbody id="forecastTableBody">
+                    <tr>
+                        <td colspan="4" style="text-align: center; padding: 20px; color: #6c757d;">
+                            Loading forecast data...
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Historical Context -->
+        <div class="card" id="historicalCard">
+            <h2>📜 Historical Context</h2>
+            <div id="historicalSummary" style="line-height: 2;">
+                Loading historical data...
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let forecastChart;
+
+        async function loadForecastData() {
+            try {
+                const response = await fetch('../forensics/forensics_anomaly_forecast.json');
+                const data = await response.json();
+                
+                // Update timestamp
+                document.getElementById('lastUpdate').textContent = 
+                    `Last updated: ${new Date(data.forecast_generated_at).toLocaleString()}`;
+                
+                // Update risk meter
+                updateRiskMeter(data);
+                
+                // Update summary metrics
+                updateSummaryMetrics(data);
+                
+                // Update alerts
+                updateAlerts(data);
+                
+                // Update chart
+                updateForecastChart(data);
+                
+                // Update table
+                updateForecastTable(data);
+                
+                // Update historical context
+                updateHistoricalContext(data);
+                
+            } catch (error) {
+                console.error('Failed to load forecast data:', error);
+                document.getElementById('riskLabel').textContent = 'ERROR';
+                document.getElementById('riskRationale').innerHTML = 
+                    '<strong>Error:</strong> Failed to load forecast data. Check console for details.';
+            }
+        }
+
+        function updateRiskMeter(data) {
+            const riskLevel = data.risk_level || 'low';
+            const riskLabel = document.getElementById('riskLabel');
+            const riskMeter = document.getElementById('riskMeter');
+            const riskRationale = document.getElementById('riskRationale');
+            
+            // Update label
+            riskLabel.textContent = riskLevel.toUpperCase();
+            
+            // Update meter styling
+            riskMeter.className = 'risk-meter risk-' + riskLevel;
+            
+            // Update rationale
+            riskRationale.innerHTML = `<strong>Assessment:</strong> ${data.risk_rationale || 'No rationale available.'}`;
+        }
+
+        function updateSummaryMetrics(data) {
+            // Days analyzed
+            if (data.historical_summary) {
+                document.getElementById('daysAnalyzed').textContent = 
+                    data.historical_summary.days_analyzed || '-';
+            } else if (data.days_analyzed !== undefined) {
+                document.getElementById('daysAnalyzed').textContent = data.days_analyzed;
+            }
+            
+            // Average forecast
+            const forecast = data.predicted_anomalies_7d || [];
+            if (forecast.length > 0) {
+                const avg = forecast.reduce((a, b) => a + b, 0) / forecast.length;
+                document.getElementById('avgForecast').textContent = avg.toFixed(2);
+            }
+            
+            // Status
+            const status = data.status || 'unknown';
+            const statusEl = document.getElementById('forecastStatus');
+            statusEl.textContent = status.replace('_', ' ').toUpperCase();
+            statusEl.style.color = status === 'success' ? '#28a745' : 
+                                    status === 'error' ? '#dc3545' : '#ffc107';
+            
+            // Model parameters
+            if (data.model_parameters) {
+                document.getElementById('algorithm').textContent = 
+                    data.model_parameters.algorithm || '-';
+                document.getElementById('alpha').textContent = 
+                    data.model_parameters.alpha || '-';
+                document.getElementById('horizon').textContent = 
+                    data.model_parameters.forecast_horizon_days || '-';
+            }
+        }
+
+        function updateAlerts(data) {
+            const container = document.getElementById('alertContainer');
+            const riskLevel = data.risk_level || 'low';
+            
+            if (riskLevel === 'high') {
+                container.innerHTML = `
+                    <div class="alert alert-high">
+                        <strong>⚠️ HIGH RISK DETECTED</strong><br>
+                        Forecasted anomaly volume exceeds safety thresholds. 
+                        Immediate review recommended.
+                    </div>
+                `;
+            } else if (riskLevel === 'medium') {
+                container.innerHTML = `
+                    <div class="alert alert-medium">
+                        <strong>⚡ MEDIUM RISK</strong><br>
+                        Elevated anomaly activity predicted. Monitor closely.
+                    </div>
+                `;
+            } else {
+                container.innerHTML = `
+                    <div class="alert alert-low">
+                        <strong>✅ LOW RISK</strong><br>
+                        Anomaly levels within normal operating parameters.
+                    </div>
+                `;
+            }
+        }
+
+        function updateForecastChart(data) {
+            const forecast = data.predicted_anomalies_7d || [];
+            
+            // Generate next 7 days
+            const labels = [];
+            const today = new Date();
+            for (let i = 1; i <= 7; i++) {
+                const futureDate = new Date(today);
+                futureDate.setDate(today.getDate() + i);
+                labels.push(futureDate.toLocaleDateString('en-US', { 
+                    month: 'short', 
+                    day: 'numeric' 
+                }));
+            }
+            
+            const ctx = document.getElementById('forecastChart').getContext('2d');
+            
+            if (forecastChart) {
+                forecastChart.destroy();
+            }
+            
+            forecastChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Predicted Anomalies',
+                        data: forecast,
+                        borderColor: '#f5576c',
+                        backgroundColor: 'rgba(245, 87, 108, 0.1)',
+                        borderWidth: 3,
+                        fill: true,
+                        tension: 0.4,
+                        pointRadius: 5,
+                        pointBackgroundColor: '#f5576c',
+                        pointBorderColor: '#fff',
+                        pointBorderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: true,
+                            position: 'top'
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return `Predicted: ${context.parsed.y.toFixed(2)} anomalies`;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'Anomaly Count'
+                            }
+                        },
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Forecast Date'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function updateForecastTable(data) {
+            const forecast = data.predicted_anomalies_7d || [];
+            const tbody = document.getElementById('forecastTableBody');
+            
+            if (forecast.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="4" style="text-align: center; padding: 20px; color: #6c757d;">
+                            No forecast data available
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+            
+            let html = '';
+            const today = new Date();
+            
+            forecast.forEach((count, index) => {
+                const futureDate = new Date(today);
+                futureDate.setDate(today.getDate() + index + 1);
+                
+                const riskIndicator = count > 25 ? '🔴 High' : 
+                                     count > 10 ? '🟡 Medium' : 
+                                     '🟢 Low';
+                
+                html += `
+                    <tr>
+                        <td>Day ${index + 1}</td>
+                        <td>${futureDate.toLocaleDateString('en-US', { 
+                            weekday: 'short', 
+                            month: 'short', 
+                            day: 'numeric' 
+                        })}</td>
+                        <td><strong>${count.toFixed(2)}</strong></td>
+                        <td>${riskIndicator}</td>
+                    </tr>
+                `;
+            });
+            
+            tbody.innerHTML = html;
+        }
+
+        function updateHistoricalContext(data) {
+            const container = document.getElementById('historicalSummary');
+            
+            if (data.historical_summary) {
+                const hist = data.historical_summary;
+                container.innerHTML = `
+                    <strong>Analysis Period:</strong> ${hist.date_range.first} to ${hist.date_range.last}<br>
+                    <strong>Total Anomalies:</strong> ${hist.total_anomalies}<br>
+                    <strong>Avg. Daily Anomalies:</strong> ${hist.avg_daily_anomalies.toFixed(2)}<br>
+                    <strong>Days in Dataset:</strong> ${hist.days_analyzed}
+                `;
+            } else {
+                container.innerHTML = `
+                    <em>Insufficient historical data available (${data.days_analyzed || 0} days).</em><br>
+                    Minimum 3 days required for reliable forecasting.
+                `;
+            }
+        }
+
+        // Initial load
+        loadForecastData();
+        
+        // Auto-refresh every 10 minutes
+        setInterval(loadForecastData, 10 * 60 * 1000);
+    </script>
+</body>
+</html>

@@ -1,0 +1,10 @@
+{
+  "deviation_threshold_soft": 0.05,
+  "deviation_threshold_material": 0.15,
+  "deviation_threshold_critical": 0.30,
+  "human_review_policy": {
+    "auto_issue": true,
+    "issue_labels": ["mvcrs", "human-review"]
+  },
+  "max_auto_trust_locks_per_day": 1
+}

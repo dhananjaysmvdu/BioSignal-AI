@@ -1,0 +1,117 @@
+name: MV-CRS Long-Horizon Governance Synthesizer
+
+on:
+  schedule:
+    # Daily at 07:45 UTC (after Strategic Influence at 07:30)
+    - cron: '45 7 * * *'
+  workflow_dispatch:
+
+jobs:
+  hlgs-synthesis:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Run HLGS Synthesizer
+        id: hlgs
+        run: |
+          python scripts/mvcrs/mvcrs_hlgs.py
+          EXIT_CODE=$?
+          echo "exit_code=$EXIT_CODE" >> $GITHUB_OUTPUT
+          exit $EXIT_CODE
+        continue-on-error: true
+
+      - name: Check critical status
+        id: check_critical
+        if: always()
+        run: |
+          # Check if plan shows critical status with high confidence
+          if [ -f state/mvcrs_long_horizon_plan.json ]; then
+            STATUS=$(jq -r '.status // "unknown"' state/mvcrs_long_horizon_plan.json)
+            CONFIDENCE=$(jq -r '.confidence // 0' state/mvcrs_long_horizon_plan.json)
+            
+            echo "Plan status: $STATUS"
+            echo "Confidence: $CONFIDENCE"
+            
+            # Critical if status=critical AND confidence>0.7
+            if [ "$STATUS" == "critical" ] && [ "$(echo "$CONFIDENCE > 0.7" | bc)" == "1" ]; then
+              echo "critical_detected=true" >> $GITHUB_OUTPUT
+              echo "⚠️ CRITICAL: Long-horizon plan shows critical status with high confidence"
+              exit 1
+            else
+              echo "critical_detected=false" >> $GITHUB_OUTPUT
+            fi
+          else
+            echo "critical_detected=false" >> $GITHUB_OUTPUT
+            echo "⚠️ Plan file not found"
+          fi
+
+      - name: Upload HLGS Artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: mvcrs-hlgs-plan-${{ github.run_number }}
+          path: |
+            state/mvcrs_long_horizon_plan.json
+            logs/mvcrs_hlgs_log.jsonl
+          retention-days: 90
+
+      - name: Create Fix Branch on Critical Status
+        if: always() && steps.check_critical.outputs.critical_detected == 'true'
+        run: |
+          TIMESTAMP=$(date -u +"%Y%m%dT%H%M%SZ")
+          BRANCH_NAME="fix/mvcrs-hlgs-critical-$TIMESTAMP"
+          
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git checkout -b "$BRANCH_NAME"
+          
+          # Add current state for investigation
+          git add state/mvcrs_long_horizon_plan.json logs/mvcrs_hlgs_log.jsonl || true
+          git commit -m "chore: HLGS critical status detected - auto-created fix branch" || true
+          git push origin "$BRANCH_NAME" || true
+          
+          echo "✓ Created fix branch: $BRANCH_NAME"
+
+      - name: Append Audit Marker (Success)
+        if: steps.hlgs.outputs.exit_code == '0'
+        run: |
+          TIMESTAMP=$(date -u +"%Y%m%dT%H%M%SZ")
+          echo "<!-- MVCRS_HLGS: VERIFIED $TIMESTAMP -->" >> INSTRUCTION_EXECUTION_SUMMARY.md
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add INSTRUCTION_EXECUTION_SUMMARY.md
+          git commit -m "chore: HLGS verification marker $TIMESTAMP" || true
+          git push || true
+
+      - name: Append Audit Marker (Critical)
+        if: always() && steps.check_critical.outputs.critical_detected == 'true'
+        run: |
+          TIMESTAMP=$(date -u +"%Y%m%dT%H%M%SZ")
+          echo "<!-- MVCRS_HLGS: CRITICAL $TIMESTAMP -->" >> INSTRUCTION_EXECUTION_SUMMARY.md
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add INSTRUCTION_EXECUTION_SUMMARY.md
+          git commit -m "chore: HLGS CRITICAL marker $TIMESTAMP" || true
+          git push || true
+
+      - name: Fail workflow on critical status
+        if: steps.check_critical.outputs.critical_detected == 'true'
+        run: |
+          echo "::error::HLGS detected critical governance status with high confidence"
+          exit 1

@@ -1,0 +1,14 @@
+﻿{
+  "locked": true,
+  "locked_at": "2025-11-14T06:23:42.197008+00:00",
+  "reason": "multiple",
+  "metrics": {
+    "integrity": 97.5,
+    "consensus": 0.0,
+    "reputation": 0.0
+  },
+  "unlock_scheduled_at": "2025-11-15T06:23:42.190262+00:00",
+  "manual_unlocks_today": 0,
+  "manual_unlocks_last_reset": "2025-11-14",
+  "bypass": false
+}

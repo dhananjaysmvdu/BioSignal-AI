@@ -1,0 +1,26 @@
+name: Federated Provenance Drift Detection
+
+on:
+  workflow_run:
+    workflows: ["Federated Provenance Sync"]
+    types: [completed]
+  workflow_dispatch:
+
+jobs:
+  drift:
+    if: ${{ github.event.workflow_run.conclusion == 'success' || github.event_name == 'workflow_dispatch' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+
+      - name: Run drift detector
+        run: |
+          python scripts/federation/provenance_drift_detector.py --repair

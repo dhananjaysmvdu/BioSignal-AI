@@ -1,0 +1,14 @@
+{
+  "GOVERNANCE_TRANSPARENCY.md": {
+    "timestamp": "2025-11-14T19:34:20.016573+00:00",
+    "sha256": "4e095e99511e6ee0d70d444423f3488d48547454be8180f3bc2929199d9d41b4"
+  },
+  "INSTRUCTION_EXECUTION_SUMMARY.md": {
+    "timestamp": "2025-11-14T19:34:20.016573+00:00",
+    "sha256": "d1502b2ce37eb9af867e4d54a609579097904ab0c88aab5769b9dfb4dbe0a270"
+  },
+  "docs\\audit_summary.md": {
+    "timestamp": "2025-11-14T19:34:20.016573+00:00",
+    "sha256": "f14a40efe7d5e9ed102cb68e7ec884c4404e6f55858156ff9227300b87346f6f"
+  }
+}

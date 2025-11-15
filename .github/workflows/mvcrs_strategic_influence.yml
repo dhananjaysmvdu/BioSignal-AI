@@ -1,0 +1,101 @@
+name: MV-CRS Strategic Influence Engine
+
+on:
+  schedule:
+    # Daily at 07:30 UTC (after feedback at 07:10)
+    - cron: '30 7 * * *'
+  workflow_dispatch:
+
+jobs:
+  mvcrs-strategic-influence:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      
+      - name: Check critical failure conditions
+        id: check_conditions
+        run: |
+          critical_failure=false
+          
+          if [ -f state/mvcrs_feedback.json ]; then
+            mvcrs_health=$(python -c "import json; data=json.load(open('state/mvcrs_feedback.json')); print(data.get('mvcrs_status', 'unknown'))")
+            echo "mvcrs_health=$mvcrs_health" >> $GITHUB_OUTPUT
+            
+            # Check trust lock
+            trust_locked="false"
+            if [ -f state/trust_lock_state.json ]; then
+              trust_locked=$(python -c "import json; data=json.load(open('state/trust_lock_state.json')); print('true' if data.get('trust_locked', False) else 'false')")
+            fi
+            echo "trust_locked=$trust_locked" >> $GITHUB_OUTPUT
+            
+            # Check fusion state
+            fusion_state="UNKNOWN"
+            if [ -f state/policy_fusion_state.json ]; then
+              fusion_state=$(python -c "import json; data=json.load(open('state/policy_fusion_state.json')); print(data.get('fusion_state', 'UNKNOWN'))")
+            fi
+            echo "fusion_state=$fusion_state" >> $GITHUB_OUTPUT
+            
+            # Critical condition: failed health + trust locked + RED fusion
+            if [ "$mvcrs_health" = "failed" ] && [ "$trust_locked" = "true" ] && [ "$fusion_state" = "RED" ]; then
+              critical_failure=true
+              echo "⚠️ Critical failure: MV-CRS failed + Trust locked + RED fusion"
+            fi
+          else
+            echo "⚠️ Feedback state not found"
+            echo "mvcrs_health=unknown" >> $GITHUB_OUTPUT
+          fi
+          
+          echo "critical_failure=$critical_failure" >> $GITHUB_OUTPUT
+      
+      - name: Run MV-CRS Strategic Influence Engine
+        id: strategic
+        run: |
+          python scripts/mvcrs/mvcrs_strategic_influence.py
+          echo "exit_code=$?" >> $GITHUB_OUTPUT
+      
+      - name: Upload strategic influence artifacts
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: mvcrs-strategic-influence-artifacts
+          path: |
+            state/mvcrs_strategic_influence.json
+            logs/mvcrs_strategic_influence_log.jsonl
+          retention-days: 90
+      
+      - name: Create fix branch on critical failure
+        if: steps.check_conditions.outputs.critical_failure == 'true' || steps.strategic.outputs.exit_code == '2'
+        run: |
+          timestamp=$(date -u +"%Y%m%dT%H%M%SZ")
+          branch_name="fix/mvcrs-strategic-influence-failure-$timestamp"
+          git checkout -b "$branch_name"
+          echo "<!-- MVCRS_STRATEGIC_INFLUENCE: FAILED $(date -u +"%Y-%m-%dT%H:%M:%SZ") -->" >> INSTRUCTION_EXECUTION_SUMMARY.md
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add INSTRUCTION_EXECUTION_SUMMARY.md
+          git commit -m "chore(mvcrs): strategic influence engine critical failure marker"
+          git push origin "$branch_name"
+          echo "✓ Created fix branch: $branch_name"
+      
+      - name: Append success marker
+        if: steps.check_conditions.outputs.critical_failure == 'false' && steps.strategic.outputs.exit_code == '0'
+        run: |
+          echo "<!-- MVCRS_STRATEGIC_INFLUENCE: VERIFIED $(date -u +"%Y-%m-%dT%H:%M:%SZ") -->" >> INSTRUCTION_EXECUTION_SUMMARY.md
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add INSTRUCTION_EXECUTION_SUMMARY.md
+          git commit -m "chore(mvcrs): strategic influence engine verification marker"
+          git push
+      
+      - name: Fail workflow on critical conditions
+        if: steps.check_conditions.outputs.critical_failure == 'true' || steps.strategic.outputs.exit_code == '2'
+        run: |
+          echo "❌ Workflow failed due to critical conditions"
+          exit 1

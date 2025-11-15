@@ -181,7 +181,12 @@ def main() -> int:
         'bundle_weighted_agreement_pct': bundle_pct,
         'weighted_agreement_pct': weighted_min_pct,
         'confidence_interval_95': ci,
+        # Aliases for validation consumers
+        'confidence_interval': ci,
         'top_trusted_peers': [
+            {'peer': str(name), 'score': float(score)} for name, score in top3 if name is not None
+        ],
+        'top_peers': [
             {'peer': str(name), 'score': float(score)} for name, score in top3 if name is not None
         ],
         'baseline': {

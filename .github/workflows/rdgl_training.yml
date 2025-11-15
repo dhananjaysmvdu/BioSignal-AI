@@ -1,0 +1,64 @@
+name: RDGL Training
+
+on:
+  schedule:
+    - cron: '20 6 * * *'  # 06:20 UTC daily
+  workflow_run:
+    workflows: ["autonomous_threshold_tuning.yml"]
+    types: ["completed"]
+  workflow_dispatch:
+
+jobs:
+  train:
+    if: ${{ github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Run RDGL Engine
+        run: |
+          python scripts/learning/reinforcement_governance_learning.py
+
+      - name: Upload RDGL Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: rdgl-artifacts
+          path: |
+            state/rdgl_policy_adjustments.json
+            state/rdgl_reward_log.jsonl
+          retention-days: 90
+
+      - name: Append Audit Marker
+        run: |
+          echo "\n<!-- RDGL: UPDATED $(date -u +"%Y-%m-%dT%H:%M:%SZ") -->" >> audit_summary.md
+
+      - name: Commit Updates
+        run: |
+          git config user.name "github-actions"
+          git config user.email "actions@github.com"
+          git add state/rdgl_policy_adjustments.json state/rdgl_reward_log.jsonl audit_summary.md
+          git commit -m "chore(rdgl): update policy and reward log [skip ci]" || echo "No changes"
+
+    continue-on-error: false
+
+  fix_on_failure:
+    needs: train
+    if: failure()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Create Fix Branch
+        run: |
+          ts=$(date -u +"%Y%m%d-%H%M%S")
+          git checkout -b fix/rdgl-$ts
+          echo "\n<!-- RDGL: CI_FAIL $(date -u +"%Y-%m-%dT%H:%M:%SZ") -->" >> audit_summary.md
+          git add audit_summary.md
+          git commit -m "chore(rdgl): CI failure marker [skip ci]"
+          git push origin HEAD

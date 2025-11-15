@@ -206,6 +206,414 @@
         </header>
         
         <div class="metrics-grid">
+            <!-- Correction Engine Status Card -->
+            <div class="metric-card">
+                <div class="metric-header">
+                    <span class="metric-title">Correction Engine Status</span>
+                    <span class="status-badge" id="correction-badge">—</span>
+                </div>
+                <div class="metric-value" style="font-size:2.2em;" id="correction-type-value">—</div>
+                <div class="metric-label">Last Correction</div>
+                <div style="margin-top:20px;">
+                    <div class="metric-detail">
+                        <span class="detail-label">Timestamp</span>
+                        <span class="detail-value" id="correction-last-ts">—</span>
+                    </div>
+                    <div class="metric-detail">
+                        <span class="detail-label">Hard (24h)</span>
+                        <span class="detail-value" id="correction-hard-count">0</span>
+                    </div>
+                    <div class="metric-detail">
+                        <span class="detail-label">Trust Lock Blocked</span>
+                        <span class="detail-value" id="correction-trust-block">—</span>
+                    </div>
+                    <div class="metric-detail">
+                        <span class="detail-label">Safety Brake Blocked</span>
+                        <span class="detail-value" id="correction-brake-block">—</span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Escalation Lifecycle Card -->
+            <div class="metric-card">
+                <div class="metric-header">
+                    <span class="metric-title">Escalation Lifecycle</span>
+                    <span class="status-badge" id="lifecycle-badge">—</span>
+                </div>
+                <div class="metric-value" style="font-size:1.8em;" id="lifecycle-state-value">—</div>
+                <div class="metric-label">Current Stage</div>
+                <div style="margin-top:20px;">
+                    <div class="metric-detail">
+                        <span class="detail-label">Time in Stage</span>
+                        <span class="detail-value" id="lifecycle-time-in-stage">—</span>
+                    </div>
+                    <div class="metric-detail">
+                        <span class="detail-label">Last Transition</span>
+                        <span class="detail-value" id="lifecycle-last-transition">—</span>
+                    </div>
+                    <div class="metric-detail">
+                        <span class="detail-label">Resolved Count</span>
+                        <span class="detail-value" id="lifecycle-resolved-count">0</span>
+                    </div>
+                    <div class="metric-detail">
+                        <span class="detail-label">Rejected Count</span>
+                        <span class="detail-value" id="lifecycle-rejected-count">0</span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- MV-CRS Integration Status Card -->
+            <div class="metric-card">
+                <div class="metric-header">
+                    <span class="metric-title">MV-CRS Integration Status</span>
+                    <span class="status-badge" id="integration-badge">—</span>
+                </div>
+                <div class="metric-value" style="font-size:1.8em;" id="integration-decision-value">—</div>
+                <div class="metric-label">Final Decision</div>
+                <div style="margin-top:20px;">
+                    <div class="metric-detail">
+                        <span class="detail-label">Lifecycle State</span>
+                        <span class="detail-value" id="integration-lifecycle">—</span>
+                    </div>
+                    <div class="metric-detail">
+                        <span class="detail-label">Escalation Open</span>
+                        <span class="detail-value" id="integration-escalation-open">—</span>
+                    </div>
+                    <div class="metric-detail">
+                        <span class="detail-label">Governance Risk</span>
+                        <span class="detail-value" id="integration-governance-risk">—</span>
+                    </div>
+                    <div class="metric-detail">
+                        <span class="detail-label">Last Updated</span>
+                        <span class="detail-value" id="integration-last-updated">—</span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- MV-CRS Feedback Influence Card -->
+            <div class="metric-card">
+                <div class="metric-header">
+                    <span class="metric-title">MV-CRS Feedback Influence</span>
+                    <span class="status-badge" id="feedback-badge">—</span>
+                </div>
+                <div class="metric-value" style="font-size:1.5em;" id="feedback-signal-value">—</div>
+                <div class="metric-label">RDGL Signal</div>
+                <div style="margin-top:20px;">
+                    <div class="metric-detail">
+                        <span class="detail-label">Threshold Shift (%)</span>
+                        <span class="detail-value" id="feedback-threshold-shift">—</span>
+                    </div>
+                    <div class="metric-detail">
+                        <span class="detail-label">Fusion Bias</span>
+                        <span class="detail-value" id="feedback-fusion-bias">—</span>
+                    </div>
+                    <div class="metric-detail">
+                        <span class="detail-label">Feedback Confidence</span>
+                        <span class="detail-value" id="feedback-confidence">—</span>
+                    </div>
+                    <div class="metric-detail">
+                        <span class="detail-label">Last Updated</span>
+                        <span class="detail-value" id="feedback-last-updated">—</span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- MV-CRS Strategic Influence Card -->
+            <div class="metric-card">
+                <div class="metric-header">
+                    <span class="metric-title">MV-CRS Strategic Influence</span>
+                    <span class="status-badge" id="strategic-badge">—</span>
+                </div>
+                <div class="metric-value" style="font-size:1.5em;" id="strategic-profile-value">—</div>
+                <div class="metric-label">Strategic Profile</div>
+                <div style="margin-top:20px;">
+                    <div class="metric-detail">
+                        <span class="detail-label">Learning Rate Multiplier</span>
+                        <span class="detail-value" id="strategic-rdgl-multiplier">—</span>
+                    </div>
+                    <div class="metric-detail">
+                        <span class="detail-label">ATTE Shift Ceiling (%)</span>
+                        <span class="detail-value" id="strategic-atte-ceiling">—</span>
+                    </div>
+                    <div class="metric-detail">
+                        <span class="detail-label">Fusion Sensitivity Bias</span>
+                        <span class="detail-value" id="strategic-fusion-bias">—</span>
+                    </div>
+                    <div class="metric-detail">
+                        <span class="detail-label">Trust Guard Weight Δ</span>
+                        <span class="detail-value" id="strategic-trust-delta">—</span>
+                    </div>
+                    <div class="metric-detail">
+                        <span class="detail-label">Response Aggressiveness</span>
+                        <span class="detail-value" id="strategic-aggressiveness">—</span>
+                    </div>
+                    <div class="metric-detail">
+                        <span class="detail-label">Confidence</span>
+                        <span class="detail-value" id="strategic-confidence">—</span>
+                    </div>
+                    <div class="metric-detail">
+                        <span class="detail-label">Last Updated</span>
+                        <span class="detail-value" id="strategic-last-updated">—</span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- MV-CRS Long-Horizon Governance Plan (45 Days) -->
+            <div class="metric-card">
+                <div class="metric-header">
+                    <span class="metric-title">Long-Horizon Governance Plan (45 Days)</span>
+                    <span class="status-badge" id="hlgs-status-badge">—</span>
+                </div>
+                <div class="metric-value" style="font-size:1.5em;" id="hlgs-status-value">—</div>
+                <div class="metric-label">Overall Governance Status</div>
+                <div style="margin-top:20px;">
+                    <div class="metric-detail">
+                        <span class="detail-label">MV-CRS Health Trend</span>
+                        <span class="detail-value" id="hlgs-mvcrs-trend">—</span>
+                    </div>
+                    <div class="metric-detail">
+                        <span class="detail-label">Forensic Risk Projection</span>
+                        <span class="detail-value" id="hlgs-forensic-risk">—</span>
+                    </div>
+                    <div class="metric-detail">
+                        <span class="detail-label">Policy Instability Prediction</span>
+                        <span class="detail-value" id="hlgs-policy-instability">—</span>
+                    </div>
+                    <div class="metric-detail">
+                        <span class="detail-label">Expected Trust Events</span>
+                        <span class="detail-value" id="hlgs-trust-events">—</span>
+                    </div>
+                    <div class="metric-detail">
+                        <span class="detail-label">RDGL Trajectory</span>
+                        <span class="detail-value" id="hlgs-rdgl-trajectory">—</span>
+                    </div>
+                    <div class="metric-detail">
+                        <span class="detail-label">ATTE Pressure</span>
+                        <span class="detail-value" id="hlgs-atte-pressure">—</span>
+                    </div>
+                    <div class="metric-detail">
+                        <span class="detail-label">Fusion Cycle Prediction</span>
+                        <span class="detail-value" id="hlgs-fusion-cycle">—</span>
+                    </div>
+                    <div class="metric-detail">
+                        <span class="detail-label">Recommended Actions</span>
+                        <div class="detail-value" id="hlgs-actions" style="display:block; margin-top:5px; line-height:1.6;">—</div>
+                    </div>
+                    <div class="metric-detail">
+                        <span class="detail-label">Plan Confidence</span>
+                        <span class="detail-value" id="hlgs-confidence">—</span>
+                    </div>
+                    <div class="metric-detail">
+                        <span class="detail-label">Last Updated</span>
+                        <span class="detail-value" id="hlgs-last-updated">—</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Horizon Coherence (Short / Mid / Long) -->
+            <div class="metric-card">
+                <div class="metric-header">
+                    <span class="metric-title">Horizon Coherence (Short / Mid / Long)</span>
+                    <span class="status-badge" id="hce-status-badge">—</span>
+                </div>
+                <div class="metric-value" style="font-size:1.5em;" id="hce-coherence-value">—</div>
+                <div class="metric-label">Overall Coherence Status</div>
+                <div style="margin-top:20px;">
+                    <div class="metric-detail">
+                        <span class="detail-label">Short-Term Signal</span>
+                        <span class="detail-value" id="hce-short-signal">—</span>
+                    </div>
+                    <div class="metric-detail">
+                        <span class="detail-label">Mid-Term Projection</span>
+                        <span class="detail-value" id="hce-mid-projection">—</span>
+                    </div>
+                    <div class="metric-detail">
+                        <span class="detail-label">Long-Term Outlook</span>
+                        <span class="detail-value" id="hce-long-outlook">—</span>
+                    </div>
+                    <div class="metric-detail">
+                        <span class="detail-label">Conflict Sources</span>
+                        <span class="detail-value" id="hce-conflicts">—</span>
+                    </div>
+                    <div class="metric-detail">
+                        <span class="detail-label">Instability Score</span>
+                        <span class="detail-value" id="hce-instability">—</span>
+                    </div>
+                    <div class="metric-detail">
+                        <span class="detail-label">Alignment Recommendation</span>
+                        <span class="detail-value" id="hce-recommendation">—</span>
+                    </div>
+                    <div class="metric-detail">
+                        <span class="detail-label">Confidence</span>
+                        <span class="detail-value" id="hce-confidence">—</span>
+                    </div>
+                    <div class="metric-detail">
+                        <span class="detail-label">Last Updated</span>
+                        <span class="detail-value" id="hce-last-updated">—</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Predictive Ensemble (1d / 7d / 30d) -->
+            <div class="metric-card">
+                <div class="metric-header">
+                    <span class="metric-title">Predictive Ensemble (1d / 7d / 30d)</span>
+                    <span class="status-badge" id="mhpe-dominant-badge">—</span>
+                </div>
+                <div style="margin-top:15px;">
+                    <div class="metric-detail">
+                        <span class="detail-label">1-Day Instability</span>
+                        <span class="detail-value">
+                            <span class="status-badge" id="mhpe-1d-badge">—</span>
+                            <strong id="mhpe-1d-value">—</strong>
+                        </span>
+                    </div>
+                    <div class="metric-detail">
+                        <span class="detail-label">7-Day Instability</span>
+                        <span class="detail-value">
+                            <span class="status-badge" id="mhpe-7d-badge">—</span>
+                            <strong id="mhpe-7d-value">—</strong>
+                        </span>
+                    </div>
+                    <div class="metric-detail">
+                        <span class="detail-label">30-Day Instability</span>
+                        <span class="detail-value">
+                            <span class="status-badge" id="mhpe-30d-badge">—</span>
+                            <strong id="mhpe-30d-value">—</strong>
+                        </span>
+                    </div>
+                    <div class="metric-detail">
+                        <span class="detail-label">Ensemble Confidence</span>
+                        <span class="detail-value">
+                            <meter id="mhpe-confidence-meter" min="0" max="1" low="0.3" high="0.7" optimum="0.9" value="0"></meter>
+                            <strong id="mhpe-confidence-value">—</strong>
+                        </span>
+                    </div>
+                    <div class="metric-detail" style="margin-top:15px;">
+                        <details>
+                            <summary style="cursor:pointer;color:#667eea;font-weight:600;">📊 Explanation</summary>
+                            <p id="mhpe-explanation" style="margin-top:10px;padding:10px;background:#f9fafb;border-left:3px solid #667eea;font-size:0.9em;color:#555;">—</p>
+                        </details>
+                    </div>
+                    <div class="metric-detail">
+                        <span class="detail-label">Last Updated</span>
+                        <span class="detail-value" id="mhpe-last-updated">—</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Governance Drift (90-Day) -->
+            <div class="metric-card">
+                <div class="metric-header">
+                    <span class="metric-title">Governance Drift (90-Day)</span>
+                    <span class="status-badge" id="gda-drift-badge">—</span>
+                </div>
+                <div style="margin-top:15px;">
+                    <div class="metric-detail">
+                        <span class="detail-label">Drift Score</span>
+                        <span class="detail-value"><strong id="gda-drift-score">—</strong></span>
+                    </div>
+                    <div class="metric-detail">
+                        <span class="detail-label">Drift Direction</span>
+                        <span class="detail-value" id="gda-drift-direction">—</span>
+                    </div>
+                    <div class="metric-detail">
+                        <span class="detail-label">Drift Class</span>
+                        <span class="detail-value" id="gda-drift-class">—</span>
+                    </div>
+                    <div class="metric-detail">
+                        <span class="detail-label">Confidence</span>
+                        <span class="detail-value"><meter id="gda-confidence-meter" min="0" max="1" low="0.3" high="0.7" optimum="0.9" value="0"></meter> <strong id="gda-confidence-value">—</strong></span>
+                    </div>
+                    <div class="metric-detail">
+                        <span class="detail-label">Contributing Factors</span>
+                        <span class="detail-value" id="gda-factors" style="display:block;margin-top:5px;line-height:1.4;">—</span>
+                    </div>
+                    <div class="metric-detail" style="margin-top:15px;">
+                        <details>
+                            <summary style="cursor:pointer;color:#667eea;font-weight:600;">🧪 Raw JSON</summary>
+                            <pre id="gda-raw-json" style="margin-top:10px;padding:10px;background:#f9fafb;border-left:3px solid #667eea;font-size:0.75em;color:#555;white-space:pre-wrap;word-break:break-word;">—</pre>
+                        </details>
+                    </div>
+                    <div class="metric-detail">
+                        <span class="detail-label">Last Updated</span>
+                        <span class="detail-value" id="gda-last-updated">—</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Drift Stabilization Profile -->
+            <div class="metric-card">
+                <div class="metric-header">
+                    <span class="metric-title">Drift Stabilization Profile</span>
+                    <span class="status-badge" id="gdse-intensity-badge">—</span>
+                </div>
+                <div style="margin-top:15px;">
+                    <div class="metric-detail">
+                        <span class="detail-label">Stabilization Intensity</span>
+                        <span class="detail-value" id="gdse-intensity-value">—</span>
+                    </div>
+                    <div class="metric-detail">
+                        <span class="detail-label">Threshold Shift (%)</span>
+                        <span class="detail-value" id="gdse-threshold-shift">—</span>
+                    </div>
+                    <div class="metric-detail">
+
+            <!-- Stability Convergence -->
+            <div class="metric-card">
+                <div class="metric-header">
+                    <span class="metric-title">Stability Convergence</span>
+                    <span class="status-badge" id="convergence-risk-badge">OK</span>
+                </div>
+                <div id="stability-convergence-card" style="margin-top:15px;">
+                    <div style="color:#999; text-align:center; padding:20px;">Loading...</div>
+                </div>
+            </div>
+            
+            <!-- Drift Stabilization Profile (continued) -->
+            <div class="metric-card">
+                <div class="metric-header">
+                    <span class="metric-title">Drift Stabilization Profile</span>
+                    <span class="status-badge" id="gdse-intensity-badge">—</span>
+                </div>
+                <div style="margin-top:15px;">
+                    <div class="metric-detail">
+                        <span class="detail-label">Stabilization Intensity</span>
+                        <span class="detail-value" id="gdse-intensity-value">—</span>
+                    </div>
+                    <div class="metric-detail">
+                        <span class="detail-label">Threshold Shift (%)</span>
+                        <span class="detail-value" id="gdse-threshold-shift">—</span>
+                    </div>
+                    <div class="metric-detail">
+                        <span class="detail-label">RDGL Learning Rate</span>
+                        <span class="detail-value" id="gdse-rdgl-lr">—</span>
+                    </div>
+                    <div class="metric-detail">
+                        <span class="detail-label">Fusion Bias Δ</span>
+                        <span class="detail-value" id="gdse-fusion-bias">—</span>
+                    </div>
+                    <div class="metric-detail">
+                        <span class="detail-label">Response Sensitivity</span>
+                        <span class="detail-value" id="gdse-response-sens">—</span>
+                    </div>
+                    <div class="metric-detail">
+                        <span class="detail-label">Confidence</span>
+                        <span class="detail-value"><meter id="gdse-confidence-meter" min="0" max="1" low="0.3" high="0.7" optimum="0.9" value="0"></meter> <strong id="gdse-confidence-value">—</strong></span>
+                    </div>
+                    <div class="metric-detail" style="margin-top:15px;">
+                        <details>
+                            <summary style="cursor:pointer;color:#667eea;font-weight:600;">🧩 Reason Matrix</summary>
+                            <div id="gdse-reason-matrix" style="margin-top:10px;padding:10px;background:#f9fafb;border-left:3px solid #667eea;font-size:0.75em;color:#555;line-height:1.4;">—</div>
+                        </details>
+                    </div>
+                    <div class="metric-detail">
+                        <span class="detail-label">Last Updated</span>
+                        <span class="detail-value" id="gdse-last-updated">—</span>
+                    </div>
+                </div>
+            </div>
+            
             <!-- Integrity Card -->
             <div class="metric-card">
                 <div class="metric-header">
@@ -384,6 +792,228 @@
                     </div>
                 </div>
             </div>
+
+            <!-- Forensic Intelligence Card -->
+            <div class="metric-card">
+                <div class="metric-header">
+                    <span class="metric-title">Forensic Intelligence</span>
+                    <span class="status-badge status-green" id="forensics-status">OK</span>
+                </div>
+                <div class="metric-value" style="font-size: 2em;" id="forensics-anomalies">—</div>
+                <div class="metric-label">Total Anomalies Detected</div>
+                <div style="margin-top: 20px;">
+                    <div class="metric-detail">
+                        <span class="detail-label">Daily Frequency</span>
+                        <span class="detail-value" id="forensics-frequency">—</span>
+                    </div>
+                    <div class="metric-detail">
+                        <span class="detail-label">Records Analyzed</span>
+                        <span class="detail-value" id="forensics-records">—</span>
+                    </div>
+                    <div style="margin-top: 15px; text-align: center;">
+                        <a href="forensics_insights.html" style="color: #667eea; text-decoration: none; font-weight: 600;">→ View Detailed Analysis</a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Predictive Forensics Card -->
+            <div class="metric-card">
+                <div class="metric-header">
+                    <span class="metric-title">Predictive Forensics</span>
+                    <span class="status-badge status-certified" id="forecast-risk-badge">LOW</span>
+                </div>
+                <div class="metric-value" style="font-size: 2em;" id="forecast-avg">—</div>
+                <div class="metric-label">Avg. Daily Forecast (7d)</div>
+                <div style="margin-top: 20px;">
+                    <div class="metric-detail">
+                        <span class="detail-label">Risk Level</span>
+                        <span class="detail-value" id="forecast-risk-level">—</span>
+                    </div>
+                    <div class="metric-detail">
+                        <span class="detail-label">Forecast Status</span>
+                        <span class="detail-value" id="forecast-status">—</span>
+                    </div>
+                    <div style="margin-top: 15px; text-align: center;">
+                        <a href="forensics_forecast.html" style="color: #667eea; text-decoration: none; font-weight: 600;">→ View 7-Day Forecast</a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Adaptive Responses Card -->
+            <div class="metric-card">
+                <div class="metric-header">
+                    <span class="metric-title">Adaptive Responses</span>
+                    <span class="status-badge status-green" id="adaptive-brake-badge">ACTIVE</span>
+                </div>
+                <div class="metric-value" style="font-size: 2em;" id="adaptive-response-count">—</div>
+                <div class="metric-label">24h Response Count</div>
+                <div style="margin-top: 20px;">
+                    <div class="metric-detail">
+                        <span class="detail-label">Last Action</span>
+                        <span class="detail-value" id="adaptive-last-action">—</span>
+                    </div>
+                    <div class="metric-detail">
+                        <span class="detail-label">Safety Brake</span>
+                        <span class="detail-value" id="adaptive-brake-status">—</span>
+                    </div>
+                    <div style="margin-top: 15px; text-align: center;">
+                        <a href="../forensics/response_history.jsonl" style="color: #667eea; text-decoration: none; font-weight: 600;" download>→ Download Response History</a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- System Policy Status Card -->
+            <div class="metric-card">
+                <div class="metric-header">
+                    <span class="metric-title">System Policy Status</span>
+                    <span class="status-badge" id="policy-badge">—</span>
+                </div>
+                <div class="metric-value" style="font-size: 2.5em;" id="policy-level">—</div>
+                <div class="metric-label">Current Policy Level</div>
+                <div style="margin-top: 20px;">
+                    <div class="metric-detail">
+                        <span class="detail-label">Last Evaluation</span>
+                        <span class="detail-value" id="policy-timestamp">—</span>
+                    </div>
+                    <div class="metric-detail">
+                        <span class="detail-label">Trust Lock</span>
+                        <span class="detail-value" id="policy-trust">—</span>
+                    </div>
+                    <div class="metric-detail">
+                        <span class="detail-label">Forecast Risk</span>
+                        <span class="detail-value" id="policy-forecast">—</span>
+                    </div>
+                    <div style="margin-top: 15px; text-align: center;">
+                        <a href="../state/policy_state.json" style="color: #667eea; text-decoration: none; font-weight: 600;" target="_blank">→ View Policy Details</a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Policy Fusion Status Card -->
+            <div class="metric-card">
+                <div class="metric-header">
+                    <span class="metric-title">Policy Fusion Status</span>
+                    <span class="status-badge" id="fusion-badge">—</span>
+                </div>
+                <div class="metric-value" style="font-size: 2.5em;" id="fusion-level">—</div>
+                <div class="metric-label">System-Wide Fusion Level</div>
+                <div style="margin-top: 20px;">
+                    <div class="metric-detail">
+                        <span class="detail-label">Weighted Consensus</span>
+                        <span class="detail-value" id="fusion-consensus">—</span>
+                    </div>
+                    <div class="metric-detail">
+                        <span class="detail-label">Safety Brake</span>
+                        <span class="detail-value" id="fusion-brake">—</span>
+                    </div>
+                    <div class="metric-detail">
+                        <span class="detail-label">Trust Lock</span>
+                        <span class="detail-value" id="fusion-trust">—</span>
+                    </div>
+                    <div style="margin-top: 15px; text-align: center;">
+                        <a href="../state/policy_fusion_state.json" style="color: #667eea; text-decoration: none; font-weight: 600;" target="_blank">→ View Fusion Details</a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Adaptive Thresholds (ATTE) Card -->
+            <div class="metric-card">
+                <div class="metric-header">
+                    <span class="metric-title">Adaptive Thresholds (ATTE)</span>
+                    <span class="status-badge" id="atte-badge">—</span>
+                </div>
+                <div class="metric-value" style="font-size: 2.0em;" id="atte-status">—</div>
+                <div class="metric-label">Threshold Status</div>
+                <div style="margin-top: 20px;">
+                    <div class="metric-detail">
+                        <span class="detail-label">Integrity Threshold</span>
+                        <span class="detail-value" id="atte-integrity">—</span>
+                    </div>
+                    <div class="metric-detail">
+                        <span class="detail-label">Consensus Threshold</span>
+                        <span class="detail-value" id="atte-consensus">—</span>
+                    </div>
+                    <div class="metric-detail">
+                        <span class="detail-label">Reputation Minimum</span>
+                        <span class="detail-value" id="atte-reputation">—</span>
+                    </div>
+                    <div class="metric-detail">
+                        <span class="detail-label">Learning Influence</span>
+                        <span class="detail-value"><span class="status-badge" id="atte-learning">—</span></span>
+                    </div>
+                    <div class="metric-detail">
+                        <span class="detail-label">Shift Range</span>
+                        <span class="detail-value" id="atte-shift">—</span>
+                    </div>
+                    <div class="metric-detail">
+                        <span class="detail-label">Last Updated</span>
+                        <span class="detail-value" id="atte-updated">—</span>
+                    </div>
+                    <div style="margin-top: 15px; text-align: center;">
+                        <a href="../state/threshold_policy.json" style="color: #667eea; text-decoration: none; font-weight: 600;" target="_blank">→ View Threshold Policy</a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Learning Engine (RDGL) Card -->
+            <div class="metric-card">
+                <div class="metric-header">
+                    <span class="metric-title">Learning Engine (RDGL)</span>
+                    <span class="status-badge" id="rdgl-trend-badge">—</span>
+                </div>
+                <div class="metric-value" style="font-size: 2.0em;" id="rdgl-score">—</div>
+                <div class="metric-label">Current Policy Score</div>
+                <div style="margin-top: 20px;">
+                    <div class="metric-detail">
+                        <span class="detail-label">24h Reward</span>
+                        <span class="detail-value" id="rdgl-reward">—</span>
+                    </div>
+                    <div class="metric-detail">
+                        <span class="detail-label">Mode</span>
+                        <span class="detail-value" id="rdgl-mode">—</span>
+                    </div>
+                    <div class="metric-detail">
+                        <span class="detail-label">Shift Range</span>
+                        <span class="detail-value" id="rdgl-shift">—</span>
+                    </div>
+                    <div class="metric-detail">
+                        <span class="detail-label">Last Update</span>
+                        <span class="detail-value" id="rdgl-updated">—</span>
+                    </div>
+                    <div style="margin-top: 15px; text-align: center;">
+                        <a href="../state/rdgl_policy_adjustments.json" style="color: #667eea; text-decoration: none; font-weight: 600;" target="_blank">→ View RDGL Policy</a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Human Approval Card -->
+            <div class="card">
+                <h3 style="margin-top: 0; display: flex; align-items: center; gap: 8px;">
+                    🔐 Human Approval
+                    <span class="status-badge" id="approval-status-badge" style="margin-left: auto;">Loading</span>
+                </h3>
+                <div class="card-content">
+                    <div class="metric-detail">
+                        <span class="detail-label">Current Status</span>
+                        <span class="detail-value" id="approval-current-status">—</span>
+                    </div>
+                    <div class="metric-detail">
+                        <span class="detail-label">Active Approval ID</span>
+                        <span class="detail-value" id="approval-active-id">—</span>
+                    </div>
+                    <div class="metric-detail">
+                        <span class="detail-label">Approver</span>
+                        <span class="detail-value" id="approval-approver">—</span>
+                    </div>
+                    <div class="metric-detail">
+                        <span class="detail-label">Last Updated</span>
+                        <span class="detail-value" id="approval-updated">—</span>
+                    </div>
+                    <div style="margin-top: 15px; text-align: center;">
+                        <a href="approval.html" style="color: #667eea; text-decoration: none; font-weight: 600;">→ Manage Approvals</a>
+                    </div>
+                </div>
+            </div>
         </div>
         
         <div class="info-section">
@@ -504,6 +1134,8 @@
                 <a href="resilience.html" class="link-button">🌐 Global Resilience Monitor</a>
                 <a href="meta_audit_feed.json" class="link-button">🧠 Meta-Governance Feed</a>
                 <a href="ledger.html" class="link-button">📜 Governance Ledger</a>
+                <a href="override.html" class="link-button">🛑 Emergency Override</a>
+                <a href="trust_guard.html" class="link-button">🔐 Trust Guard</a>
             </div>
         </div>
         
@@ -677,6 +1309,203 @@
         }
         loadFederatedConfidence();
         setInterval(loadFederatedConfidence, 600000);
+
+        async function loadForensicsInsights(){
+            try{
+                const fi = await fetch('../forensics/forensics_insights_report.json', {cache:'no-store'});
+                if(fi.ok){
+                    const j = await fi.json();
+                    if(j.status === 'success'){
+                        const anomalies = Object.values(j.anomaly_classification || {}).reduce((a,b)=>a+b, 0);
+                        document.getElementById('forensics-anomalies').textContent = anomalies.toLocaleString();
+                        document.getElementById('forensics-frequency').textContent = (j.summary?.daily_error_frequency ?? 0).toFixed(2) + '/day';
+                        document.getElementById('forensics-records').textContent = (j.summary?.total_records_analyzed ?? 0).toLocaleString();
+                        const status = document.getElementById('forensics-status');
+                        if(anomalies > 10){ status.className='status-badge'; status.style.background='#ef4444'; status.textContent='HIGH'; }
+                        else if(anomalies > 5){ status.className='status-badge status-certified'; status.textContent='MED'; }
+                        else { status.className='status-badge status-green'; status.textContent='OK'; }
+                    }
+                }
+            }catch(e){}
+            
+            // Load forecast data
+            try{
+                const ff = await fetch('../forensics/forensics_anomaly_forecast.json', {cache:'no-store'});
+                if(ff.ok){
+                    const f = await ff.json();
+                    const forecast = f.predicted_anomalies_7d || [];
+                    if(forecast.length > 0){
+                        const avg = forecast.reduce((a,b)=>a+b, 0) / forecast.length;
+                        document.getElementById('forecast-avg').textContent = avg.toFixed(2);
+                        document.getElementById('forecast-risk-level').textContent = (f.risk_level || 'unknown').toUpperCase();
+                        document.getElementById('forecast-status').textContent = (f.status || 'unknown').toUpperCase();
+                        const badge = document.getElementById('forecast-risk-badge');
+                        const risk = f.risk_level || 'low';
+                        badge.textContent = risk.toUpperCase();
+                        if(risk === 'high'){ badge.className='status-badge'; badge.style.background='#ef4444'; badge.style.color='white'; }
+                        else if(risk === 'medium'){ badge.className='status-badge'; badge.style.background='#f59e0b'; badge.style.color='white'; }
+                        else { badge.className='status-badge status-green'; }
+                    }
+                }
+            }catch(e){}
+            
+            // Load adaptive response data
+            try{
+                const brake = await fetch('../forensics/safety_brake_state.json', {cache:'no-store'});
+                if(brake.ok){
+                    const b = await brake.json();
+                    const count = b.response_count_24h || 0;
+                    const maxCount = b.max_allowed || 10;
+                    const isEngaged = b.is_engaged || false;
+                    
+                    document.getElementById('adaptive-response-count').textContent = `${count}/${maxCount}`;
+                    document.getElementById('adaptive-brake-status').textContent = isEngaged ? 'ENGAGED' : 'ACTIVE';
+                    
+                    const brakeBadge = document.getElementById('adaptive-brake-badge');
+                    if(isEngaged){
+                        brakeBadge.className = 'status-badge';
+                        brakeBadge.style.background = '#ef4444';
+                        brakeBadge.style.color = 'white';
+                        brakeBadge.textContent = 'PARKED';
+                    } else if(count >= maxCount * 0.7){
+                        brakeBadge.className = 'status-badge';
+                        brakeBadge.style.background = '#f59e0b';
+                        brakeBadge.style.color = 'white';
+                        brakeBadge.textContent = 'WARNING';
+                    } else {
+                        brakeBadge.className = 'status-badge status-green';
+                        brakeBadge.textContent = 'ACTIVE';
+                    }
+                }
+            }catch(e){}
+            
+            // Load last adaptive action
+            try{
+                const resp = await fetch('../forensics/response_history.jsonl', {cache:'no-store'});
+                if(resp.ok){
+                    const text = await resp.text();
+                    const lines = text.trim().split('\n').filter(l => l);
+                    if(lines.length > 0){
+                        const lastEntry = JSON.parse(lines[lines.length - 1]);
+                        const actionCount = lastEntry.actions_taken?.length || 0;
+                        const eventType = lastEntry.event_type || 'unknown';
+                        document.getElementById('adaptive-last-action').textContent = 
+                            eventType === 'SAFETY_BRAKE' ? 'Safety Brake' : 
+                            `${actionCount} action(s)`;
+                    }
+                }
+            }catch(e){}
+
+            // Load policy orchestration state
+            try{
+                const policy = await fetch('../state/policy_state.json', {cache:'no-store'});
+                if(policy.ok){
+                    const p = await policy.json();
+                    const level = p.policy || '—';
+                    const timestamp = p.evaluated_at || '—';
+                    const inputs = p.inputs || {};
+                    
+                    document.getElementById('policy-level').textContent = level;
+                    
+                    // Format timestamp
+                    if(timestamp !== '—'){
+                        const date = new Date(timestamp);
+                        document.getElementById('policy-timestamp').textContent = 
+                            date.toISOString().slice(0,16).replace('T', ' ');
+                    } else {
+                        document.getElementById('policy-timestamp').textContent = '—';
+                    }
+                    
+                    // Trust lock status
+                    document.getElementById('policy-trust').textContent = 
+                        inputs.trust_locked ? '🔒 LOCKED' : '🔓 Unlocked';
+                    
+                    // Forecast risk
+                    document.getElementById('policy-forecast').textContent = 
+                        (inputs.forecast_risk || 'unknown').toUpperCase();
+                    
+                    // Update badge color
+                    const badge = document.getElementById('policy-badge');
+                    badge.textContent = level;
+                    if(level === 'RED'){
+                        badge.className = 'status-badge';
+                        badge.style.background = '#ef4444';
+                        badge.style.color = 'white';
+                    } else if(level === 'YELLOW'){
+                        badge.className = 'status-badge';
+                        badge.style.background = '#f59e0b';
+                        badge.style.color = 'white';
+                    } else if(level === 'GREEN'){
+                        badge.className = 'status-badge status-green';
+                    } else {
+                        badge.className = 'status-badge';
+                        badge.style.background = '#6b7280';
+                        badge.style.color = 'white';
+                    }
+                }
+            }catch(e){}
+        }
+        
+        // Load Policy Fusion State
+        async function loadPolicyFusionState(){
+            try{
+                const response = await fetch('../state/policy_fusion_state.json');
+                if(!response.ok) throw new Error('Failed to fetch fusion state');
+                const data = await response.json();
+                
+                if(data){
+                    const level = data.fusion_level || '—';
+                    const inputs = data.inputs || {};
+                    const computed = data.computed_at || '—';
+                    
+                    document.getElementById('fusion-level').textContent = level;
+                    
+                    // Format timestamp
+                    if(computed !== '—'){
+                        const date = new Date(computed);
+                        document.getElementById('fusion-timestamp').textContent = 
+                            date.toISOString().slice(0,16).replace('T', ' ');
+                    }
+                    
+                    // Weighted consensus
+                    const consensus = inputs.weighted_consensus_pct || 0;
+                    document.getElementById('fusion-consensus').textContent = 
+                        consensus.toFixed(1) + '%';
+                    
+                    // Safety brake status
+                    document.getElementById('fusion-brake').textContent = 
+                        inputs.safety_brake_engaged ? '🔴 ENGAGED' : '🟢 OFF';
+                    
+                    // Trust lock status
+                    document.getElementById('fusion-trust').textContent = 
+                        inputs.trust_locked ? '🔒 LOCKED' : '🔓 Unlocked';
+                    
+                    // Update badge color
+                    const badge = document.getElementById('fusion-badge');
+                    badge.textContent = level;
+                    if(level === 'FUSION_RED'){
+                        badge.className = 'status-badge';
+                        badge.style.background = '#dc2626';
+                        badge.style.color = 'white';
+                    } else if(level === 'FUSION_YELLOW'){
+                        badge.className = 'status-badge';
+                        badge.style.background = '#f59e0b';
+                        badge.style.color = 'white';
+                    } else if(level === 'FUSION_GREEN'){
+                        badge.className = 'status-badge status-green';
+                    } else {
+                        badge.className = 'status-badge';
+                        badge.style.background = '#6b7280';
+                        badge.style.color = 'white';
+                    }
+                }
+            }catch(e){}
+        }
+        
+        loadForensicsInsights();
+        loadPolicyFusionState();
+        setInterval(loadForensicsInsights, 15000); // Refresh policy every 15 seconds
+
                 if(prov.ok){
                     const j = await prov.json();
                     const pct = j.agreement_pct ?? 0;
@@ -698,6 +1527,865 @@
         }
         loadTrustConsensus();
         setInterval(loadTrustConsensus, 600000);
+        
+        // Auto-refresh fusion state every 10 seconds
+        setInterval(loadPolicyFusionState, 10000);
+        
+        // Load Adaptive Thresholds (ATTE)
+        async function loadAdaptiveThresholds(){
+            try{
+                const response = await fetch('../state/threshold_policy.json');
+                if(!response.ok) throw new Error('Failed to fetch threshold policy');
+                const data = await response.json();
+                
+                if(data){
+                    const status = data.status || '—';
+                    const integrity = data.integrity || {};
+                    const consensus = data.consensus || {};
+                    const reputation = data.reputation || {};
+                    const lastUpdated = data.last_updated || '—';
+                    
+                    document.getElementById('atte-status').textContent = status.toUpperCase();
+                    
+                    // Format thresholds
+                    document.getElementById('atte-integrity').textContent = 
+                        `Green: ${integrity.green?.toFixed(1) || '—'}% / Yellow: ${integrity.yellow?.toFixed(1) || '—'}%`;
+                    
+                    document.getElementById('atte-consensus').textContent = 
+                        `Green: ${consensus.green?.toFixed(1) || '—'}% / Yellow: ${consensus.yellow?.toFixed(1) || '—'}%`;
+                    
+                    document.getElementById('atte-reputation').textContent = 
+                        reputation.min_peer_score?.toFixed(1) + ' pts' || '—';
+                    
+                    // Format timestamp
+                    if(lastUpdated !== '—'){
+                        const date = new Date(lastUpdated);
+                        document.getElementById('atte-updated').textContent = 
+                            date.toISOString().slice(0,16).replace('T', ' ');
+                    } else {
+                        document.getElementById('atte-updated').textContent = '—';
+                    }
+                    
+                    // Update badge color
+                    const badge = document.getElementById('atte-badge');
+                    badge.textContent = status.toUpperCase();
+                    if(status === 'rising'){
+                        badge.className = 'status-badge';
+                        badge.style.background = '#f59e0b';
+                        badge.style.color = 'white';
+                    } else if(status === 'falling'){
+                        badge.className = 'status-badge';
+                        badge.style.background = '#3b82f6';
+                        badge.style.color = 'white';
+                    } else if(status === 'locked'){
+                        badge.className = 'status-badge';
+                        badge.style.background = '#dc2626';
+                        badge.style.color = 'white';
+                    } else if(status === 'stable'){
+                        badge.className = 'status-badge status-green';
+                    } else {
+                        badge.className = 'status-badge';
+                        badge.style.background = '#6b7280';
+                        badge.style.color = 'white';
+                    }
+
+                    // RDGL influence metadata (optional)
+                    const rdglMode = (data.rdgl_mode_used || 'normal').toString();
+                    const rdglScaled = data.rdgl_scaled_percent_range || data.rdgl_shift_percent_range || null;
+                    const rdglBadge = document.getElementById('atte-learning');
+                    rdglBadge.textContent = rdglMode.toUpperCase();
+                    if(rdglMode === 'relaxed'){
+                        rdglBadge.className = 'status-badge status-green';
+                        rdglBadge.style.color = 'white';
+                    } else if(rdglMode === 'normal'){
+                        rdglBadge.className = 'status-badge status-certified';
+                        rdglBadge.style.color = 'white';
+                    } else if(rdglMode === 'tightening'){
+                        rdglBadge.className = 'status-badge';
+                        rdglBadge.style.background = '#f59e0b';
+                        rdglBadge.style.color = 'white';
+                    } else if(rdglMode === 'locked'){
+                        rdglBadge.className = 'status-badge';
+                        rdglBadge.style.background = '#dc2626';
+                        rdglBadge.style.color = 'white';
+                    } else {
+                        rdglBadge.className = 'status-badge';
+                        rdglBadge.style.background = '#6b7280';
+                        rdglBadge.style.color = 'white';
+                    }
+                    const shiftEl = document.getElementById('atte-shift');
+                    if(Array.isArray(rdglScaled) && rdglScaled.length === 2){
+                        shiftEl.textContent = `${rdglScaled[0]}% – ${rdglScaled[1]}%`;
+                    } else {
+                        shiftEl.textContent = '—';
+                    }
+                }
+            }catch(e){}
+        }
+        
+        loadAdaptiveThresholds();
+        // Auto-refresh thresholds every 15 seconds
+        setInterval(loadAdaptiveThresholds, 15000);
+
+        // Load RDGL Learning Engine
+        async function loadRDGL(){
+            try{
+                const response = await fetch('../state/rdgl_policy_adjustments.json', {cache:'no-store'});
+                if(!response.ok) throw new Error('Failed to fetch RDGL policy');
+                const data = await response.json();
+                if(data){
+                    const score = data.policy_score ?? data.score ?? 50.0;
+                    const reward = data.reward_24h ?? 0.0;
+                    const mode = data.mode ?? '—';
+                    const shift = data.shift_percent_range ?? [0,0];
+                    const updated = data.last_updated ?? '—';
+                    const trend = (data.trend || 'Stable').toString();
+
+                    document.getElementById('rdgl-score').textContent = score.toFixed ? score.toFixed(2) : score;
+                    document.getElementById('rdgl-reward').textContent = (reward.toFixed ? reward.toFixed(3) : reward) + ' pts';
+                    document.getElementById('rdgl-mode').textContent = mode.toUpperCase();
+                    document.getElementById('rdgl-shift').textContent = `${shift[0]}% – ${shift[1]}%`;
+
+                    if(updated !== '—'){
+                        const date = new Date(updated);
+                        document.getElementById('rdgl-updated').textContent = date.toISOString().slice(0,16).replace('T',' ');
+                    } else {
+                        document.getElementById('rdgl-updated').textContent = '—';
+                    }
+
+                    const badge = document.getElementById('rdgl-trend-badge');
+                    badge.textContent = trend.toUpperCase();
+                    if(trend === 'Improving'){
+                        badge.className = 'status-badge status-green';
+                        badge.style.color = 'white';
+                    } else if(trend === 'Stable'){
+                        badge.className = 'status-badge status-certified';
+                        badge.style.color = 'white';
+                    } else if(trend === 'Degrading'){
+                        badge.className = 'status-badge';
+                        badge.style.background = '#ef4444';
+                        badge.style.color = 'white';
+                    } else {
+                        badge.className = 'status-badge';
+                        badge.style.background = '#6b7280';
+                        badge.style.color = 'white';
+                    }
+                }
+            }catch(e){}
+        }
+        loadRDGL();
+        setInterval(loadRDGL, 15000);
+
+        // Correction Engine Status Loader
+        async function loadCorrectionStatus(){
+            try {
+                const resp = await fetch('../state/mvcrs_last_correction.json', {cache:'no-store'});
+                if(!resp.ok){ return; }
+                const data = await resp.json();
+                const type = data.correction_type || 'none';
+                const ts = data.timestamp || '—';
+                const hard24 = data.hard_count_24h ?? 0;
+                const trustBlocked = data.blocked_by_trust_lock ? 'YES' : 'NO';
+                const brakeBlocked = data.blocked_by_safety_brake ? 'YES' : 'NO';
+                document.getElementById('correction-type-value').textContent = type.toUpperCase();
+                document.getElementById('correction-last-ts').textContent = ts;
+                document.getElementById('correction-hard-count').textContent = hard24;
+                document.getElementById('correction-trust-block').textContent = trustBlocked;
+                document.getElementById('correction-brake-block').textContent = brakeBlocked;
+                const badge = document.getElementById('correction-badge');
+                if(type === 'none'){
+                    badge.className='status-badge status-green';
+                    badge.textContent='NO ACTION';
+                } else if(type.startsWith('soft')) {
+                    badge.className='status-badge status-certified';
+                    badge.textContent='SOFT';
+                } else if(type === 'hard') {
+                    badge.className='status-badge';
+                    badge.style.background='#ef4444'; badge.style.color='white';
+                    badge.textContent='HARD';
+                } else {
+                    badge.className='status-badge';
+                    badge.style.background='#6b7280'; badge.style.color='white';
+                    badge.textContent= type.toUpperCase();
+                }
+            } catch(e){ /* silent */ }
+        }
+        loadCorrectionStatus();
+        setInterval(loadCorrectionStatus, 10000);
+
+        // Escalation Lifecycle Status Loader
+        async function loadLifecycleStatus(){
+            try {
+                const resp = await fetch('../state/mvcrs_escalation_lifecycle.json', {cache:'no-store'});
+                if(!resp.ok){ return; }
+                const data = await resp.json();
+                const state = data.current_state || 'unknown';
+                const entered = data.entered_current_state_at || '';
+                const lastTs = data.timestamp || '—';
+                const resolved = data.resolved_count ?? 0;
+                const rejected = data.rejected_count ?? 0;
+                
+                // Compute time in stage
+                let timeInStage = '—';
+                if(entered){
+                    try{
+                        const enteredDate = new Date(entered);
+                        const now = new Date();
+                        const diffMs = now - enteredDate;
+                        const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+                        const diffDays = Math.floor(diffHours / 24);
+                        const remHours = diffHours % 24;
+                        if(diffDays > 0){
+                            timeInStage = `${diffDays}d ${remHours}h`;
+                        } else {
+                            timeInStage = `${diffHours}h`;
+                        }
+                    }catch(e){}
+                }
+                
+                document.getElementById('lifecycle-state-value').textContent = state.toUpperCase().replace(/_/g, ' ');
+                document.getElementById('lifecycle-time-in-stage').textContent = timeInStage;
+                document.getElementById('lifecycle-last-transition').textContent = lastTs;
+                document.getElementById('lifecycle-resolved-count').textContent = resolved;
+                document.getElementById('lifecycle-rejected-count').textContent = rejected;
+                
+                const badge = document.getElementById('lifecycle-badge');
+                if(state === 'resolved'){
+                    badge.className='status-badge status-green';
+                    badge.textContent='RESOLVED';
+                } else if(state === 'rejected') {
+                    badge.className='status-badge';
+                    badge.style.background='#ef4444'; badge.style.color='white';
+                    badge.textContent='REJECTED';
+                } else if(state === 'pending') {
+                    badge.className='status-badge';
+                    badge.style.background='#f59e0b'; badge.style.color='white';
+                    badge.textContent='PENDING';
+                } else if(state === 'awaiting_validation') {
+                    badge.className='status-badge status-certified';
+                    badge.textContent='VALIDATING';
+                } else {
+                    badge.className='status-badge';
+                    badge.style.background='#6b7280'; badge.style.color='white';
+                    badge.textContent=state.toUpperCase();
+                }
+            } catch(e){ /* silent */ }
+        }
+        loadLifecycleStatus();
+        setInterval(loadLifecycleStatus, 15000);
+
+        // MV-CRS Integration Status Loader
+        async function loadIntegrationStatus(){
+            try {
+                const resp = await fetch('../state/mvcrs_integration_state.json', {cache:'no-store'});
+                if(!resp.ok){ return; }
+                const data = await resp.json();
+                const decision = data.final_decision || 'unknown';
+                const lifecycleState = data.lifecycle_state || 'unknown';
+                const escalationOpen = data.escalation_open ? 'Yes' : 'No';
+                const govRisk = data.governance_risk_level || 'unknown';
+                const lastUpdated = data.timestamp || '—';
+                
+                document.getElementById('integration-decision-value').textContent = decision.toUpperCase();
+                document.getElementById('integration-lifecycle').textContent = lifecycleState.toUpperCase().replace(/_/g, ' ');
+                document.getElementById('integration-escalation-open').textContent = escalationOpen;
+                document.getElementById('integration-governance-risk').textContent = govRisk.toUpperCase();
+                document.getElementById('integration-last-updated').textContent = lastUpdated;
+                
+                const badge = document.getElementById('integration-badge');
+                if(decision === 'allow'){
+                    badge.className='status-badge status-green';
+                    badge.textContent='ALLOW';
+                } else if(decision === 'restricted') {
+                    badge.className='status-badge';
+                    badge.style.background='#f59e0b'; badge.style.color='white';
+                    badge.textContent='RESTRICTED';
+                } else if(decision === 'blocked') {
+                    badge.className='status-badge';
+                    badge.style.background='#ef4444'; badge.style.color='white';
+                    badge.textContent='BLOCKED';
+                } else {
+                    badge.className='status-badge';
+                    badge.style.background='#6b7280'; badge.style.color='white';
+                    badge.textContent='UNKNOWN';
+                }
+            } catch(e){ /* silent */ }
+        }
+        loadIntegrationStatus();
+        setInterval(loadIntegrationStatus, 15000);
+
+        // Load MV-CRS Feedback Influence
+        async function loadFeedbackStatus(){
+            try{
+                const response = await fetch('../state/mvcrs_feedback.json', {cache:'no-store'});
+                if(!response.ok){
+                    document.getElementById('feedback-signal-value').textContent='—';
+                    document.getElementById('feedback-threshold-shift').textContent='—';
+                    document.getElementById('feedback-fusion-bias').textContent='—';
+                    document.getElementById('feedback-confidence').textContent='—';
+                    document.getElementById('feedback-last-updated').textContent='—';
+                    document.getElementById('feedback-badge').textContent='—';
+                    return;
+                }
+                const data = await response.json();
+                if(data){
+                    const rdglSignal = data.rdgl_signal ?? 'neutral';
+                    const thresholdShift = data.recommended_threshold_shift_pct ?? 0;
+                    const fusionBias = data.recommended_fusion_bias ?? 'steady';
+                    const confidence = data.feedback_confidence ?? 0;
+                    const timestamp = data.timestamp ?? '—';
+                    
+                    document.getElementById('feedback-signal-value').textContent=rdglSignal.toUpperCase();
+                    document.getElementById('feedback-threshold-shift').textContent=(thresholdShift >= 0 ? '+' : '') + thresholdShift.toFixed(1) + '%';
+                    document.getElementById('feedback-fusion-bias').textContent=fusionBias.toUpperCase();
+                    document.getElementById('feedback-confidence').textContent=(confidence * 100).toFixed(1) + '%';
+                    
+                    if(timestamp !== '—'){
+                        const ts = new Date(timestamp);
+                        document.getElementById('feedback-last-updated').textContent=ts.toLocaleString();
+                    } else {
+                        document.getElementById('feedback-last-updated').textContent='—';
+                    }
+                    
+                    // Badge color logic
+                    const badge = document.getElementById('feedback-badge');
+                    if(rdglSignal === 'penalize' || fusionBias === 'raise'){
+                        badge.className='status-badge';
+                        badge.style.background='#ef4444'; badge.style.color='white';
+                        badge.textContent='PENALIZE';
+                    } else if(rdglSignal === 'neutral' || fusionBias === 'steady') {
+                        badge.className='status-badge';
+                        badge.style.background='#f59e0b'; badge.style.color='white';
+                        badge.textContent='NEUTRAL';
+                    } else if(rdglSignal === 'reinforce' || fusionBias === 'lower') {
+                        badge.className='status-badge status-green';
+                        badge.textContent='REINFORCE';
+                    } else {
+                        badge.className='status-badge';
+                        badge.style.background='#6b7280'; badge.style.color='white';
+                        badge.textContent='UNKNOWN';
+                    }
+                }
+            } catch(e){ /* silent */ }
+        }
+        loadFeedbackStatus();
+        setInterval(loadFeedbackStatus, 15000);
+
+        // Load MV-CRS Strategic Influence
+        async function loadStrategicInfluence(){
+            try{
+                const response = await fetch('../state/mvcrs_strategic_influence.json', {cache:'no-store'});
+                if(!response.ok){
+                    document.getElementById('strategic-profile-value').textContent='—';
+                    document.getElementById('strategic-rdgl-multiplier').textContent='—';
+                    document.getElementById('strategic-atte-ceiling').textContent='—';
+                    document.getElementById('strategic-fusion-bias').textContent='—';
+                    document.getElementById('strategic-trust-delta').textContent='—';
+                    document.getElementById('strategic-aggressiveness').textContent='—';
+                    document.getElementById('strategic-confidence').textContent='—';
+                    document.getElementById('strategic-last-updated').textContent='—';
+                    document.getElementById('strategic-badge').textContent='—';
+                    return;
+                }
+                const data = await response.json();
+                if(data){
+                    const profile = data.strategic_profile ?? 'stable';
+                    const rdglMultiplier = data.rdgl_learning_rate_multiplier ?? 1.0;
+                    const atteCeiling = data.atte_shift_ceiling_pct ?? 3.0;
+                    const fusionBias = data.fusion_sensitivity_bias ?? 'neutral';
+                    const trustDelta = data.trust_guard_weight_delta ?? 0.0;
+                    const aggressiveness = data.adaptive_response_aggressiveness ?? 'medium';
+                    const confidence = data.confidence ?? 0.0;
+                    const timestamp = data.timestamp ?? '—';
+                    
+                    document.getElementById('strategic-profile-value').textContent=profile.toUpperCase();
+                    document.getElementById('strategic-rdgl-multiplier').textContent=rdglMultiplier.toFixed(3) + '×';
+                    document.getElementById('strategic-atte-ceiling').textContent=atteCeiling.toFixed(2) + '%';
+                    document.getElementById('strategic-fusion-bias').textContent=fusionBias.toUpperCase();
+                    document.getElementById('strategic-trust-delta').textContent=(trustDelta >= 0 ? '+' : '') + trustDelta.toFixed(3);
+                    document.getElementById('strategic-aggressiveness').textContent=aggressiveness.toUpperCase();
+                    document.getElementById('strategic-confidence').textContent=(confidence * 100).toFixed(1) + '%';
+                    
+                    if(timestamp !== '—'){
+                        const ts = new Date(timestamp);
+                        document.getElementById('strategic-last-updated').textContent=ts.toLocaleString();
+                    } else {
+                        document.getElementById('strategic-last-updated').textContent='—';
+                    }
+                    
+                    // Badge color logic
+                    const badge = document.getElementById('strategic-badge');
+                    if(profile === 'aggressive'){
+                        badge.className='status-badge status-green';
+                        badge.textContent='AGGRESSIVE';
+                    } else if(profile === 'stable') {
+                        badge.className='status-badge';
+                        badge.style.background='#f59e0b'; badge.style.color='white';
+                        badge.textContent='STABLE';
+                    } else if(profile === 'cautious') {
+                        badge.className='status-badge';
+                        badge.style.background='#ef4444'; badge.style.color='white';
+                        badge.textContent='CAUTIOUS';
+                    } else {
+                        badge.className='status-badge';
+                        badge.style.background='#6b7280'; badge.style.color='white';
+                        badge.textContent='UNKNOWN';
+                    }
+                }
+            } catch(e){ /* silent */ }
+        }
+        loadStrategicInfluence();
+        setInterval(loadStrategicInfluence, 15000);
+
+        // Load Long-Horizon Governance Plan
+        async function loadLongHorizonPlan(){
+            try{
+                const response = await fetch('state/mvcrs_long_horizon_plan.json');
+                if(!response.ok){
+                    document.getElementById('hlgs-status-value').textContent='—';
+                    document.getElementById('hlgs-mvcrs-trend').textContent='—';
+                    document.getElementById('hlgs-forensic-risk').textContent='—';
+                    document.getElementById('hlgs-policy-instability').textContent='—';
+                    document.getElementById('hlgs-trust-events').textContent='—';
+                    document.getElementById('hlgs-rdgl-trajectory').textContent='—';
+                    document.getElementById('hlgs-atte-pressure').textContent='—';
+                    document.getElementById('hlgs-fusion-cycle').textContent='—';
+                    document.getElementById('hlgs-actions').innerHTML='—';
+                    document.getElementById('hlgs-confidence').textContent='—';
+                    document.getElementById('hlgs-last-updated').textContent='—';
+                    document.getElementById('hlgs-status-badge').textContent='—';
+                    return;
+                }
+                const data = await response.json();
+                if(data){
+                    const status = data.status ?? 'unknown';
+                    const mvcrsTrend = data.mvcrs_health_trend ?? '—';
+                    const forensicRisk = data.forensic_risk_projection ?? 0.0;
+                    const policyInstability = data.predicted_policy_instability ?? 0.0;
+                    const trustEvents = data.expected_trust_events ?? 0;
+                    const rdglTrajectory = data.rdgl_trajectory ?? '—';
+                    const attePressure = data.atte_pressure ?? '—';
+                    const fusionCycle = data.fusion_cycle_prediction ?? '—';
+                    const actions = data.recommended_governance_actions ?? [];
+                    const confidence = data.confidence ?? 0.0;
+                    const timestamp = data.timestamp ?? '—';
+                    
+                    document.getElementById('hlgs-status-value').textContent=status.toUpperCase();
+                    document.getElementById('hlgs-mvcrs-trend').textContent=mvcrsTrend.toUpperCase();
+                    document.getElementById('hlgs-forensic-risk').textContent=(forensicRisk * 100).toFixed(1) + '%';
+                    document.getElementById('hlgs-policy-instability').textContent=(policyInstability * 100).toFixed(1) + '%';
+                    document.getElementById('hlgs-trust-events').textContent=trustEvents;
+                    document.getElementById('hlgs-rdgl-trajectory').textContent=rdglTrajectory.toUpperCase();
+                    document.getElementById('hlgs-atte-pressure').textContent=attePressure.toUpperCase();
+                    document.getElementById('hlgs-fusion-cycle').textContent=fusionCycle.toUpperCase();
+                    document.getElementById('hlgs-confidence').textContent=(confidence * 100).toFixed(1) + '%';
+                    
+                    // Format actions as list
+                    if(actions.length > 0){
+                        const actionsList = actions.map(a => '<span style="display:block; margin:3px 0;">• ' + a.replace(/_/g, ' ') + '</span>').join('');
+                        document.getElementById('hlgs-actions').innerHTML=actionsList;
+                    } else {
+                        document.getElementById('hlgs-actions').innerHTML='<em>None</em>';
+                    }
+                    
+                    if(timestamp !== '—'){
+                        const ts = new Date(timestamp);
+                        document.getElementById('hlgs-last-updated').textContent=ts.toLocaleString();
+                    } else {
+                        document.getElementById('hlgs-last-updated').textContent='—';
+                    }
+                    
+                    // Badge color logic
+                    const badge = document.getElementById('hlgs-status-badge');
+                    if(status === 'stable'){
+                        badge.className='status-badge status-green';
+                        badge.textContent='STABLE';
+                    } else if(status === 'volatile') {
+                        badge.className='status-badge';
+                        badge.style.background='#f59e0b'; badge.style.color='white';
+                        badge.textContent='VOLATILE';
+                    } else if(status === 'critical') {
+                        badge.className='status-badge';
+                        badge.style.background='#ef4444'; badge.style.color='white';
+                        badge.textContent='CRITICAL';
+                    } else {
+                        badge.className='status-badge';
+                        badge.style.background='#6b7280'; badge.style.color='white';
+                        badge.textContent='UNKNOWN';
+                    }
+                }
+            } catch(e){ /* silent */ }
+        }
+        loadLongHorizonPlan();
+        setInterval(loadLongHorizonPlan, 15000);
+
+        // Load Human Approval Status
+        // Load Horizon Coherence
+        async function loadHorizonCoherence(){
+            try{
+                const response = await fetch('../state/mvcrs_horizon_coherence.json', {cache:'no-store'});
+                if(!response.ok){
+                    document.getElementById('hce-coherence-value').textContent='—';
+                    document.getElementById('hce-short-signal').textContent='—';
+                    document.getElementById('hce-mid-projection').textContent='—';
+                    document.getElementById('hce-long-outlook').textContent='—';
+                    document.getElementById('hce-conflicts').textContent='—';
+                    document.getElementById('hce-instability').textContent='—';
+                    document.getElementById('hce-recommendation').textContent='—';
+                    document.getElementById('hce-confidence').textContent='—';
+                    document.getElementById('hce-last-updated').textContent='—';
+                    document.getElementById('hce-status-badge').textContent='—';
+                    return;
+                }
+                const data = await response.json();
+                if(data){
+                    const status = data.coherence_status ?? 'aligned';
+                    const shortSig = data.short_term_signal ?? 'stable';
+                    const midProj = data.mid_term_projection ?? 'normal';
+                    const longOut = data.long_term_outlook ?? 'stable';
+                    const conflicts = data.conflict_sources ?? [];
+                    const instability = data.instability_score ?? 0.0;
+                    const rec = data.governance_alignment_recommendation ?? 'hold';
+                    const confidence = data.confidence ?? 0.0;
+                    const timestamp = data.timestamp ?? '—';
+
+                    document.getElementById('hce-coherence-value').textContent=status.toUpperCase();
+                    document.getElementById('hce-short-signal').textContent=shortSig.toUpperCase();
+                    document.getElementById('hce-mid-projection').textContent=midProj.toUpperCase();
+                    document.getElementById('hce-long-outlook').textContent=longOut.toUpperCase();
+                    document.getElementById('hce-conflicts').textContent=conflicts.length ? conflicts.map(c=>c.replace(/_/g,' ').toUpperCase()).join(', ') : 'NONE';
+                    document.getElementById('hce-instability').textContent=(instability*100).toFixed(1) + '%';
+                    document.getElementById('hce-recommendation').textContent=rec.toUpperCase();
+                    document.getElementById('hce-confidence').textContent=(confidence*100).toFixed(1) + '%';
+                    if(timestamp !== '—'){
+                        const ts = new Date(timestamp);
+                        document.getElementById('hce-last-updated').textContent=ts.toLocaleString();
+                    } else {
+                        document.getElementById('hce-last-updated').textContent='—';
+                    }
+                    const badge = document.getElementById('hce-status-badge');
+                    if(status === 'aligned'){
+                        badge.className='status-badge status-green';
+                        badge.textContent='ALIGNED';
+                    } else if(status === 'tension') {
+                        badge.className='status-badge';
+                        badge.style.background='#f59e0b'; badge.style.color='white';
+                        badge.textContent='TENSION';
+                    } else if(status === 'conflict') {
+                        badge.className='status-badge';
+                        badge.style.background='#ef4444'; badge.style.color='white';
+                        badge.textContent='CONFLICT';
+                    } else {
+                        badge.className='status-badge';
+                        badge.style.background='#6b7280'; badge.style.color='white';
+                        badge.textContent='UNKNOWN';
+                    }
+                }
+            } catch(e){ /* silent */ }
+        }
+        loadHorizonCoherence();
+        setInterval(loadHorizonCoherence, 15000);
+
+        // Load Predictive Ensemble
+        async function loadPredictiveEnsemble(){
+            try{
+                const response = await fetch('../state/mvcrs_multi_horizon_ensemble.json', {cache:'no-store'});
+                if(!response.ok){
+                    document.getElementById('mhpe-1d-value').textContent='—';
+                    document.getElementById('mhpe-7d-value').textContent='—';
+                    document.getElementById('mhpe-30d-value').textContent='—';
+                    document.getElementById('mhpe-confidence-value').textContent='—';
+                    document.getElementById('mhpe-dominant-badge').textContent='—';
+                    document.getElementById('mhpe-explanation').textContent='—';
+                    document.getElementById('mhpe-last-updated').textContent='—';
+                    return;
+                }
+                const data = await response.json();
+                if(data){
+                    const instab1d = data.instability_1d ?? 0.0;
+                    const instab7d = data.instability_7d ?? 0.0;
+                    const instab30d = data.instability_30d ?? 0.0;
+                    const confidence = data.ensemble_confidence ?? 0.0;
+                    const dominant = data.dominant_horizon ?? 'unknown';
+                    const explanation = data.explanation ?? 'No explanation available';
+                    const timestamp = data.timestamp ?? '—';
+
+                    // Probability badges color coding
+                    function setProbBadge(elemId, prob){
+                        const badge = document.getElementById(elemId);
+                        if(prob < 0.10){
+                            badge.className='status-badge status-green';
+                            badge.textContent='LOW';
+                        } else if(prob < 0.30) {
+                            badge.className='status-badge';
+                            badge.style.background='#fbbf24'; badge.style.color='white';
+                            badge.textContent='MODERATE';
+                        } else if(prob < 0.60) {
+                            badge.className='status-badge';
+                            badge.style.background='#f97316'; badge.style.color='white';
+                            badge.textContent='ELEVATED';
+                        } else {
+                            badge.className='status-badge';
+                            badge.style.background='#ef4444'; badge.style.color='white';
+                            badge.textContent='HIGH';
+                        }
+                    }
+
+                    setProbBadge('mhpe-1d-badge', instab1d);
+                    setProbBadge('mhpe-7d-badge', instab7d);
+                    setProbBadge('mhpe-30d-badge', instab30d);
+
+                    document.getElementById('mhpe-1d-value').textContent=(instab1d*100).toFixed(1) + '%';
+                    document.getElementById('mhpe-7d-value').textContent=(instab7d*100).toFixed(1) + '%';
+                    document.getElementById('mhpe-30d-value').textContent=(instab30d*100).toFixed(1) + '%';
+
+                    // Confidence meter
+                    const meter = document.getElementById('mhpe-confidence-meter');
+                    meter.value = confidence;
+                    document.getElementById('mhpe-confidence-value').textContent=(confidence*100).toFixed(1) + '%';
+
+                    // Dominant horizon badge
+                    const domBadge = document.getElementById('mhpe-dominant-badge');
+                    const horizonMap = {
+                        'short_term': 'SHORT-TERM',
+                        'mid_term': 'MID-TERM',
+                        'long_term': 'LONG-TERM'
+                    };
+                    domBadge.textContent = horizonMap[dominant] || 'UNKNOWN';
+                    if(dominant === 'short_term'){
+                        domBadge.className='status-badge';
+                        domBadge.style.background='#3b82f6'; domBadge.style.color='white';
+                    } else if(dominant === 'mid_term'){
+                        domBadge.className='status-badge';
+                        domBadge.style.background='#8b5cf6'; domBadge.style.color='white';
+                    } else if(dominant === 'long_term'){
+                        domBadge.className='status-badge';
+                        domBadge.style.background='#ec4899'; domBadge.style.color='white';
+                    } else {
+                        domBadge.className='status-badge';
+                        domBadge.style.background='#6b7280'; domBadge.style.color='white';
+                    }
+
+                    document.getElementById('mhpe-explanation').textContent=explanation;
+                    
+                    if(timestamp !== '—'){
+                        const ts = new Date(timestamp);
+                        document.getElementById('mhpe-last-updated').textContent=ts.toLocaleString();
+                    } else {
+                        document.getElementById('mhpe-last-updated').textContent='—';
+                    }
+                }
+            } catch(e){ /* silent */ }
+        }
+        loadPredictiveEnsemble();
+        setInterval(loadPredictiveEnsemble, 15000);
+
+        // Load Governance Drift Auditor (90-Day)
+        async function loadGovernanceDrift(){
+            try{
+                const response = await fetch('../state/mvcrs_governance_drift.json', {cache:'no-store'});
+                if(!response.ok){
+                    document.getElementById('gda-drift-score').textContent='—';
+                    document.getElementById('gda-drift-direction').textContent='—';
+                    document.getElementById('gda-drift-class').textContent='—';
+                    document.getElementById('gda-confidence-value').textContent='—';
+                    document.getElementById('gda-factors').textContent='—';
+                    document.getElementById('gda-last-updated').textContent='—';
+                    document.getElementById('gda-raw-json').textContent='—';
+                    document.getElementById('gda-drift-badge').textContent='—';
+                    return;
+                }
+                const data = await response.json();
+                if(data){
+                    const driftScore = data.drift_score ?? 0.0;
+                    const driftDirection = data.drift_direction ?? 'unknown';
+                    const driftClass = data.drift_class ?? 'unknown';
+                    const confidence = data.confidence ?? 0.0;
+                    const factors = data.contributing_factors ?? [];
+                    const timestamp = data.timestamp ?? '—';
+
+                    document.getElementById('gda-drift-score').textContent=(driftScore*100).toFixed(1)+'%';
+                    document.getElementById('gda-drift-direction').textContent=driftDirection.toUpperCase();
+                    document.getElementById('gda-drift-class').textContent=driftClass.toUpperCase();
+                    document.getElementById('gda-confidence-value').textContent=(confidence*100).toFixed(1)+'%';
+                    document.getElementById('gda-factors').innerHTML = factors.length ? factors.map(f=>'<span style="display:block">• '+f.replace(/_/g,' ')+'</span>').join('') : '<em>None</em>';
+                    document.getElementById('gda-raw-json').textContent = JSON.stringify(data, null, 2);
+
+                    if(timestamp !== '—'){
+                        const ts = new Date(timestamp);
+                        document.getElementById('gda-last-updated').textContent=ts.toLocaleString();
+                    } else {
+                        document.getElementById('gda-last-updated').textContent='—';
+                    }
+
+                    // Badge coloring
+                    const badge = document.getElementById('gda-drift-badge');
+                    if(driftScore < 0.25){
+                        badge.className='status-badge status-green';
+                        badge.textContent='LOW';
+                    } else if(driftScore < 0.45){
+                        badge.className='status-badge'; badge.style.background='#fbbf24'; badge.style.color='white';
+                        badge.textContent='MODERATE';
+                    } else if(driftScore < 0.65){
+                        badge.className='status-badge'; badge.style.background='#f97316'; badge.style.color='white';
+                        badge.textContent='ELEVATED';
+                    } else {
+                        badge.className='status-badge'; badge.style.background='#ef4444'; badge.style.color='white';
+                        badge.textContent='HIGH';
+                    }
+                    const confMeter = document.getElementById('gda-confidence-meter');
+                    confMeter.value = confidence;
+                }
+            } catch(e){ /* silent */ }
+        }
+        loadGovernanceDrift();
+        setInterval(loadGovernanceDrift, 15000);
+
+        // Load Drift Stabilization Profile (GDSE)
+        async function loadStabilizationProfile(){
+            try{
+                const response = await fetch('../state/mvcrs_stabilization_profile.json', {cache:'no-store'});
+                if(!response.ok){
+                    document.getElementById('gdse-intensity-value').textContent='—';
+                    document.getElementById('gdse-threshold-shift').textContent='—';
+                    document.getElementById('gdse-rdgl-lr').textContent='—';
+                    document.getElementById('gdse-fusion-bias').textContent='—';
+                    document.getElementById('gdse-response-sens').textContent='—';
+                    document.getElementById('gdse-confidence-value').textContent='—';
+                    document.getElementById('gdse-reason-matrix').textContent='—';
+                    document.getElementById('gdse-last-updated').textContent='—';
+                    const badge=document.getElementById('gdse-intensity-badge');
+                    badge.textContent='—'; badge.className='status-badge'; badge.style.background='#6b7280'; badge.style.color='white';
+                    return;
+                }
+                const data = await response.json();
+                if(data){
+                    const intensity = data.stabilization_intensity || 'unknown';
+                    const cv = data.correction_vector || {};
+                    const conf = data.final_confidence || 0.0;
+                    const reasons = data.reason_matrix || [];
+                    const tsVal = data.timestamp || '—';
+
+                    document.getElementById('gdse-intensity-value').textContent=intensity.toUpperCase();
+                    document.getElementById('gdse-threshold-shift').textContent=(cv.threshold_shift_pct!==undefined? cv.threshold_shift_pct.toFixed(2)+'%':'—');
+                    document.getElementById('gdse-rdgl-lr').textContent=(cv.rdgl_learning_rate_factor!==undefined? cv.rdgl_learning_rate_factor.toFixed(2):'—');
+                    document.getElementById('gdse-fusion-bias').textContent=(cv.fusion_bias_delta!==undefined? cv.fusion_bias_delta.toFixed(3):'—');
+                    document.getElementById('gdse-response-sens').textContent=(cv.response_sensitivity!==undefined? cv.response_sensitivity.toFixed(2):'—');
+                    document.getElementById('gdse-confidence-value').textContent=(conf*100).toFixed(1)+'%';
+                    document.getElementById('gdse-reason-matrix').innerHTML = reasons.length ? reasons.map(r=>'<span style=\"display:block\">• '+r.replace(/_/g,' ')+'</span>').join('') : '<em>No influences</em>';
+                    if(tsVal!=='—'){ const ts=new Date(tsVal); document.getElementById('gdse-last-updated').textContent=ts.toLocaleString(); } else { document.getElementById('gdse-last-updated').textContent='—'; }
+                    const badge=document.getElementById('gdse-intensity-badge');
+                    if(intensity==='low'){
+                        badge.className='status-badge'; badge.style.background='#10b981'; badge.style.color='white'; badge.textContent='LOW';
+                    } else if(intensity==='moderate'){
+                        badge.className='status-badge'; badge.style.background='#fbbf24'; badge.style.color='white'; badge.textContent='MODERATE';
+                    } else if(intensity==='high'){
+                        badge.className='status-badge'; badge.style.background='#ef4444'; badge.style.color='white'; badge.textContent='HIGH';
+                    } else {
+                        badge.className='status-badge'; badge.style.background='#6b7280'; badge.style.color='white'; badge.textContent='—';
+                    }
+                    const confMeter = document.getElementById('gdse-confidence-meter');
+                    if(confMeter) confMeter.value = conf;
+                }
+            }catch(e){ /* silent */ }
+        }
+        loadStabilizationProfile();
+        setInterval(loadStabilizationProfile, 15000);
+
+        async function loadApprovalStatus(){
+            try{
+                const response = await fetch('../state/approval_state.json', {cache:'no-store'});
+                if(!response.ok){
+                    document.getElementById('approval-status-badge').textContent = 'No Data';
+                    document.getElementById('approval-current-status').textContent = 'unlocked';
+                    document.getElementById('approval-active-id').textContent = '—';
+                    document.getElementById('approval-approver').textContent = '—';
+                    document.getElementById('approval-updated').textContent = '—';
+                    return;
+                }
+                const data = await response.json();
+                if(data){
+                    const status = data.status ?? 'unlocked';
+                    const approvalId = data.approval_id ?? '—';
+                    const approver = data.approver ?? '—';
+                    const updated = data.last_updated ?? '—';
+
+                    document.getElementById('approval-current-status').textContent = status;
+                    document.getElementById('approval-active-id').textContent = approvalId === '—' ? '—' : approvalId.substring(0,8);
+                    document.getElementById('approval-approver').textContent = approver;
+                    
+                    if(updated !== '—'){
+                        const ts = new Date(updated);
+                        document.getElementById('approval-updated').textContent = ts.toLocaleString();
+                    } else {
+                        document.getElementById('approval-updated').textContent = '—';
+                    }
+
+                    const badge = document.getElementById('approval-status-badge');
+                    if(status === 'approved'){
+                        badge.textContent = 'APPROVED';
+                        badge.className = 'status-badge status-green';
+                        badge.style.color = 'white';
+                    } else if(status === 'pending_approval'){
+                        badge.textContent = 'PENDING';
+                        badge.className = 'status-badge';
+                        badge.style.background = '#fbbf24';
+                        badge.style.color = 'white';
+                    } else {
+                        badge.textContent = 'UNLOCKED';
+                        badge.className = 'status-badge status-certified';
+                        badge.style.color = 'white';
+                    }
+                }
+            }catch(e){}
+        }
+        loadApprovalStatus();
+        setInterval(loadApprovalStatus, 15000);
+        
+        // Load Stability Convergence Profile
+        async function loadStabilityConvergence(){
+            try{
+                const response = await fetch('../state/mvcrs_stability_convergence.json', {cache:'no-store'});
+                if(!response.ok) return;
+                const profile = await response.json();
+                const card = document.getElementById('stability-convergence-card');
+                if(card){
+                    const score = profile.convergence_score || 0;
+                    const alignment = profile.alignment_status || 'unknown';
+                    const risk = profile.potential_gating_risk || false;
+                    const riskColor = risk ? '#ef4444' : (score > 0.55 ? '#22c55e' : '#eab308');
+                    const riskText = risk ? 'RISK' : 'OK';
+                    
+                    card.innerHTML = `
+                        <h3>Stability Convergence</h3>
+                        <div style="display:grid; grid-template-columns:1fr 1fr; gap:15px; margin:15px 0;">
+                            <div style="background:#f3f4f6; padding:10px; border-radius:8px;">
+                                <div style="font-size:0.9em; color:#666;">Convergence Score</div>
+                                <div style="font-size:1.8em; font-weight:bold; color:#667eea;">${score.toFixed(3)}</div>
+                            </div>
+                            <div style="background:#f3f4f6; padding:10px; border-radius:8px;">
+                                <div style="font-size:0.9em; color:#666;">Alignment</div>
+                                <div style="font-size:1.5em; font-weight:bold; color:#667eea;">${alignment}</div>
+                            </div>
+                        </div>
+                        <div style="display:flex; gap:10px; margin:10px 0;">
+                            <div style="background:#f3f4f6; padding:8px 12px; border-radius:6px; flex:1;">
+                                <div style="font-size:0.8em; color:#666;">Confidence Adj</div>
+                                <div style="font-weight:bold;">${(profile.confidence_adjust || 1).toFixed(2)}</div>
+                            </div>
+                            <div style="background:${riskColor}; padding:8px 12px; border-radius:6px; color:white; font-weight:bold; flex:1; text-align:center;">
+                                ${riskText}
+                            </div>
+                        </div>
+                        <div style="font-size:0.85em; color:#666; margin-top:10px;">
+                            Updated: ${new Date(profile.timestamp).toLocaleTimeString()}
+                        </div>
+                    `;
+                }
+            }catch(e){}
+        }
+        loadStabilityConvergence();
+        setInterval(loadStabilityConvergence, 15000);
     </script>
 </body>
 </html>

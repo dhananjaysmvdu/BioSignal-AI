@@ -1,0 +1,39 @@
+{
+  "timestamp": "2025-11-14T06:54:14.870057+00:00",
+  "status": "success",
+  "summary": {
+    "total_records_analyzed": 474,
+    "daily_error_frequency": 158.0,
+    "time_range": {
+      "first": "2025-11-11T12:00:00+00:00",
+      "last": "2025-11-14T00:14:17.643532+00:00"
+    }
+  },
+  "error_types": {
+    "jsonl_parse_failed": 2
+  },
+  "anomaly_classification": {
+    "Type D - Unknown": 2
+  },
+  "top_affected_files": {
+    "ledger_snapshot_20231114T221320+0000.tar.gz": 18,
+    "ledger_snapshot_20231114T221321+0000.tar.gz": 18,
+    "ledger_snapshot_20231114T221322+0000.tar.gz": 18,
+    "ledger_snapshot_20231114T221323+0000.tar.gz": 18,
+    "ledger_snapshot_20231114T221324+0000.tar.gz": 18,
+    "ledger_snapshot_20231114T221325+0000.tar.gz": 18,
+    "ledger_snapshot_20231114T221326+0000.tar.gz": 18,
+    "ledger_snapshot_20231114T221327+0000.tar.gz": 18,
+    "ledger_snapshot_20231114T221328+0000.tar.gz": 18,
+    "ledger_snapshot_20231114T221329+0000.tar.gz": 18
+  },
+  "frequent_errors": [],
+  "alerts": [
+    {
+      "severity": "medium",
+      "type": "frequent_errors",
+      "message": "Error frequency (158.00/day) exceeds threshold",
+      "timestamp": "2025-11-14T06:54:14.870068+00:00"
+    }
+  ]
+}

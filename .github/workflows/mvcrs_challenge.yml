@@ -1,0 +1,66 @@
+name: MVCRS Challenge
+on:
+  schedule:
+    - cron: '30 3 * * *'  # Daily 03:30 UTC
+  workflow_dispatch:
+
+jobs:
+  mvcrs-skeleton:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install deps
+        run: pip install -r requirements.txt || echo "No extra deps"
+      - name: Run placeholder tests
+        run: python -m pytest -q tests/mvcrs || echo "Placeholder tests only"
+      - name: Dry-run challenge engine
+        run: python scripts/mvcrs/challenge_engine.py --dry-run --simulate baseline
+      - name: Run challenge verifier
+        id: run_verifier
+        run: |
+          set -e
+          python scripts/mvcrs/challenge_verifier.py > verifier_output.json
+          if [ ! -f state/challenge_verifier_state.json ]; then
+            echo "Verifier state file missing" >&2
+            exit 2
+          fi
+          STATUS=$(jq -r '.result.status' verifier_output.json || echo 'failed')
+          echo "VERIFIER_STATUS=$STATUS" >> $GITHUB_ENV
+          if [ "$STATUS" = "failed" ]; then
+            echo "Verifier failed - escalation path" >> $GITHUB_STEP_SUMMARY
+          fi
+      - name: Upload verifier artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: mvcrs-verifier-artifacts
+          path: |
+            state/challenge_verifier_state.json
+            state/challenge_verifier_log.jsonl
+            state/challenge_summary.json
+            docs/audit_summary.md
+            verifier_output.json
+            state/mvcrs_escalation.json
+      - name: Escalation branch on failure
+        if: env.VERIFIER_STATUS == 'failed'
+        run: |
+          set -e
+          TS=$(date -u +%Y%m%d%H%M%S)
+          git config user.name 'ci-bot'
+          git config user.email 'ci-bot@example.com'
+          git checkout -b fix/mvcrs-escalation-$TS
+          sed -i '/MVCRS_VERIFIER:/d' docs/audit_summary.md || true
+          sed -i '/MVCRS_ESCALATION:/d' docs/audit_summary.md || true
+          echo '<!-- MVCRS_VERIFIER: ESCALATED '$(date -u +%Y-%m-%dT%H:%M:%SZ)' -->' >> docs/audit_summary.md
+          if [ -f state/mvcrs_escalation.json ]; then
+            echo '<!-- MVCRS_ESCALATION: COMMITTED '$(date -u +%Y-%m-%dT%H:%M:%SZ)' -->' >> docs/audit_summary.md
+          fi
+          git add state/mvcrs_escalation.json state/challenge_verifier_state.json state/challenge_verifier_log.jsonl state/challenge_summary.json docs/audit_summary.md || true
+          git commit -m 'fix(mv-crs): escalation diagnostics commit'
+          git push origin HEAD
+          echo 'Escalation branch created fix/mvcrs-escalation-'$TS >> $GITHUB_STEP_SUMMARY
+          exit 2

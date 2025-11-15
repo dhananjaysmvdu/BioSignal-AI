@@ -1,0 +1,126 @@
+name: Forensics Anomaly Forecast
+
+on:
+  schedule:
+    # Daily at 03:00 UTC
+    - cron: '0 3 * * *'
+  workflow_dispatch:
+
+jobs:
+  forecast-anomalies:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      issues: write
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      
+      - name: Run anomaly forecaster (with retries)
+        id: forecast
+        run: |
+          MAX_RETRIES=2
+          RETRY_COUNT=0
+          SUCCESS=false
+          
+          while [ $RETRY_COUNT -le $MAX_RETRIES ] && [ "$SUCCESS" = "false" ]; do
+            if [ $RETRY_COUNT -gt 0 ]; then
+              echo "Retry attempt $RETRY_COUNT of $MAX_RETRIES..."
+              sleep 5
+            fi
+            
+            if python scripts/forensics/forensic_anomaly_forecaster.py; then
+              SUCCESS=true
+              echo "status=success" >> $GITHUB_OUTPUT
+            else
+              RETRY_COUNT=$((RETRY_COUNT + 1))
+            fi
+          done
+          
+          if [ "$SUCCESS" = "false" ]; then
+            echo "status=failed" >> $GITHUB_OUTPUT
+            echo "Forecast generation failed after $MAX_RETRIES retries"
+            
+            # Log failure to forensics error log
+            python3 -c 'import json; from datetime import datetime, timezone; from pathlib import Path; p = Path("forensics/forensics_error_log.jsonl"); p.parent.mkdir(parents=True, exist_ok=True); open(p, "a").write(json.dumps({"timestamp": datetime.now(timezone.utc).isoformat(), "error": "forecast_workflow_failed", "retries": 2, "context": "CI workflow execution"}) + "\n")'
+            
+            # Continue workflow (don't block pipeline)
+            exit 0
+          fi
+      
+      - name: Upload forecast report
+        if: steps.forecast.outputs.status == 'success'
+        uses: actions/upload-artifact@v4
+        with:
+          name: forensics-forecast-${{ github.run_number }}
+          path: forensics/forensics_anomaly_forecast.json
+          retention-days: 90
+      
+      - name: Check risk level
+        if: steps.forecast.outputs.status == 'success'
+        id: check_risk
+        run: |
+          if [ -f forensics/forensics_anomaly_forecast.json ]; then
+            RISK_LEVEL=$(python -c "import json; j=json.load(open('forensics/forensics_anomaly_forecast.json')); print(j.get('risk_level', 'unknown'))")
+            echo "risk_level=$RISK_LEVEL" >> $GITHUB_OUTPUT
+            
+            AVG_FORECAST=$(python -c "import json; j=json.load(open('forensics/forensics_anomaly_forecast.json')); f=j.get('predicted_anomalies_7d', []); print(round(sum(f)/len(f), 2) if f else 0)")
+            echo "avg_forecast=$AVG_FORECAST" >> $GITHUB_OUTPUT
+            
+            FORECAST_STATUS=$(python -c "import json; j=json.load(open('forensics/forensics_anomaly_forecast.json')); print(j.get('status', 'unknown'))")
+            echo "forecast_status=$FORECAST_STATUS" >> $GITHUB_OUTPUT
+          else
+            echo "risk_level=unknown" >> $GITHUB_OUTPUT
+            echo "avg_forecast=0" >> $GITHUB_OUTPUT
+            echo "forecast_status=missing" >> $GITHUB_OUTPUT
+          fi
+      
+      - name: Create high-risk issue
+        if: steps.check_risk.outputs.risk_level == 'high' && steps.forecast.outputs.status == 'success'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const forecastData = JSON.parse(fs.readFileSync('forensics/forensics_anomaly_forecast.json', 'utf8'));
+            
+            const title = '⚠️ High Forensic Risk Detected';
+            const body = `## High Risk Alert\n\n` +
+              `**Risk Level:** ${forecastData.risk_level}\n` +
+              `**Avg. Daily Forecast:** ${forecastData.predicted_anomalies_7d.reduce((a,b)=>a+b,0) / forecastData.predicted_anomalies_7d.length} anomalies/day\n` +
+              `**Forecast Status:** ${forecastData.status}\n` +
+              `**Generated:** ${forecastData.forecast_generated_at}\n\n` +
+              `### Risk Rationale\n${forecastData.risk_rationale}\n\n` +
+              `### 7-Day Forecast\n\`\`\`json\n${JSON.stringify(forecastData.predicted_anomalies_7d, null, 2)}\n\`\`\`\n\n` +
+              `### Historical Summary\n` +
+              `- **Days Analyzed:** ${forecastData.historical_summary?.days_analyzed || 'N/A'}\n` +
+              `- **Total Anomalies:** ${forecastData.historical_summary?.total_anomalies || 'N/A'}\n` +
+              `- **Avg. Daily Anomalies:** ${forecastData.historical_summary?.avg_daily_anomalies?.toFixed(2) || 'N/A'}\n\n` +
+              `**Action Required:** Review forensic logs and investigate root cause of elevated anomaly activity.\n\n` +
+              `[View Full Forecast Report](../forensics/forensics_anomaly_forecast.json)`;
+            
+            await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: title,
+              body: body,
+              labels: ['forensics', 'high-priority', 'automated']
+            });
+      
+      - name: Commit audit marker
+        if: steps.forecast.outputs.status == 'success'
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+          git pull --rebase
+          git add audit_summary.md forensics/forensics_anomaly_forecast.json
+          git commit -m "chore: update forensics forecast (risk=${RISK_LEVEL}, avg=${AVG_FORECAST})" || echo "No changes to commit"
+          git push
+        env:
+          RISK_LEVEL: ${{ steps.check_risk.outputs.risk_level }}
+          AVG_FORECAST: ${{ steps.check_risk.outputs.avg_forecast }}

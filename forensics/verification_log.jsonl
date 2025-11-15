@@ -1,0 +1,234 @@
+{"timestamp": "2025-11-13T22:29:27.065327+00:00", "type": "snapshot", "file": "ledger_snapshot_20231114T221320+0000.tar.gz", "ok": false, "verified": false}
+{"timestamp": "2025-11-13T22:29:27.065327+00:00", "type": "snapshot", "file": "ledger_snapshot_20231114T221321+0000.tar.gz", "ok": true, "verified": true}
+{"timestamp": "2025-11-13T22:29:27.065327+00:00", "type": "snapshot", "file": "ledger_snapshot_20231114T221322+0000.tar.gz", "ok": true, "verified": true}
+{"timestamp": "2025-11-13T22:29:27.065327+00:00", "type": "snapshot", "file": "ledger_snapshot_20231114T221323+0000.tar.gz", "ok": true, "verified": true}
+{"timestamp": "2025-11-13T22:29:27.065327+00:00", "type": "snapshot", "file": "ledger_snapshot_20231114T221324+0000.tar.gz", "ok": true, "verified": true}
+{"timestamp": "2025-11-13T22:29:27.065327+00:00", "type": "snapshot", "file": "ledger_snapshot_20231114T221325+0000.tar.gz", "ok": true, "verified": true}
+{"timestamp": "2025-11-13T22:29:27.065327+00:00", "type": "snapshot", "file": "ledger_snapshot_20231114T221326+0000.tar.gz", "ok": true, "verified": true}
+{"timestamp": "2025-11-13T22:29:27.065327+00:00", "type": "snapshot", "file": "ledger_snapshot_20231114T221327+0000.tar.gz", "ok": true, "verified": true}
+{"timestamp": "2025-11-13T22:29:27.065327+00:00", "type": "snapshot", "file": "ledger_snapshot_20231114T221328+0000.tar.gz", "ok": true, "verified": true}
+{"timestamp": "2025-11-13T22:29:27.065327+00:00", "type": "snapshot", "file": "ledger_snapshot_20231114T221329+0000.tar.gz", "ok": true, "verified": true}
+{"timestamp": "2025-11-13T22:29:27.065327+00:00", "type": "snapshot", "file": "ledger_snapshot_20231114T221330+0000.tar.gz", "ok": true, "verified": true}
+{"timestamp": "2025-11-13T22:29:27.065327+00:00", "type": "mirror", "file": "anchor_20250101T000000+0000.json", "ok_file": true, "ok_chain": true, "verified": true}
+{"timestamp": "2025-11-13T22:29:27.065327+00:00", "type": "mirror", "file": "anchor_20250101T000001+0000.json", "ok_file": true, "ok_chain": true, "verified": true}
+{"timestamp": "2025-11-13T22:30:18.019543+00:00", "type": "snapshot", "file": "ledger_snapshot_20231114T221320+0000.tar.gz", "ok": false, "verified": false}
+{"timestamp": "2025-11-13T22:30:18.019543+00:00", "type": "snapshot", "file": "ledger_snapshot_20231114T221321+0000.tar.gz", "ok": false, "verified": false}
+{"timestamp": "2025-11-13T22:30:18.019543+00:00", "type": "snapshot", "file": "ledger_snapshot_20231114T221322+0000.tar.gz", "ok": false, "verified": false}
+{"timestamp": "2025-11-13T22:30:18.019543+00:00", "type": "snapshot", "file": "ledger_snapshot_20231114T221323+0000.tar.gz", "ok": false, "verified": false}
+{"timestamp": "2025-11-13T22:30:18.019543+00:00", "type": "snapshot", "file": "ledger_snapshot_20231114T221324+0000.tar.gz", "ok": false, "verified": false}
+{"timestamp": "2025-11-13T22:30:18.019543+00:00", "type": "snapshot", "file": "ledger_snapshot_20231114T221325+0000.tar.gz", "ok": false, "verified": false}
+{"timestamp": "2025-11-13T22:30:18.019543+00:00", "type": "snapshot", "file": "ledger_snapshot_20231114T221326+0000.tar.gz", "ok": false, "verified": false}
+{"timestamp": "2025-11-13T22:30:18.019543+00:00", "type": "snapshot", "file": "ledger_snapshot_20231114T221327+0000.tar.gz", "ok": false, "verified": false}
+{"timestamp": "2025-11-13T22:30:18.019543+00:00", "type": "snapshot", "file": "ledger_snapshot_20231114T221328+0000.tar.gz", "ok": false, "verified": false}
+{"timestamp": "2025-11-13T22:30:18.019543+00:00", "type": "snapshot", "file": "ledger_snapshot_20231114T221329+0000.tar.gz", "ok": false, "verified": false}
+{"timestamp": "2025-11-13T22:30:18.019543+00:00", "type": "snapshot", "file": "ledger_snapshot_20231114T221330+0000.tar.gz", "ok": false, "verified": false}
+{"timestamp": "2025-11-13T22:30:18.019543+00:00", "type": "snapshot", "file": "ledger_snapshot_20231114T221320+0000.tar.gz", "ok": false, "verified": false}
+{"timestamp": "2025-11-13T22:30:18.019543+00:00", "type": "snapshot", "file": "ledger_snapshot_20231114T221321+0000.tar.gz", "ok": true, "verified": true}
+{"timestamp": "2025-11-13T22:30:18.019543+00:00", "type": "snapshot", "file": "ledger_snapshot_20231114T221322+0000.tar.gz", "ok": true, "verified": true}
+{"timestamp": "2025-11-13T22:30:18.019543+00:00", "type": "snapshot", "file": "ledger_snapshot_20231114T221323+0000.tar.gz", "ok": true, "verified": true}
+{"timestamp": "2025-11-13T22:30:18.019543+00:00", "type": "snapshot", "file": "ledger_snapshot_20231114T221324+0000.tar.gz", "ok": true, "verified": true}
+{"timestamp": "2025-11-13T22:30:18.019543+00:00", "type": "snapshot", "file": "ledger_snapshot_20231114T221325+0000.tar.gz", "ok": true, "verified": true}
+{"timestamp": "2025-11-13T22:30:18.019543+00:00", "type": "snapshot", "file": "ledger_snapshot_20231114T221326+0000.tar.gz", "ok": true, "verified": true}
+{"timestamp": "2025-11-13T22:30:18.019543+00:00", "type": "snapshot", "file": "ledger_snapshot_20231114T221327+0000.tar.gz", "ok": true, "verified": true}
+{"timestamp": "2025-11-13T22:30:18.019543+00:00", "type": "snapshot", "file": "ledger_snapshot_20231114T221328+0000.tar.gz", "ok": true, "verified": true}
+{"timestamp": "2025-11-13T22:30:18.019543+00:00", "type": "snapshot", "file": "ledger_snapshot_20231114T221329+0000.tar.gz", "ok": true, "verified": true}
+{"timestamp": "2025-11-13T22:30:18.019543+00:00", "type": "snapshot", "file": "ledger_snapshot_20231114T221330+0000.tar.gz", "ok": true, "verified": true}
+{"timestamp": "2025-11-13T22:30:18.019543+00:00", "type": "mirror", "file": "anchor_20250101T000000+0000.json", "ok_file": true, "ok_chain": true, "verified": true}
+{"timestamp": "2025-11-13T22:30:18.019543+00:00", "type": "mirror", "file": "anchor_20250101T000001+0000.json", "ok_file": true, "ok_chain": true, "verified": true}
+{"timestamp": "2025-11-13T22:30:18.019543+00:00", "type": "mirror", "file": "anchor_20250101T000000+0000.json", "ok_file": true, "ok_chain": true, "verified": true}
+{"timestamp": "2025-11-13T22:30:18.019543+00:00", "type": "mirror", "file": "anchor_20250101T000001+0000.json", "ok_file": true, "ok_chain": true, "verified": true}
+{"timestamp": "2025-11-13T22:32:19.439678+00:00", "type": "snapshot", "file": "ledger_snapshot_20231114T221320+0000.tar.gz", "ok": false, "verified": false}
+{"timestamp": "2025-11-13T22:32:19.439678+00:00", "type": "snapshot", "file": "ledger_snapshot_20231114T221321+0000.tar.gz", "ok": false, "verified": false}
+{"timestamp": "2025-11-13T22:32:19.439678+00:00", "type": "snapshot", "file": "ledger_snapshot_20231114T221322+0000.tar.gz", "ok": false, "verified": false}
+{"timestamp": "2025-11-13T22:32:19.439678+00:00", "type": "snapshot", "file": "ledger_snapshot_20231114T221323+0000.tar.gz", "ok": false, "verified": false}
+{"timestamp": "2025-11-13T22:32:19.439678+00:00", "type": "snapshot", "file": "ledger_snapshot_20231114T221324+0000.tar.gz", "ok": false, "verified": false}
+{"timestamp": "2025-11-13T22:32:19.439678+00:00", "type": "snapshot", "file": "ledger_snapshot_20231114T221325+0000.tar.gz", "ok": false, "verified": false}
+{"timestamp": "2025-11-13T22:32:19.439678+00:00", "type": "snapshot", "file": "ledger_snapshot_20231114T221326+0000.tar.gz", "ok": false, "verified": false}
+{"timestamp": "2025-11-13T22:32:19.439678+00:00", "type": "snapshot", "file": "ledger_snapshot_20231114T221327+0000.tar.gz", "ok": false, "verified": false}
+{"timestamp": "2025-11-13T22:32:19.439678+00:00", "type": "snapshot", "file": "ledger_snapshot_20231114T221328+0000.tar.gz", "ok": false, "verified": false}
+{"timestamp": "2025-11-13T22:32:19.439678+00:00", "type": "snapshot", "file": "ledger_snapshot_20231114T221329+0000.tar.gz", "ok": false, "verified": false}
+{"timestamp": "2025-11-13T22:32:19.439678+00:00", "type": "snapshot", "file": "ledger_snapshot_20231114T221330+0000.tar.gz", "ok": false, "verified": false}
+{"timestamp": "2025-11-13T22:32:19.439678+00:00", "type": "snapshot", "file": "ledger_snapshot_20231114T221320+0000.tar.gz", "ok": false, "verified": false}
+{"timestamp": "2025-11-13T22:32:19.439678+00:00", "type": "snapshot", "file": "ledger_snapshot_20231114T221321+0000.tar.gz", "ok": false, "verified": false}
+{"timestamp": "2025-11-13T22:32:19.439678+00:00", "type": "snapshot", "file": "ledger_snapshot_20231114T221322+0000.tar.gz", "ok": false, "verified": false}
+{"timestamp": "2025-11-13T22:32:19.439678+00:00", "type": "snapshot", "file": "ledger_snapshot_20231114T221323+0000.tar.gz", "ok": false, "verified": false}
+{"timestamp": "2025-11-13T22:32:19.439678+00:00", "type": "snapshot", "file": "ledger_snapshot_20231114T221324+0000.tar.gz", "ok": false, "verified": false}
+{"timestamp": "2025-11-13T22:32:19.439678+00:00", "type": "snapshot", "file": "ledger_snapshot_20231114T221325+0000.tar.gz", "ok": false, "verified": false}
+{"timestamp": "2025-11-13T22:32:19.439678+00:00", "type": "snapshot", "file": "ledger_snapshot_20231114T221326+0000.tar.gz", "ok": false, "verified": false}
+{"timestamp": "2025-11-13T22:32:19.439678+00:00", "type": "snapshot", "file": "ledger_snapshot_20231114T221327+0000.tar.gz", "ok": false, "verified": false}
+{"timestamp": "2025-11-13T22:32:19.439678+00:00", "type": "snapshot", "file": "ledger_snapshot_20231114T221328+0000.tar.gz", "ok": false, "verified": false}
+{"timestamp": "2025-11-13T22:32:19.439678+00:00", "type": "snapshot", "file": "ledger_snapshot_20231114T221329+0000.tar.gz", "ok": false, "verified": false}
+{"timestamp": "2025-11-13T22:32:19.439678+00:00", "type": "snapshot", "file": "ledger_snapshot_20231114T221330+0000.tar.gz", "ok": false, "verified": false}
+{"timestamp": "2025-11-13T22:32:19.439678+00:00", "type": "snapshot", "file": "ledger_snapshot_20231114T221320+0000.tar.gz", "ok": false, "verified": false}
+{"timestamp": "2025-11-13T22:32:19.439678+00:00", "type": "snapshot", "file": "ledger_snapshot_20231114T221321+0000.tar.gz", "ok": true, "verified": true}
+{"timestamp": "2025-11-13T22:32:19.439678+00:00", "type": "snapshot", "file": "ledger_snapshot_20231114T221322+0000.tar.gz", "ok": true, "verified": true}
+{"timestamp": "2025-11-13T22:32:19.439678+00:00", "type": "snapshot", "file": "ledger_snapshot_20231114T221323+0000.tar.gz", "ok": true, "verified": true}
+{"timestamp": "2025-11-13T22:32:19.439678+00:00", "type": "snapshot", "file": "ledger_snapshot_20231114T221324+0000.tar.gz", "ok": true, "verified": true}
+{"timestamp": "2025-11-13T22:32:19.439678+00:00", "type": "snapshot", "file": "ledger_snapshot_20231114T221325+0000.tar.gz", "ok": true, "verified": true}
+{"timestamp": "2025-11-13T22:32:19.439678+00:00", "type": "snapshot", "file": "ledger_snapshot_20231114T221326+0000.tar.gz", "ok": true, "verified": true}
+{"timestamp": "2025-11-13T22:32:19.439678+00:00", "type": "snapshot", "file": "ledger_snapshot_20231114T221327+0000.tar.gz", "ok": true, "verified": true}
+{"timestamp": "2025-11-13T22:32:19.439678+00:00", "type": "snapshot", "file": "ledger_snapshot_20231114T221328+0000.tar.gz", "ok": true, "verified": true}
+{"timestamp": "2025-11-13T22:32:19.439678+00:00", "type": "snapshot", "file": "ledger_snapshot_20231114T221329+0000.tar.gz", "ok": true, "verified": true}
+{"timestamp": "2025-11-13T22:32:19.439678+00:00", "type": "snapshot", "file": "ledger_snapshot_20231114T221330+0000.tar.gz", "ok": true, "verified": true}
+{"timestamp": "2025-11-13T22:32:19.439678+00:00", "type": "mirror", "file": "anchor_20250101T000000+0000.json", "ok_file": true, "ok_chain": true, "verified": true}
+{"timestamp": "2025-11-13T22:32:19.439678+00:00", "type": "mirror", "file": "anchor_20250101T000001+0000.json", "ok_file": true, "ok_chain": true, "verified": true}
+{"timestamp": "2025-11-13T22:32:19.439678+00:00", "type": "mirror", "file": "anchor_20250101T000000+0000.json", "ok_file": true, "ok_chain": true, "verified": true}
+{"timestamp": "2025-11-13T22:32:19.439678+00:00", "type": "mirror", "file": "anchor_20250101T000001+0000.json", "ok_file": true, "ok_chain": true, "verified": true}
+{"timestamp": "2025-11-13T22:32:19.439678+00:00", "type": "mirror", "file": "anchor_20250101T000000+0000.json", "ok_file": true, "ok_chain": true, "verified": true}
+{"timestamp": "2025-11-13T22:32:19.439678+00:00", "type": "mirror", "file": "anchor_20250101T000001+0000.json", "ok_file": true, "ok_chain": true, "verified": true}
+{"timestamp": "2025-11-13T22:36:59.396861+00:00", "type": "snapshot", "file": "ledger_snapshot_20231114T221320+0000.tar.gz", "ok": false, "verified": false}
+{"timestamp": "2025-11-13T22:36:59.396861+00:00", "type": "snapshot", "file": "ledger_snapshot_20231114T221321+0000.tar.gz", "ok": false, "verified": false}
+{"timestamp": "2025-11-13T22:36:59.396861+00:00", "type": "snapshot", "file": "ledger_snapshot_20231114T221322+0000.tar.gz", "ok": false, "verified": false}
+{"timestamp": "2025-11-13T22:36:59.396861+00:00", "type": "snapshot", "file": "ledger_snapshot_20231114T221323+0000.tar.gz", "ok": false, "verified": false}
+{"timestamp": "2025-11-13T22:36:59.396861+00:00", "type": "snapshot", "file": "ledger_snapshot_20231114T221324+0000.tar.gz", "ok": false, "verified": false}
+{"timestamp": "2025-11-13T22:36:59.396861+00:00", "type": "snapshot", "file": "ledger_snapshot_20231114T221325+0000.tar.gz", "ok": false, "verified": false}
+{"timestamp": "2025-11-13T22:36:59.396861+00:00", "type": "snapshot", "file": "ledger_snapshot_20231114T221326+0000.tar.gz", "ok": false, "verified": false}
+{"timestamp": "2025-11-13T22:36:59.396861+00:00", "type": "snapshot", "file": "ledger_snapshot_20231114T221327+0000.tar.gz", "ok": false, "verified": false}
+{"timestamp": "2025-11-13T22:36:59.396861+00:00", "type": "snapshot", "file": "ledger_snapshot_20231114T221328+0000.tar.gz", "ok": false, "verified": false}
+{"timestamp": "2025-11-13T22:36:59.396861+00:00", "type": "snapshot", "file": "ledger_snapshot_20231114T221329+0000.tar.gz", "ok": false, "verified": false}
+{"timestamp": "2025-11-13T22:36:59.396861+00:00", "type": "snapshot", "file": "ledger_snapshot_20231114T221330+0000.tar.gz", "ok": false, "verified": false}
+{"timestamp": "2025-11-13T22:36:59.396861+00:00", "type": "snapshot", "file": "ledger_snapshot_20231114T221320+0000.tar.gz", "ok": false, "verified": false}
+{"timestamp": "2025-11-13T22:36:59.396861+00:00", "type": "snapshot", "file": "ledger_snapshot_20231114T221321+0000.tar.gz", "ok": false, "verified": false}
+{"timestamp": "2025-11-13T22:36:59.396861+00:00", "type": "snapshot", "file": "ledger_snapshot_20231114T221322+0000.tar.gz", "ok": false, "verified": false}
+{"timestamp": "2025-11-13T22:36:59.396861+00:00", "type": "snapshot", "file": "ledger_snapshot_20231114T221323+0000.tar.gz", "ok": false, "verified": false}
+{"timestamp": "2025-11-13T22:36:59.396861+00:00", "type": "snapshot", "file": "ledger_snapshot_20231114T221324+0000.tar.gz", "ok": false, "verified": false}
+{"timestamp": "2025-11-13T22:36:59.396861+00:00", "type": "snapshot", "file": "ledger_snapshot_20231114T221325+0000.tar.gz", "ok": false, "verified": false}
+{"timestamp": "2025-11-13T22:36:59.396861+00:00", "type": "snapshot", "file": "ledger_snapshot_20231114T221326+0000.tar.gz", "ok": false, "verified": false}
+{"timestamp": "2025-11-13T22:36:59.396861+00:00", "type": "snapshot", "file": "ledger_snapshot_20231114T221327+0000.tar.gz", "ok": false, "verified": false}
+{"timestamp": "2025-11-13T22:36:59.396861+00:00", "type": "snapshot", "file": "ledger_snapshot_20231114T221328+0000.tar.gz", "ok": false, "verified": false}
+{"timestamp": "2025-11-13T22:36:59.396861+00:00", "type": "snapshot", "file": "ledger_snapshot_20231114T221329+0000.tar.gz", "ok": false, "verified": false}
+{"timestamp": "2025-11-13T22:36:59.396861+00:00", "type": "snapshot", "file": "ledger_snapshot_20231114T221330+0000.tar.gz", "ok": false, "verified": false}
+{"timestamp": "2025-11-13T22:36:59.396861+00:00", "type": "snapshot", "file": "ledger_snapshot_20231114T221320+0000.tar.gz", "ok": false, "verified": false}
+{"timestamp": "2025-11-13T22:36:59.396861+00:00", "type": "snapshot", "file": "ledger_snapshot_20231114T221321+0000.tar.gz", "ok": false, "verified": false}
+{"timestamp": "2025-11-13T22:36:59.396861+00:00", "type": "snapshot", "file": "ledger_snapshot_20231114T221322+0000.tar.gz", "ok": false, "verified": false}
+{"timestamp": "2025-11-13T22:36:59.396861+00:00", "type": "snapshot", "file": "ledger_snapshot_20231114T221323+0000.tar.gz", "ok": false, "verified": false}
+{"timestamp": "2025-11-13T22:36:59.396861+00:00", "type": "snapshot", "file": "ledger_snapshot_20231114T221324+0000.tar.gz", "ok": false, "verified": false}
+{"timestamp": "2025-11-13T22:36:59.396861+00:00", "type": "snapshot", "file": "ledger_snapshot_20231114T221325+0000.tar.gz", "ok": false, "verified": false}
+{"timestamp": "2025-11-13T22:36:59.396861+00:00", "type": "snapshot", "file": "ledger_snapshot_20231114T221326+0000.tar.gz", "ok": false, "verified": false}
+{"timestamp": "2025-11-13T22:36:59.396861+00:00", "type": "snapshot", "file": "ledger_snapshot_20231114T221327+0000.tar.gz", "ok": false, "verified": false}
+{"timestamp": "2025-11-13T22:36:59.396861+00:00", "type": "snapshot", "file": "ledger_snapshot_20231114T221328+0000.tar.gz", "ok": false, "verified": false}
+{"timestamp": "2025-11-13T22:36:59.396861+00:00", "type": "snapshot", "file": "ledger_snapshot_20231114T221329+0000.tar.gz", "ok": false, "verified": false}
+{"timestamp": "2025-11-13T22:36:59.396861+00:00", "type": "snapshot", "file": "ledger_snapshot_20231114T221330+0000.tar.gz", "ok": false, "verified": false}
+{"timestamp": "2025-11-13T22:36:59.396861+00:00", "type": "snapshot", "file": "ledger_snapshot_20231114T221320+0000.tar.gz", "ok": false, "verified": false}
+{"timestamp": "2025-11-13T22:36:59.396861+00:00", "type": "snapshot", "file": "ledger_snapshot_20231114T221321+0000.tar.gz", "ok": true, "verified": true}
+{"timestamp": "2025-11-13T22:36:59.396861+00:00", "type": "snapshot", "file": "ledger_snapshot_20231114T221322+0000.tar.gz", "ok": true, "verified": true}
+{"timestamp": "2025-11-13T22:36:59.396861+00:00", "type": "snapshot", "file": "ledger_snapshot_20231114T221323+0000.tar.gz", "ok": true, "verified": true}
+{"timestamp": "2025-11-13T22:36:59.396861+00:00", "type": "snapshot", "file": "ledger_snapshot_20231114T221324+0000.tar.gz", "ok": true, "verified": true}
+{"timestamp": "2025-11-13T22:36:59.396861+00:00", "type": "snapshot", "file": "ledger_snapshot_20231114T221325+0000.tar.gz", "ok": true, "verified": true}
+{"timestamp": "2025-11-13T22:36:59.396861+00:00", "type": "snapshot", "file": "ledger_snapshot_20231114T221326+0000.tar.gz", "ok": true, "verified": true}
+{"timestamp": "2025-11-13T22:36:59.396861+00:00", "type": "snapshot", "file": "ledger_snapshot_20231114T221327+0000.tar.gz", "ok": true, "verified": true}
+{"timestamp": "2025-11-13T22:36:59.396861+00:00", "type": "snapshot", "file": "ledger_snapshot_20231114T221328+0000.tar.gz", "ok": true, "verified": true}
+{"timestamp": "2025-11-13T22:36:59.396861+00:00", "type": "snapshot", "file": "ledger_snapshot_20231114T221329+0000.tar.gz", "ok": true, "verified": true}
+{"timestamp": "2025-11-13T22:36:59.396861+00:00", "type": "snapshot", "file": "ledger_snapshot_20231114T221330+0000.tar.gz", "ok": true, "verified": true}
+{"timestamp": "2025-11-13T22:36:59.396861+00:00", "type": "mirror", "file": "anchor_20250101T000000+0000.json", "ok_file": true, "ok_chain": true, "verified": true}
+{"timestamp": "2025-11-13T22:36:59.396861+00:00", "type": "mirror", "file": "anchor_20250101T000001+0000.json", "ok_file": true, "ok_chain": true, "verified": true}
+{"timestamp": "2025-11-13T22:36:59.396861+00:00", "type": "mirror", "file": "anchor_20250101T000000+0000.json", "ok_file": true, "ok_chain": true, "verified": true}
+{"timestamp": "2025-11-13T22:36:59.396861+00:00", "type": "mirror", "file": "anchor_20250101T000001+0000.json", "ok_file": true, "ok_chain": true, "verified": true}
+{"timestamp": "2025-11-13T22:36:59.396861+00:00", "type": "mirror", "file": "anchor_20250101T000000+0000.json", "ok_file": true, "ok_chain": true, "verified": true}
+{"timestamp": "2025-11-13T22:36:59.396861+00:00", "type": "mirror", "file": "anchor_20250101T000001+0000.json", "ok_file": true, "ok_chain": true, "verified": true}
+{"timestamp": "2025-11-13T22:36:59.396861+00:00", "type": "mirror", "file": "anchor_20250101T000000+0000.json", "ok_file": true, "ok_chain": true, "verified": true}
+{"timestamp": "2025-11-13T22:36:59.396861+00:00", "type": "mirror", "file": "anchor_20250101T000001+0000.json", "ok_file": true, "ok_chain": true, "verified": true}
+{"timestamp": "2025-11-14T00:14:17.169133+00:00", "type": "snapshot", "file": "ledger_snapshot_20231114T221320+0000.tar.gz", "ok": false, "verified": false}
+{"timestamp": "2025-11-14T00:14:17.169133+00:00", "type": "snapshot", "file": "ledger_snapshot_20231114T221321+0000.tar.gz", "ok": false, "verified": false}
+{"timestamp": "2025-11-14T00:14:17.169133+00:00", "type": "snapshot", "file": "ledger_snapshot_20231114T221322+0000.tar.gz", "ok": false, "verified": false}
+{"timestamp": "2025-11-14T00:14:17.169133+00:00", "type": "snapshot", "file": "ledger_snapshot_20231114T221323+0000.tar.gz", "ok": false, "verified": false}
+{"timestamp": "2025-11-14T00:14:17.169133+00:00", "type": "snapshot", "file": "ledger_snapshot_20231114T221324+0000.tar.gz", "ok": false, "verified": false}
+{"timestamp": "2025-11-14T00:14:17.169133+00:00", "type": "snapshot", "file": "ledger_snapshot_20231114T221325+0000.tar.gz", "ok": false, "verified": false}
+{"timestamp": "2025-11-14T00:14:17.169133+00:00", "type": "snapshot", "file": "ledger_snapshot_20231114T221326+0000.tar.gz", "ok": false, "verified": false}
+{"timestamp": "2025-11-14T00:14:17.169133+00:00", "type": "snapshot", "file": "ledger_snapshot_20231114T221327+0000.tar.gz", "ok": false, "verified": false}
+{"timestamp": "2025-11-14T00:14:17.169133+00:00", "type": "snapshot", "file": "ledger_snapshot_20231114T221328+0000.tar.gz", "ok": false, "verified": false}
+{"timestamp": "2025-11-14T00:14:17.169133+00:00", "type": "snapshot", "file": "ledger_snapshot_20231114T221329+0000.tar.gz", "ok": false, "verified": false}
+{"timestamp": "2025-11-14T00:14:17.169133+00:00", "type": "snapshot", "file": "ledger_snapshot_20231114T221330+0000.tar.gz", "ok": false, "verified": false}
+{"timestamp": "2025-11-14T00:14:17.169133+00:00", "type": "snapshot", "file": "ledger_snapshot_20231114T221320+0000.tar.gz", "ok": false, "verified": false}
+{"timestamp": "2025-11-14T00:14:17.169133+00:00", "type": "snapshot", "file": "ledger_snapshot_20231114T221321+0000.tar.gz", "ok": false, "verified": false}
+{"timestamp": "2025-11-14T00:14:17.169133+00:00", "type": "snapshot", "file": "ledger_snapshot_20231114T221322+0000.tar.gz", "ok": false, "verified": false}
+{"timestamp": "2025-11-14T00:14:17.169133+00:00", "type": "snapshot", "file": "ledger_snapshot_20231114T221323+0000.tar.gz", "ok": false, "verified": false}
+{"timestamp": "2025-11-14T00:14:17.169133+00:00", "type": "snapshot", "file": "ledger_snapshot_20231114T221324+0000.tar.gz", "ok": false, "verified": false}
+{"timestamp": "2025-11-14T00:14:17.169133+00:00", "type": "snapshot", "file": "ledger_snapshot_20231114T221325+0000.tar.gz", "ok": false, "verified": false}
+{"timestamp": "2025-11-14T00:14:17.169133+00:00", "type": "snapshot", "file": "ledger_snapshot_20231114T221326+0000.tar.gz", "ok": false, "verified": false}
+{"timestamp": "2025-11-14T00:14:17.169133+00:00", "type": "snapshot", "file": "ledger_snapshot_20231114T221327+0000.tar.gz", "ok": false, "verified": false}
+{"timestamp": "2025-11-14T00:14:17.169133+00:00", "type": "snapshot", "file": "ledger_snapshot_20231114T221328+0000.tar.gz", "ok": false, "verified": false}
+{"timestamp": "2025-11-14T00:14:17.169133+00:00", "type": "snapshot", "file": "ledger_snapshot_20231114T221329+0000.tar.gz", "ok": false, "verified": false}
+{"timestamp": "2025-11-14T00:14:17.169133+00:00", "type": "snapshot", "file": "ledger_snapshot_20231114T221330+0000.tar.gz", "ok": false, "verified": false}
+{"timestamp": "2025-11-14T00:14:17.169133+00:00", "type": "snapshot", "file": "ledger_snapshot_20231114T221320+0000.tar.gz", "ok": false, "verified": false}
+{"timestamp": "2025-11-14T00:14:17.169133+00:00", "type": "snapshot", "file": "ledger_snapshot_20231114T221321+0000.tar.gz", "ok": false, "verified": false}
+{"timestamp": "2025-11-14T00:14:17.169133+00:00", "type": "snapshot", "file": "ledger_snapshot_20231114T221322+0000.tar.gz", "ok": false, "verified": false}
+{"timestamp": "2025-11-14T00:14:17.169133+00:00", "type": "snapshot", "file": "ledger_snapshot_20231114T221323+0000.tar.gz", "ok": false, "verified": false}
+{"timestamp": "2025-11-14T00:14:17.169133+00:00", "type": "snapshot", "file": "ledger_snapshot_20231114T221324+0000.tar.gz", "ok": false, "verified": false}
+{"timestamp": "2025-11-14T00:14:17.169133+00:00", "type": "snapshot", "file": "ledger_snapshot_20231114T221325+0000.tar.gz", "ok": false, "verified": false}
+{"timestamp": "2025-11-14T00:14:17.169133+00:00", "type": "snapshot", "file": "ledger_snapshot_20231114T221326+0000.tar.gz", "ok": false, "verified": false}
+{"timestamp": "2025-11-14T00:14:17.169133+00:00", "type": "snapshot", "file": "ledger_snapshot_20231114T221327+0000.tar.gz", "ok": false, "verified": false}
+{"timestamp": "2025-11-14T00:14:17.169133+00:00", "type": "snapshot", "file": "ledger_snapshot_20231114T221328+0000.tar.gz", "ok": false, "verified": false}
+{"timestamp": "2025-11-14T00:14:17.169133+00:00", "type": "snapshot", "file": "ledger_snapshot_20231114T221329+0000.tar.gz", "ok": false, "verified": false}
+{"timestamp": "2025-11-14T00:14:17.169133+00:00", "type": "snapshot", "file": "ledger_snapshot_20231114T221330+0000.tar.gz", "ok": false, "verified": false}
+{"timestamp": "2025-11-14T00:14:17.169133+00:00", "type": "snapshot", "file": "ledger_snapshot_20231114T221320+0000.tar.gz", "ok": false, "verified": false}
+{"timestamp": "2025-11-14T00:14:17.169133+00:00", "type": "snapshot", "file": "ledger_snapshot_20231114T221321+0000.tar.gz", "ok": true, "verified": true}
+{"timestamp": "2025-11-14T00:14:17.169133+00:00", "type": "snapshot", "file": "ledger_snapshot_20231114T221322+0000.tar.gz", "ok": true, "verified": true}
+{"timestamp": "2025-11-14T00:14:17.169133+00:00", "type": "snapshot", "file": "ledger_snapshot_20231114T221323+0000.tar.gz", "ok": true, "verified": true}
+{"timestamp": "2025-11-14T00:14:17.169133+00:00", "type": "snapshot", "file": "ledger_snapshot_20231114T221324+0000.tar.gz", "ok": true, "verified": true}
+{"timestamp": "2025-11-14T00:14:17.169133+00:00", "type": "snapshot", "file": "ledger_snapshot_20231114T221325+0000.tar.gz", "ok": true, "verified": true}
+{"timestamp": "2025-11-14T00:14:17.169133+00:00", "type": "snapshot", "file": "ledger_snapshot_20231114T221326+0000.tar.gz", "ok": true, "verified": true}
+{"timestamp": "2025-11-14T00:14:17.169133+00:00", "type": "snapshot", "file": "ledger_snapshot_20231114T221327+0000.tar.gz", "ok": true, "verified": true}
+{"timestamp": "2025-11-14T00:14:17.169133+00:00", "type": "snapshot", "file": "ledger_snapshot_20231114T221328+0000.tar.gz", "ok": true, "verified": true}
+{"timestamp": "2025-11-14T00:14:17.169133+00:00", "type": "snapshot", "file": "ledger_snapshot_20231114T221329+0000.tar.gz", "ok": true, "verified": true}
+{"timestamp": "2025-11-14T00:14:17.169133+00:00", "type": "snapshot", "file": "ledger_snapshot_20231114T221330+0000.tar.gz", "ok": true, "verified": true}
+{"timestamp": "2025-11-14T00:14:17.169133+00:00", "type": "mirror", "file": "anchor_20250101T000000+0000.json", "ok_file": true, "ok_chain": true, "verified": true}
+{"timestamp": "2025-11-14T00:14:17.169133+00:00", "type": "mirror", "file": "anchor_20250101T000001+0000.json", "ok_file": true, "ok_chain": true, "verified": true}
+{"timestamp": "2025-11-14T00:14:17.169133+00:00", "type": "mirror", "file": "anchor_20250101T000000+0000.json", "ok_file": true, "ok_chain": true, "verified": true}
+{"timestamp": "2025-11-14T00:14:17.169133+00:00", "type": "mirror", "file": "anchor_20250101T000001+0000.json", "ok_file": true, "ok_chain": true, "verified": true}
+{"timestamp": "2025-11-14T00:14:17.169133+00:00", "type": "mirror", "file": "anchor_20250101T000000+0000.json", "ok_file": true, "ok_chain": true, "verified": true}
+{"timestamp": "2025-11-14T00:14:17.169133+00:00", "type": "mirror", "file": "anchor_20250101T000001+0000.json", "ok_file": true, "ok_chain": true, "verified": true}
+{"timestamp": "2025-11-14T00:14:17.169133+00:00", "type": "mirror", "file": "anchor_20250101T000000+0000.json", "ok_file": true, "ok_chain": true, "verified": true}
+{"timestamp": "2025-11-14T00:14:17.169133+00:00", "type": "mirror", "file": "anchor_20250101T000001+0000.json", "ok_file": true, "ok_chain": true, "verified": true}
+{"timestamp": "2025-11-14T00:14:17.643532+00:00", "type": "snapshot", "file": "ledger_snapshot_20231114T221320+0000.tar.gz", "ok": false, "verified": false}
+{"timestamp": "2025-11-14T00:14:17.643532+00:00", "type": "snapshot", "file": "ledger_snapshot_20231114T221321+0000.tar.gz", "ok": false, "verified": false}
+{"timestamp": "2025-11-14T00:14:17.643532+00:00", "type": "snapshot", "file": "ledger_snapshot_20231114T221322+0000.tar.gz", "ok": false, "verified": false}
+{"timestamp": "2025-11-14T00:14:17.643532+00:00", "type": "snapshot", "file": "ledger_snapshot_20231114T221323+0000.tar.gz", "ok": false, "verified": false}
+{"timestamp": "2025-11-14T00:14:17.643532+00:00", "type": "snapshot", "file": "ledger_snapshot_20231114T221324+0000.tar.gz", "ok": false, "verified": false}
+{"timestamp": "2025-11-14T00:14:17.643532+00:00", "type": "snapshot", "file": "ledger_snapshot_20231114T221325+0000.tar.gz", "ok": false, "verified": false}
+{"timestamp": "2025-11-14T00:14:17.643532+00:00", "type": "snapshot", "file": "ledger_snapshot_20231114T221326+0000.tar.gz", "ok": false, "verified": false}
+{"timestamp": "2025-11-14T00:14:17.643532+00:00", "type": "snapshot", "file": "ledger_snapshot_20231114T221327+0000.tar.gz", "ok": false, "verified": false}
+{"timestamp": "2025-11-14T00:14:17.643532+00:00", "type": "snapshot", "file": "ledger_snapshot_20231114T221328+0000.tar.gz", "ok": false, "verified": false}
+{"timestamp": "2025-11-14T00:14:17.643532+00:00", "type": "snapshot", "file": "ledger_snapshot_20231114T221329+0000.tar.gz", "ok": false, "verified": false}
+{"timestamp": "2025-11-14T00:14:17.643532+00:00", "type": "snapshot", "file": "ledger_snapshot_20231114T221330+0000.tar.gz", "ok": false, "verified": false}
+{"timestamp": "2025-11-14T00:14:17.643532+00:00", "type": "snapshot", "file": "ledger_snapshot_20231114T221320+0000.tar.gz", "ok": false, "verified": false}
+{"timestamp": "2025-11-14T00:14:17.643532+00:00", "type": "snapshot", "file": "ledger_snapshot_20231114T221321+0000.tar.gz", "ok": false, "verified": false}
+{"timestamp": "2025-11-14T00:14:17.643532+00:00", "type": "snapshot", "file": "ledger_snapshot_20231114T221322+0000.tar.gz", "ok": false, "verified": false}
+{"timestamp": "2025-11-14T00:14:17.643532+00:00", "type": "snapshot", "file": "ledger_snapshot_20231114T221323+0000.tar.gz", "ok": false, "verified": false}
+{"timestamp": "2025-11-14T00:14:17.643532+00:00", "type": "snapshot", "file": "ledger_snapshot_20231114T221324+0000.tar.gz", "ok": false, "verified": false}
+{"timestamp": "2025-11-14T00:14:17.643532+00:00", "type": "snapshot", "file": "ledger_snapshot_20231114T221325+0000.tar.gz", "ok": false, "verified": false}
+{"timestamp": "2025-11-14T00:14:17.643532+00:00", "type": "snapshot", "file": "ledger_snapshot_20231114T221326+0000.tar.gz", "ok": false, "verified": false}
+{"timestamp": "2025-11-14T00:14:17.643532+00:00", "type": "snapshot", "file": "ledger_snapshot_20231114T221327+0000.tar.gz", "ok": false, "verified": false}
+{"timestamp": "2025-11-14T00:14:17.643532+00:00", "type": "snapshot", "file": "ledger_snapshot_20231114T221328+0000.tar.gz", "ok": false, "verified": false}
+{"timestamp": "2025-11-14T00:14:17.643532+00:00", "type": "snapshot", "file": "ledger_snapshot_20231114T221329+0000.tar.gz", "ok": false, "verified": false}
+{"timestamp": "2025-11-14T00:14:17.643532+00:00", "type": "snapshot", "file": "ledger_snapshot_20231114T221330+0000.tar.gz", "ok": false, "verified": false}
+{"timestamp": "2025-11-14T00:14:17.643532+00:00", "type": "snapshot", "file": "ledger_snapshot_20231114T221320+0000.tar.gz", "ok": false, "verified": false}
+{"timestamp": "2025-11-14T00:14:17.643532+00:00", "type": "snapshot", "file": "ledger_snapshot_20231114T221321+0000.tar.gz", "ok": false, "verified": false}
+{"timestamp": "2025-11-14T00:14:17.643532+00:00", "type": "snapshot", "file": "ledger_snapshot_20231114T221322+0000.tar.gz", "ok": false, "verified": false}
+{"timestamp": "2025-11-14T00:14:17.643532+00:00", "type": "snapshot", "file": "ledger_snapshot_20231114T221323+0000.tar.gz", "ok": false, "verified": false}
+{"timestamp": "2025-11-14T00:14:17.643532+00:00", "type": "snapshot", "file": "ledger_snapshot_20231114T221324+0000.tar.gz", "ok": false, "verified": false}
+{"timestamp": "2025-11-14T00:14:17.643532+00:00", "type": "snapshot", "file": "ledger_snapshot_20231114T221325+0000.tar.gz", "ok": false, "verified": false}
+{"timestamp": "2025-11-14T00:14:17.643532+00:00", "type": "snapshot", "file": "ledger_snapshot_20231114T221326+0000.tar.gz", "ok": false, "verified": false}
+{"timestamp": "2025-11-14T00:14:17.643532+00:00", "type": "snapshot", "file": "ledger_snapshot_20231114T221327+0000.tar.gz", "ok": false, "verified": false}
+{"timestamp": "2025-11-14T00:14:17.643532+00:00", "type": "snapshot", "file": "ledger_snapshot_20231114T221328+0000.tar.gz", "ok": false, "verified": false}
+{"timestamp": "2025-11-14T00:14:17.643532+00:00", "type": "snapshot", "file": "ledger_snapshot_20231114T221329+0000.tar.gz", "ok": false, "verified": false}
+{"timestamp": "2025-11-14T00:14:17.643532+00:00", "type": "snapshot", "file": "ledger_snapshot_20231114T221330+0000.tar.gz", "ok": false, "verified": false}
+{"timestamp": "2025-11-14T00:14:17.643532+00:00", "type": "snapshot", "file": "ledger_snapshot_20231114T221320+0000.tar.gz", "ok": false, "verified": false}
+{"timestamp": "2025-11-14T00:14:17.643532+00:00", "type": "snapshot", "file": "ledger_snapshot_20231114T221321+0000.tar.gz", "ok": true, "verified": true}
+{"timestamp": "2025-11-14T00:14:17.643532+00:00", "type": "snapshot", "file": "ledger_snapshot_20231114T221322+0000.tar.gz", "ok": true, "verified": true}
+{"timestamp": "2025-11-14T00:14:17.643532+00:00", "type": "snapshot", "file": "ledger_snapshot_20231114T221323+0000.tar.gz", "ok": true, "verified": true}
+{"timestamp": "2025-11-14T00:14:17.643532+00:00", "type": "snapshot", "file": "ledger_snapshot_20231114T221324+0000.tar.gz", "ok": true, "verified": true}
+{"timestamp": "2025-11-14T00:14:17.643532+00:00", "type": "snapshot", "file": "ledger_snapshot_20231114T221325+0000.tar.gz", "ok": true, "verified": true}
+{"timestamp": "2025-11-14T00:14:17.643532+00:00", "type": "snapshot", "file": "ledger_snapshot_20231114T221326+0000.tar.gz", "ok": true, "verified": true}
+{"timestamp": "2025-11-14T00:14:17.643532+00:00", "type": "snapshot", "file": "ledger_snapshot_20231114T221327+0000.tar.gz", "ok": true, "verified": true}
+{"timestamp": "2025-11-14T00:14:17.643532+00:00", "type": "snapshot", "file": "ledger_snapshot_20231114T221328+0000.tar.gz", "ok": true, "verified": true}
+{"timestamp": "2025-11-14T00:14:17.643532+00:00", "type": "snapshot", "file": "ledger_snapshot_20231114T221329+0000.tar.gz", "ok": true, "verified": true}
+{"timestamp": "2025-11-14T00:14:17.643532+00:00", "type": "snapshot", "file": "ledger_snapshot_20231114T221330+0000.tar.gz", "ok": true, "verified": true}
+{"timestamp": "2025-11-14T00:14:17.643532+00:00", "type": "mirror", "file": "anchor_20250101T000000+0000.json", "ok_file": true, "ok_chain": true, "verified": true}
+{"timestamp": "2025-11-14T00:14:17.643532+00:00", "type": "mirror", "file": "anchor_20250101T000001+0000.json", "ok_file": true, "ok_chain": true, "verified": true}
+{"timestamp": "2025-11-14T00:14:17.643532+00:00", "type": "mirror", "file": "anchor_20250101T000000+0000.json", "ok_file": true, "ok_chain": true, "verified": true}
+{"timestamp": "2025-11-14T00:14:17.643532+00:00", "type": "mirror", "file": "anchor_20250101T000001+0000.json", "ok_file": true, "ok_chain": true, "verified": true}
+{"timestamp": "2025-11-14T00:14:17.643532+00:00", "type": "mirror", "file": "anchor_20250101T000000+0000.json", "ok_file": true, "ok_chain": true, "verified": true}
+{"timestamp": "2025-11-14T00:14:17.643532+00:00", "type": "mirror", "file": "anchor_20250101T000001+0000.json", "ok_file": true, "ok_chain": true, "verified": true}
+{"timestamp": "2025-11-14T00:14:17.643532+00:00", "type": "mirror", "file": "anchor_20250101T000000+0000.json", "ok_file": true, "ok_chain": true, "verified": true}
+{"timestamp": "2025-11-14T00:14:17.643532+00:00", "type": "mirror", "file": "anchor_20250101T000001+0000.json", "ok_file": true, "ok_chain": true, "verified": true}

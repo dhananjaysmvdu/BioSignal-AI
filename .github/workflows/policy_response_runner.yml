@@ -1,0 +1,108 @@
+name: Policy Response Runner
+
+on:
+  workflow_dispatch:
+    inputs:
+      auto_apply:
+        description: 'Enable real actions (default: DRY_RUN)'
+        required: false
+        default: 'false'
+  workflow_run:
+    workflows: ["Policy Orchestration"]
+    types:
+      - completed
+
+jobs:
+  respond:
+    runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'success' || github.event_name == 'workflow_dispatch' }}
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+
+      - name: Fetch policy state
+        id: fetch_policy
+        run: |
+          if [ -f state/policy_state.json ]; then
+            POLICY=$(python -c "import json; print(json.load(open('state/policy_state.json'))['policy'])")
+            echo "policy=$POLICY" >> $GITHUB_OUTPUT
+          else
+            echo "policy=UNKNOWN" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Run policy response (dry-run or apply)
+        id: respond
+        env:
+          POLICY_AUTO_APPLY: ${{ github.event.inputs.auto_apply || 'false' }}
+        run: |
+          POLICY="${{ steps.fetch_policy.outputs.policy }}"
+          
+          if [ "$POLICY" = "RED" ]; then
+            if [ "$POLICY_AUTO_APPLY" = "true" ]; then
+              python scripts/response/run_policy_responses.py --policy RED --apply
+            else
+              python scripts/response/run_policy_responses.py --policy RED
+            fi
+          else
+            echo "Policy is $POLICY (not RED), skipping response actions"
+          fi
+        continue-on-error: true
+
+      - name: Upload response artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: policy-response-${{ github.run_id }}
+          path: |
+            state/policy_response_*.json
+            state/policy_response_log.jsonl
+            reports/policy_response_blocked.json
+          retention-days: 90
+
+      - name: Handle response failure
+        if: steps.respond.outcome == 'failure'
+        run: |
+          TIMESTAMP=$(date -u +"%Y%m%d%H%M%S")
+          BRANCH_NAME="fix/policy-response-${TIMESTAMP}"
+          
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          
+          git checkout -b "${BRANCH_NAME}"
+          git add state/ reports/ audit_summary.md || true
+          git commit -m "fix: policy response failure logs - ${TIMESTAMP}" || true
+          git push origin "${BRANCH_NAME}" || true
+          
+          # Append failure marker
+          echo "" >> audit_summary.md
+          echo "<!-- POLICY_RESPONSE: FAILED $(date -u +"%Y-%m-%dT%H:%M:%S+00:00") -->" >> audit_summary.md
+          git add audit_summary.md
+          git commit -m "chore: append policy response failure marker"
+          git push origin "${BRANCH_NAME}"
+          
+          exit 1
+
+      - name: Commit state updates on success
+        if: steps.respond.outcome == 'success'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          
+          git add state/ reports/ audit_summary.md
+          if git diff --cached --quiet; then
+            echo "No changes to commit"
+          else
+            git commit -m "chore(policy): update response state [skip ci]"
+            git push origin HEAD
+          fi

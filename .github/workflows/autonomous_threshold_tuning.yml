@@ -1,0 +1,99 @@
+name: Autonomous Threshold Tuning
+
+on:
+  schedule:
+    - cron: '0 6 * * *'  # Daily at 06:00 UTC
+  workflow_run:
+    workflows: ["Policy Orchestration", "Policy Response Runner", "Policy Fusion"]
+    types:
+      - completed
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  autonomous-threshold-tuning:
+    runs-on: ubuntu-latest
+    if: ${{ github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Run threshold tuner
+        id: tuner
+        continue-on-error: true
+        run: |
+          python scripts/policy/autonomous_threshold_tuner.py > tuner_output.txt 2>&1
+          echo "exit_code=$?" >> $GITHUB_OUTPUT
+          cat tuner_output.txt
+
+      - name: Extract RDGL metadata
+        if: steps.tuner.outputs.exit_code == '0'
+        id: rdgl_meta
+        run: |
+          python -c "import json, pathlib; p=pathlib.Path('state/threshold_policy.json'); j=json.loads(p.read_text(encoding='utf-8')) if p.exists() else {}; mode=j.get('rdgl_mode_used','unknown'); scaled=j.get('rdgl_scaled_percent_range',[None,None]); pathlib.Path('state/rdgl_impact.json').write_text(json.dumps({'rdgl_mode_used':mode,'rdgl_scaled_percent_range':scaled}), encoding='utf-8'); print('RDGL mode:', mode); print('RDGL scaled:', scaled)"
+
+      - name: Upload RDGL impact artifact
+        if: steps.tuner.outputs.exit_code == '0'
+        uses: actions/upload-artifact@v4
+        with:
+          name: rdgl-impact-${{ github.run_number }}
+          path: |
+            state/rdgl_impact.json
+          retention-days: 90
+
+      - name: Warn if RDGL locked tuner
+        if: steps.tuner.outputs.exit_code == '0'
+        run: |
+          MODE=$(python -c "import json;print(json.load(open('state/rdgl_impact.json'))['rdgl_mode_used'])")
+          MAX=$(python -c "import json;print(json.load(open('state/rdgl_impact.json'))['rdgl_scaled_percent_range'][1])")
+          if [ "$MODE" = "locked" ] || [ "$MAX" = "0.0" ] || [ "$MAX" = "0" ]; then
+            echo "::warning::RDGL locked tuner shift range (0,0)"
+          fi
+
+      - name: Upload tuner artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: threshold-tuning-${{ github.run_number }}
+          path: |
+            state/threshold_policy.json
+            state/threshold_tuning_history.jsonl
+            tuner_output.txt
+          retention-days: 90
+
+      - name: Handle persistent failure
+        if: steps.tuner.outputs.exit_code != '0'
+        run: |
+          TIMESTAMP=$(date -u +"%Y%m%d-%H%M%S")
+          BRANCH_NAME="fix/threshold-tuner-${TIMESTAMP}"
+          
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          
+          git checkout -b "${BRANCH_NAME}"
+          git add tuner_output.txt logs/ || true
+          git commit -m "fix: threshold tuner failure - ${TIMESTAMP}" || true
+          git push origin "${BRANCH_NAME}" || true
+          
+          echo "<!-- ATTE: CI_FAIL $(date -u +"%Y-%m-%dT%H:%M:%SZ") -->" >> audit_summary.md
+          git add audit_summary.md
+          git commit -m "chore: append ATTE CI failure marker [skip ci]" || true
+          git push origin "${BRANCH_NAME}" || true
+
+      - name: Commit threshold updates on success
+        if: steps.tuner.outputs.exit_code == '0'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add state/threshold_policy.json state/threshold_tuning_history.jsonl state/rdgl_impact.json audit_summary.md || true
+          git diff --cached --quiet || git commit -m "chore: update autonomous thresholds [skip ci]"
+          git push || true

@@ -1,0 +1,108 @@
+name: MVCRS Escalation Lifecycle
+
+on:
+  schedule:
+    # Daily 06:40 UTC - after correction workflow
+    - cron: '40 6 * * *'
+  workflow_dispatch:
+    inputs:
+      force_fix_branch:
+        description: "Force fix-branch creation to test failure path"
+        required: false
+        default: false
+        type: boolean
+
+jobs:
+  lifecycle:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install minimal deps
+        run: |
+          python -m pip install --upgrade pip
+          pip install pytest
+
+      - name: Check consecutive failure count
+        id: failure_check
+        run: |
+          # Check if lifecycle has been stuck for >3 days
+          if [ -f state/mvcrs_escalation_lifecycle.json ]; then
+            STATE=$(python -c "
+          import json
+          from datetime import datetime, timezone, timedelta
+          with open('state/mvcrs_escalation_lifecycle.json') as f:
+              data = json.load(f)
+          entered = datetime.fromisoformat(data['entered_current_state_at'].replace('Z', '+00:00'))
+          now = datetime.now(timezone.utc)
+          elapsed = (now - entered).total_seconds() / 3600
+          if elapsed > 72 and data['current_state'] not in ['resolved', 'rejected']:
+              print('STUCK')
+          else:
+              print('OK')
+          ")
+            echo "lifecycle_status=$STATE" >> $GITHUB_OUTPUT
+            if [ "$STATE" = "STUCK" ]; then
+              echo "⚠️ Lifecycle stuck in non-terminal state for >3 days" >> $GITHUB_STEP_SUMMARY
+            fi
+          else
+            echo "lifecycle_status=MISSING" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Run escalation lifecycle engine
+        id: lifecycle
+        run: |
+          set -e
+          python scripts/mvcrs/mvcrs_escalation_lifecycle.py
+          
+          if [ -f state/mvcrs_escalation_lifecycle.json ]; then
+            CURRENT_STATE=$(python -c "import json; print(json.load(open('state/mvcrs_escalation_lifecycle.json'))['current_state'])")
+            echo "current_state=$CURRENT_STATE" >> $GITHUB_OUTPUT
+            echo "### Escalation Lifecycle" >> $GITHUB_STEP_SUMMARY
+            echo "**Current State:** $CURRENT_STATE" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "current_state=unknown" >> $GITHUB_OUTPUT
+            echo "⚠️ Lifecycle state file missing" >> $GITHUB_STEP_SUMMARY
+          fi
+
+      - name: Upload lifecycle artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: mvcrs-lifecycle-artifacts
+          path: |
+            state/mvcrs_escalation_lifecycle.json
+            state/mvcrs_escalation_lifecycle_log.jsonl
+            docs/audit_summary.md
+          retention-days: 90
+
+      - name: Fail workflow if stuck >3 days
+        if: steps.failure_check.outputs.lifecycle_status == 'STUCK'
+        run: |
+          echo "Error: Escalation lifecycle stuck in non-terminal state for >72 hours" >&2
+          echo "Current state requires manual intervention" >&2
+          exit 1
+
+      - name: Handle persistent failure
+        if: failure() || (github.event_name == 'workflow_dispatch' && inputs.force_fix_branch)
+        run: |
+          TS=$(date -u +"%Y%m%dT%H%M%SZ")
+          BR=fix/mvcrs-escalation-lifecycle-$TS
+          
+          git config user.name 'ci-bot'
+          git config user.email 'ci-bot@example.com'
+          git checkout -b "$BR"
+          
+          echo '<!-- MVCRS_ESCALATION_LIFECYCLE: FAILED '"$TS"' -->' >> docs/audit_summary.md
+          
+          git add state/mvcrs_escalation_lifecycle.json state/mvcrs_escalation_lifecycle_log.jsonl docs/audit_summary.md || true
+          git commit -m "chore(mvcrs): escalation lifecycle failure diagnostics [$TS]" || true
+          git push origin "$BR" || true
+          
+          echo "Created fix branch: $BR" >> $GITHUB_STEP_SUMMARY

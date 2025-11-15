@@ -1,0 +1,80 @@
+name: MV-CRS Governance Drift Auditor
+
+on:
+  schedule:
+    - cron: '45 8 * * *'
+  workflow_dispatch:
+
+jobs:
+  governance-drift:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.13'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+
+      - name: Run Governance Drift Auditor
+        id: gda
+        run: |
+          python scripts/audit/mvcrs_governance_drift_auditor.py
+          EXIT_CODE=$?
+          echo "exit_code=$EXIT_CODE" >> $GITHUB_OUTPUT
+          exit $EXIT_CODE
+
+      - name: Evaluate Drift Status
+        if: always()
+        run: |
+          if [ ! -f state/mvcrs_governance_drift.json ]; then
+            echo "⚠ Drift state file missing"; exit 1; fi
+          DRIFT_SCORE=$(jq -r '.drift_score // 0' state/mvcrs_governance_drift.json)
+          CONFIDENCE=$(jq -r '.confidence // 0' state/mvcrs_governance_drift.json)
+          echo "Drift Score: $DRIFT_SCORE"; echo "Confidence: $CONFIDENCE"
+          # Failure gate
+          if (( $(echo "$DRIFT_SCORE > 0.65" | bc -l) )) && (( $(echo "$CONFIDENCE > 0.60" | bc -l) )); then
+            echo "❌ High governance drift detected (score >0.65 & confidence >0.60)"; exit 1; fi
+          echo "✓ Drift within acceptable bounds"
+
+      - name: Upload Drift Artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: gda-state-${{ github.run_number }}
+          path: |
+            state/mvcrs_governance_drift.json
+            logs/mvcrs_gda_log.jsonl
+          retention-days: 90
+
+      - name: Create Fix Branch on High Drift
+        if: failure()
+        run: |
+          TIMESTAMP=$(date -u +%Y%m%dT%H%M%SZ)
+          BRANCH="fix/mvcrs-gda-$TIMESTAMP"
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git checkout -b "$BRANCH"
+          git add -A
+          git commit -m "fix(gda): high governance drift detected (score/conf threshold breach)" || true
+          echo "<!-- MVCRS_GDA: FAILED $(date -u +%Y-%m-%dT%H:%M:%SZ) -->" >> INSTRUCTION_EXECUTION_SUMMARY.md
+          git add INSTRUCTION_EXECUTION_SUMMARY.md
+          git commit -m "docs(gda): append governance drift failure marker" || true
+          git push origin "$BRANCH"
+
+      - name: Append Verification Marker
+        if: success()
+        run: |
+          echo "<!-- MVCRS_GDA: VERIFIED $(date -u +%Y-%m-%dT%H:%M:%SZ) -->" >> INSTRUCTION_EXECUTION_SUMMARY.md
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add INSTRUCTION_EXECUTION_SUMMARY.md
+          git commit -m "docs(gda): append governance drift verification marker" || true
+          git push origin HEAD
