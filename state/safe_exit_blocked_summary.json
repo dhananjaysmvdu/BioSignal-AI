@@ -1,0 +1,27 @@
+{
+  "status": "BLOCKED",
+  "generated_at": "2025-11-15T14:22:06Z",
+  "branch": "fix/safe-exit-blocked-20251115T142206Z",
+  "reasons": [
+    "policy_fusion_red",
+    "trust_guard_locked",
+    "convergence_below_0.40_and_no_upward_trend"
+  ],
+  "evidence": {
+    "alignment_status": "aligned",
+    "convergence_score": 0.2,
+    "last3_scores": [0.2, 0.2, 0.2],
+    "drift_score": 0.0,
+    "input_fresh_hours_min": 0.22,
+    "fusion_level": "FUSION_RED",
+    "trust_locked": true,
+    "escalation_status": "none",
+    "safe_mode_lock_present": true
+  },
+  "next_actions": [
+    "Run policy_fusion_engine to reevaluate and clear RED if conditions permit",
+    "Unlock trust guard via trust_guard_controller or wait for scheduled unlock",
+    "Continue monitoring convergence; require >=0.40 or clear upward trend",
+    "Once gates pass, rerun Instruction 151 from step 2"
+  ]
+}

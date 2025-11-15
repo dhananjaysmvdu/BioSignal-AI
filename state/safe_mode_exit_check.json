@@ -1,0 +1,25 @@
+{
+  "alignment_ok": true,
+  "alignment_status": "aligned",
+  "drift_or_fresh_ok": true,
+  "drift_value": 0.0,
+  "input_fresh_hours_min": 0.22,
+  "inputs_freshness": [
+    {"file": "state/mvcrs_stability_convergence.json", "age_hours": 0.22},
+    {"file": "state/mvcrs_governance_drift.json", "age_hours": 0.39},
+    {"file": "state/mvcrs_horizon_coherence.json", "age_hours": 2.21},
+    {"file": "state/mvcrs_stabilization_profile.json", "age_hours": 2.21},
+    {"file": "state/mvcrs_multi_horizon_ensemble.json", "age_hours": 2.21}
+  ],
+  "convergence_ok": false,
+  "convergence_score": 0.2,
+  "trend_up_last3": false,
+  "last3_scores": [0.2, 0.2, 0.2],
+  "policy_fusion_ok": false,
+  "fusion_level": "FUSION_RED",
+  "trust_guard_ok": false,
+  "trust_locked": true,
+  "escalation_ok": true,
+  "escalation_status": "none",
+  "safe_mode_lock_present": true
+}
