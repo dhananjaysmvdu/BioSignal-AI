@@ -1,0 +1,10 @@
+{
+  "ready_for_green": true,
+  "green_attempt_branch": "release/green-attempt-20251116T101500Z",
+  "gates": {
+    "sustainment": true,
+    "convergence": true,
+    "trust": true,
+    "alignment": true
+  }
+}
