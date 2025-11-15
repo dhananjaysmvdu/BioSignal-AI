@@ -283,7 +283,7 @@ def run_gdse_engine() -> int:
         update_audit_marker('FAILED')
         return 2
     update_audit_marker('UPDATED')
-    print('✓ Stabilization profile generated')
+    print('[OK] Stabilization profile generated')
     return 0
 
 if __name__ == '__main__':
