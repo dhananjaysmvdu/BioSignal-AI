@@ -1,0 +1,43 @@
+{
+  "package_version": 1,
+  "prepared_at": "2025-11-16T10:15:00Z",
+  "preconditions": {
+    "sustainment": "PASS",
+    "convergence_score": 0.26,
+    "trust": "UNLOCKED",
+    "alignment": "ALIGNED"
+  },
+  "rollback_criteria": {
+    "fusion_RED": true,
+    "alignment_not_ALIGNED": true,
+    "confidence_drop_gt_0_05": true,
+    "convergence_drop_gt_0_05": true,
+    "weight_health_CORRUPT": true
+  },
+  "step_1": {
+    "type": "dry_run",
+    "notes": "Dry-run already evaluated in prior steps; included for completeness"
+  },
+  "step_2": {
+    "type": "staged_reactivation",
+    "members": []
+  },
+  "step_3": {
+    "type": "apply_weights_confidence",
+    "confidence_target": 0.15,
+    "weight_map": {
+      "ensemble_1": 0.2525,
+      "ensemble_2": 0.2525,
+      "ensemble_4": 0.2525,
+      "ensemble_5": 0.2525,
+      "ensemble_3": 0.0
+    }
+  },
+  "consolidation_probes": 3,
+  "audit_plan": {
+    "snapshots": ["pre", "post"],
+    "artifacts": [
+      "fusion/green_apply_183.json"
+    ]
+  }
+}
