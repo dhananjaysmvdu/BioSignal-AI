@@ -1,0 +1,8 @@
+{
+  "timestamp_utc": "2025-11-15T15:35:00Z",
+  "convergence_score": 0.2,
+  "fusion_status": "RED",
+  "drift_trend": "stable",
+  "alignment_state": "aligned",
+  "selected_path": "FUSION_FIRST"
+}
