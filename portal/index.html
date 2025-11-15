@@ -453,6 +453,54 @@
                     </div>
                 </div>
             </div>
+
+            <!-- Predictive Ensemble (1d / 7d / 30d) -->
+            <div class="metric-card">
+                <div class="metric-header">
+                    <span class="metric-title">Predictive Ensemble (1d / 7d / 30d)</span>
+                    <span class="status-badge" id="mhpe-dominant-badge">—</span>
+                </div>
+                <div style="margin-top:15px;">
+                    <div class="metric-detail">
+                        <span class="detail-label">1-Day Instability</span>
+                        <span class="detail-value">
+                            <span class="status-badge" id="mhpe-1d-badge">—</span>
+                            <strong id="mhpe-1d-value">—</strong>
+                        </span>
+                    </div>
+                    <div class="metric-detail">
+                        <span class="detail-label">7-Day Instability</span>
+                        <span class="detail-value">
+                            <span class="status-badge" id="mhpe-7d-badge">—</span>
+                            <strong id="mhpe-7d-value">—</strong>
+                        </span>
+                    </div>
+                    <div class="metric-detail">
+                        <span class="detail-label">30-Day Instability</span>
+                        <span class="detail-value">
+                            <span class="status-badge" id="mhpe-30d-badge">—</span>
+                            <strong id="mhpe-30d-value">—</strong>
+                        </span>
+                    </div>
+                    <div class="metric-detail">
+                        <span class="detail-label">Ensemble Confidence</span>
+                        <span class="detail-value">
+                            <meter id="mhpe-confidence-meter" min="0" max="1" low="0.3" high="0.7" optimum="0.9" value="0"></meter>
+                            <strong id="mhpe-confidence-value">—</strong>
+                        </span>
+                    </div>
+                    <div class="metric-detail" style="margin-top:15px;">
+                        <details>
+                            <summary style="cursor:pointer;color:#667eea;font-weight:600;">📊 Explanation</summary>
+                            <p id="mhpe-explanation" style="margin-top:10px;padding:10px;background:#f9fafb;border-left:3px solid #667eea;font-size:0.9em;color:#555;">—</p>
+                        </details>
+                    </div>
+                    <div class="metric-detail">
+                        <span class="detail-label">Last Updated</span>
+                        <span class="detail-value" id="mhpe-last-updated">—</span>
+                    </div>
+                </div>
+            </div>
             
             <!-- Integrity Card -->
             <div class="metric-card">
@@ -1925,6 +1973,101 @@
         }
         loadHorizonCoherence();
         setInterval(loadHorizonCoherence, 15000);
+
+        // Load Predictive Ensemble
+        async function loadPredictiveEnsemble(){
+            try{
+                const response = await fetch('../state/mvcrs_multi_horizon_ensemble.json', {cache:'no-store'});
+                if(!response.ok){
+                    document.getElementById('mhpe-1d-value').textContent='—';
+                    document.getElementById('mhpe-7d-value').textContent='—';
+                    document.getElementById('mhpe-30d-value').textContent='—';
+                    document.getElementById('mhpe-confidence-value').textContent='—';
+                    document.getElementById('mhpe-dominant-badge').textContent='—';
+                    document.getElementById('mhpe-explanation').textContent='—';
+                    document.getElementById('mhpe-last-updated').textContent='—';
+                    return;
+                }
+                const data = await response.json();
+                if(data){
+                    const instab1d = data.instability_1d ?? 0.0;
+                    const instab7d = data.instability_7d ?? 0.0;
+                    const instab30d = data.instability_30d ?? 0.0;
+                    const confidence = data.ensemble_confidence ?? 0.0;
+                    const dominant = data.dominant_horizon ?? 'unknown';
+                    const explanation = data.explanation ?? 'No explanation available';
+                    const timestamp = data.timestamp ?? '—';
+
+                    // Probability badges color coding
+                    function setProbBadge(elemId, prob){
+                        const badge = document.getElementById(elemId);
+                        if(prob < 0.10){
+                            badge.className='status-badge status-green';
+                            badge.textContent='LOW';
+                        } else if(prob < 0.30) {
+                            badge.className='status-badge';
+                            badge.style.background='#fbbf24'; badge.style.color='white';
+                            badge.textContent='MODERATE';
+                        } else if(prob < 0.60) {
+                            badge.className='status-badge';
+                            badge.style.background='#f97316'; badge.style.color='white';
+                            badge.textContent='ELEVATED';
+                        } else {
+                            badge.className='status-badge';
+                            badge.style.background='#ef4444'; badge.style.color='white';
+                            badge.textContent='HIGH';
+                        }
+                    }
+
+                    setProbBadge('mhpe-1d-badge', instab1d);
+                    setProbBadge('mhpe-7d-badge', instab7d);
+                    setProbBadge('mhpe-30d-badge', instab30d);
+
+                    document.getElementById('mhpe-1d-value').textContent=(instab1d*100).toFixed(1) + '%';
+                    document.getElementById('mhpe-7d-value').textContent=(instab7d*100).toFixed(1) + '%';
+                    document.getElementById('mhpe-30d-value').textContent=(instab30d*100).toFixed(1) + '%';
+
+                    // Confidence meter
+                    const meter = document.getElementById('mhpe-confidence-meter');
+                    meter.value = confidence;
+                    document.getElementById('mhpe-confidence-value').textContent=(confidence*100).toFixed(1) + '%';
+
+                    // Dominant horizon badge
+                    const domBadge = document.getElementById('mhpe-dominant-badge');
+                    const horizonMap = {
+                        'short_term': 'SHORT-TERM',
+                        'mid_term': 'MID-TERM',
+                        'long_term': 'LONG-TERM'
+                    };
+                    domBadge.textContent = horizonMap[dominant] || 'UNKNOWN';
+                    if(dominant === 'short_term'){
+                        domBadge.className='status-badge';
+                        domBadge.style.background='#3b82f6'; domBadge.style.color='white';
+                    } else if(dominant === 'mid_term'){
+                        domBadge.className='status-badge';
+                        domBadge.style.background='#8b5cf6'; domBadge.style.color='white';
+                    } else if(dominant === 'long_term'){
+                        domBadge.className='status-badge';
+                        domBadge.style.background='#ec4899'; domBadge.style.color='white';
+                    } else {
+                        domBadge.className='status-badge';
+                        domBadge.style.background='#6b7280'; domBadge.style.color='white';
+                    }
+
+                    document.getElementById('mhpe-explanation').textContent=explanation;
+                    
+                    if(timestamp !== '—'){
+                        const ts = new Date(timestamp);
+                        document.getElementById('mhpe-last-updated').textContent=ts.toLocaleString();
+                    } else {
+                        document.getElementById('mhpe-last-updated').textContent='—';
+                    }
+                }
+            } catch(e){ /* silent */ }
+        }
+        loadPredictiveEnsemble();
+        setInterval(loadPredictiveEnsemble, 15000);
+
         async function loadApprovalStatus(){
             try{
                 const response = await fetch('../state/approval_state.json', {cache:'no-store'});

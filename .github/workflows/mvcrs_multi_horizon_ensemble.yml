@@ -1,0 +1,104 @@
+name: MV-CRS Multi-Horizon Predictive Ensemble
+
+on:
+  schedule:
+    # Daily execution at 08:20 UTC (after Horizon Coherence at 08:00)
+    - cron: '20 8 * * *'
+  workflow_dispatch:
+
+jobs:
+  mhpe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.13'
+      
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+      
+      - name: Run MHPE Engine
+        id: mhpe
+        run: |
+          python scripts/mhpe/mvcrs_multi_horizon_ensemble.py
+          EXIT_CODE=$?
+          echo "exit_code=$EXIT_CODE" >> $GITHUB_OUTPUT
+          exit $EXIT_CODE
+      
+      - name: Evaluate Ensemble Status
+        if: always()
+        run: |
+          if [ ! -f state/mvcrs_multi_horizon_ensemble.json ]; then
+            echo "⚠ MHPE state file not found"
+            exit 1
+          fi
+          
+          INSTAB_1D=$(jq -r '.instability_1d // 0' state/mvcrs_multi_horizon_ensemble.json)
+          INSTAB_7D=$(jq -r '.instability_7d // 0' state/mvcrs_multi_horizon_ensemble.json)
+          INSTAB_30D=$(jq -r '.instability_30d // 0' state/mvcrs_multi_horizon_ensemble.json)
+          CONFIDENCE=$(jq -r '.ensemble_confidence // 0' state/mvcrs_multi_horizon_ensemble.json)
+          
+          echo "1d instability: $INSTAB_1D"
+          echo "7d instability: $INSTAB_7D"
+          echo "30d instability: $INSTAB_30D"
+          echo "Ensemble confidence: $CONFIDENCE"
+          
+          # Failure condition: any probability > 0.95 AND confidence > 0.70
+          if (( $(echo "$INSTAB_1D > 0.95" | bc -l) )) && (( $(echo "$CONFIDENCE > 0.70" | bc -l) )); then
+            echo "❌ CRITICAL: 1d instability >0.95 with high confidence"
+            exit 1
+          fi
+          if (( $(echo "$INSTAB_7D > 0.95" | bc -l) )) && (( $(echo "$CONFIDENCE > 0.70" | bc -l) )); then
+            echo "❌ CRITICAL: 7d instability >0.95 with high confidence"
+            exit 1
+          fi
+          if (( $(echo "$INSTAB_30D > 0.95" | bc -l) )) && (( $(echo "$CONFIDENCE > 0.70" | bc -l) )); then
+            echo "❌ CRITICAL: 30d instability >0.95 with high confidence"
+            exit 1
+          fi
+          
+          echo "✓ Ensemble status within acceptable bounds"
+      
+      - name: Upload MHPE Artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: mhpe-state-${{ github.run_number }}
+          path: |
+            state/mvcrs_multi_horizon_ensemble.json
+            logs/mvcrs_mhpe_log.jsonl
+          retention-days: 90
+      
+      - name: Create Fix Branch on Critical Instability
+        if: failure()
+        run: |
+          TIMESTAMP=$(date -u +%Y%m%dT%H%M%SZ)
+          BRANCH="fix/mvcrs-mhpe-$TIMESTAMP"
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git checkout -b "$BRANCH"
+          git add -A
+          git commit -m "fix(mhpe): critical instability detected (>0.95 with confidence >0.70)" || true
+          git push origin "$BRANCH"
+          echo "<!-- MVCRS_MHPE: FAILED $(date -u +%Y-%m-%dT%H:%M:%SZ) -->" >> INSTRUCTION_EXECUTION_SUMMARY.md
+          git add INSTRUCTION_EXECUTION_SUMMARY.md
+          git commit -m "docs: append MHPE failure marker" || true
+          git push origin "$BRANCH"
+      
+      - name: Append Success Marker
+        if: success()
+        run: |
+          echo "<!-- MVCRS_MHPE: VERIFIED $(date -u +%Y-%m-%dT%H:%M:%SZ) -->" >> INSTRUCTION_EXECUTION_SUMMARY.md
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add INSTRUCTION_EXECUTION_SUMMARY.md
+          git commit -m "docs: append MHPE verification marker" || true
+          git push origin HEAD
