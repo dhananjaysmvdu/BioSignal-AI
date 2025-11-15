@@ -1856,3 +1856,38 @@ Workflow:
 - Complements temporal reconciliation (HCE) + predictive ensemble (MHPE)
 \n+**Summary Last Updated**: 2025-11-15T11:15:00Z
 <!-- MVCRS_GDA: UPDATED 2025-11-15T07:36:11.546279+00:00 -->
+\n+## Phase XLIII — Governance Drift Stabilization Engine (GDSE)
+\n+**Instructions Executed**:
+1. GDSE Engine (`mvcrs_governance_drift_stabilizer.py`) — converts drift/coherence/ensemble into bounded correction vector
+2. Metrics — drift_pressure, coherence_stress, forecast_weight, final_confidence, stabilization_intensity
+3. Confidence — alignment × recency × agreement (fallback to moderate if <0.30)
+4. Correction Vector — threshold_shift_pct (−2→+2), rdgl_learning_rate_factor (0.7→1.3), fusion_bias_delta (−0.05→+0.05), response_sensitivity (0.8→1.2)
+5. Reason Matrix — top 5 influences (abs contribution desc then name) with signed values
+6. CI Workflow (`mvcrs_governance_drift_stabilizer.yml`) — 09:00 UTC post-GDA (08:45); fail if intensity=high & final_confidence>0.75 (fix branch + FAILED marker)
+7. Portal Card — “Drift Stabilization Profile” (intensity badge, correction vector, confidence meter, reason matrix detail, 15s refresh)
+8. Test Suite (`tests/stabilization/test_gdse.py`, 8 tests) — high/high→high, low/low→low, confidence fallback, clamping (threshold/rdgl), write failure branch, marker idempotency, deterministic reason ordering
+9. Documentation (`PHASE_XLIII_STABILIZATION_ENGINE.md`) — formulas, safety, CI gating, portal UX, subsystem integration
+10. Execution Summary — Phase XLIII section appended (this block)
+\n+**Intensity Logic**:
+HIGH if drift_pressure>0.65 & coherence_stress>0.65; MODERATE if max>0.40; else LOW; confidence<0.30 → MODERATE override.
+\n+**Safety**:
+- Atomic writes (1s/3s/9s) for state+log
+- Fix branch `fix/mvcrs-gdse-<timestamp>` on persistent failure or CI gating
+- Idempotent marker: `<!-- MVCRS_GDSE: UPDATED <UTC ISO> -->`
+- Deterministic rounding & sorted influences
+\n+**Artifacts**:
+- `scripts/stabilization/mvcrs_governance_drift_stabilizer.py`
+- `state/mvcrs_stabilization_profile.json`
+- `logs/mvcrs_gdse_log.jsonl`
+- `.github/workflows/mvcrs_governance_drift_stabilizer.yml`
+- `portal/index.html` (stabilization card + loader)
+- `tests/stabilization/test_gdse.py`
+- `docs/PHASE_XLIII_STABILIZATION_ENGINE.md`
+\n+**Validation**:
+- 8/8 stabilization tests passing (pending full suite rerun)
+- Portal card added with auto-refresh
+- Workflow scheduled after drift audit
+\n+**Meta-Governance Progression**:
+Adds stabilization layer (Phase XLIII) completing drift insight → corrective guidance loop (Phases XL–XLIII stack).
+\n+**Summary Last Updated**: 2025-11-15T11:45:00Z
+<!-- MVCRS_GDSE: UPDATED 2025-11-15T07:43:51.662829+00:00 -->

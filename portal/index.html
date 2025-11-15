@@ -541,6 +541,50 @@
                     </div>
                 </div>
             </div>
+
+            <!-- Drift Stabilization Profile -->
+            <div class="metric-card">
+                <div class="metric-header">
+                    <span class="metric-title">Drift Stabilization Profile</span>
+                    <span class="status-badge" id="gdse-intensity-badge">—</span>
+                </div>
+                <div style="margin-top:15px;">
+                    <div class="metric-detail">
+                        <span class="detail-label">Stabilization Intensity</span>
+                        <span class="detail-value" id="gdse-intensity-value">—</span>
+                    </div>
+                    <div class="metric-detail">
+                        <span class="detail-label">Threshold Shift (%)</span>
+                        <span class="detail-value" id="gdse-threshold-shift">—</span>
+                    </div>
+                    <div class="metric-detail">
+                        <span class="detail-label">RDGL Learning Rate</span>
+                        <span class="detail-value" id="gdse-rdgl-lr">—</span>
+                    </div>
+                    <div class="metric-detail">
+                        <span class="detail-label">Fusion Bias Δ</span>
+                        <span class="detail-value" id="gdse-fusion-bias">—</span>
+                    </div>
+                    <div class="metric-detail">
+                        <span class="detail-label">Response Sensitivity</span>
+                        <span class="detail-value" id="gdse-response-sens">—</span>
+                    </div>
+                    <div class="metric-detail">
+                        <span class="detail-label">Confidence</span>
+                        <span class="detail-value"><meter id="gdse-confidence-meter" min="0" max="1" low="0.3" high="0.7" optimum="0.9" value="0"></meter> <strong id="gdse-confidence-value">—</strong></span>
+                    </div>
+                    <div class="metric-detail" style="margin-top:15px;">
+                        <details>
+                            <summary style="cursor:pointer;color:#667eea;font-weight:600;">🧩 Reason Matrix</summary>
+                            <div id="gdse-reason-matrix" style="margin-top:10px;padding:10px;background:#f9fafb;border-left:3px solid #667eea;font-size:0.75em;color:#555;line-height:1.4;">—</div>
+                        </details>
+                    </div>
+                    <div class="metric-detail">
+                        <span class="detail-label">Last Updated</span>
+                        <span class="detail-value" id="gdse-last-updated">—</span>
+                    </div>
+                </div>
+            </div>
             
             <!-- Integrity Card -->
             <div class="metric-card">
@@ -2168,6 +2212,57 @@
         }
         loadGovernanceDrift();
         setInterval(loadGovernanceDrift, 15000);
+
+        // Load Drift Stabilization Profile (GDSE)
+        async function loadStabilizationProfile(){
+            try{
+                const response = await fetch('../state/mvcrs_stabilization_profile.json', {cache:'no-store'});
+                if(!response.ok){
+                    document.getElementById('gdse-intensity-value').textContent='—';
+                    document.getElementById('gdse-threshold-shift').textContent='—';
+                    document.getElementById('gdse-rdgl-lr').textContent='—';
+                    document.getElementById('gdse-fusion-bias').textContent='—';
+                    document.getElementById('gdse-response-sens').textContent='—';
+                    document.getElementById('gdse-confidence-value').textContent='—';
+                    document.getElementById('gdse-reason-matrix').textContent='—';
+                    document.getElementById('gdse-last-updated').textContent='—';
+                    const badge=document.getElementById('gdse-intensity-badge');
+                    badge.textContent='—'; badge.className='status-badge'; badge.style.background='#6b7280'; badge.style.color='white';
+                    return;
+                }
+                const data = await response.json();
+                if(data){
+                    const intensity = data.stabilization_intensity || 'unknown';
+                    const cv = data.correction_vector || {};
+                    const conf = data.final_confidence || 0.0;
+                    const reasons = data.reason_matrix || [];
+                    const tsVal = data.timestamp || '—';
+
+                    document.getElementById('gdse-intensity-value').textContent=intensity.toUpperCase();
+                    document.getElementById('gdse-threshold-shift').textContent=(cv.threshold_shift_pct!==undefined? cv.threshold_shift_pct.toFixed(2)+'%':'—');
+                    document.getElementById('gdse-rdgl-lr').textContent=(cv.rdgl_learning_rate_factor!==undefined? cv.rdgl_learning_rate_factor.toFixed(2):'—');
+                    document.getElementById('gdse-fusion-bias').textContent=(cv.fusion_bias_delta!==undefined? cv.fusion_bias_delta.toFixed(3):'—');
+                    document.getElementById('gdse-response-sens').textContent=(cv.response_sensitivity!==undefined? cv.response_sensitivity.toFixed(2):'—');
+                    document.getElementById('gdse-confidence-value').textContent=(conf*100).toFixed(1)+'%';
+                    document.getElementById('gdse-reason-matrix').innerHTML = reasons.length ? reasons.map(r=>'<span style=\"display:block\">• '+r.replace(/_/g,' ')+'</span>').join('') : '<em>No influences</em>';
+                    if(tsVal!=='—'){ const ts=new Date(tsVal); document.getElementById('gdse-last-updated').textContent=ts.toLocaleString(); } else { document.getElementById('gdse-last-updated').textContent='—'; }
+                    const badge=document.getElementById('gdse-intensity-badge');
+                    if(intensity==='low'){
+                        badge.className='status-badge'; badge.style.background='#10b981'; badge.style.color='white'; badge.textContent='LOW';
+                    } else if(intensity==='moderate'){
+                        badge.className='status-badge'; badge.style.background='#fbbf24'; badge.style.color='white'; badge.textContent='MODERATE';
+                    } else if(intensity==='high'){
+                        badge.className='status-badge'; badge.style.background='#ef4444'; badge.style.color='white'; badge.textContent='HIGH';
+                    } else {
+                        badge.className='status-badge'; badge.style.background='#6b7280'; badge.style.color='white'; badge.textContent='—';
+                    }
+                    const confMeter = document.getElementById('gdse-confidence-meter');
+                    if(confMeter) confMeter.value = conf;
+                }
+            }catch(e){ /* silent */ }
+        }
+        loadStabilizationProfile();
+        setInterval(loadStabilizationProfile, 15000);
 
         async function loadApprovalStatus(){
             try{
