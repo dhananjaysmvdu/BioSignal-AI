@@ -1,0 +1,9 @@
+{
+  "timestamp_utc": "2025-11-15T16:25:00Z",
+  "new_convergence_score": 0.18,
+  "slope": 0.02,
+  "alignment_state": "ALIGNED",
+  "mhpe_signal_strength": "moderate",
+  "drift_state": "low",
+  "fusion_level": "YELLOW"
+}
