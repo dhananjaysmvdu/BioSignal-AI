@@ -1,0 +1,11 @@
+{
+  "resilience_status": "PASS",
+  "fusion_level": "YELLOW",
+  "confidence_level": 0.12,
+  "quarantined_members": ["ensemble_3"],
+  "timestamp": "2025-11-15T17:09:00Z",
+  "provenance": {
+    "source": "chat_summary",
+    "exact": true
+  }
+}

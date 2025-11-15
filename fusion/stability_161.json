@@ -1,0 +1,12 @@
+{
+  "transition_status": "PASS",
+  "gate_fusion": true,
+  "gate_confidence": true,
+  "fusion_level": "YELLOW",
+  "confidence_level": 0.12,
+  "timestamp": "2025-11-15T17:09:00Z",
+  "provenance": {
+    "source": "chat_summary",
+    "exact": true
+  }
+}

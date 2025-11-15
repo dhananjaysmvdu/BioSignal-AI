@@ -1,0 +1,20 @@
+{
+  "timestamp": "2025-11-15T17:09:00Z",
+  "reconstructed_by": "GitHub Copilot (GPT-4.1)",
+  "branch": "recovery/reconstruct-166S-20251115T170900Z",
+  "files_exact": [
+    "convergence/baseline_163.json",
+    "convergence/prep_162.json",
+    "fusion/resilience_160.json",
+    "fusion/stability_161.json",
+    "fusion/quarantine_160.json"
+  ],
+  "files_approximated": [
+    "fusion/weight_map_latest.json",
+    "fusion/confidence_vector.json"
+  ],
+  "files_repaired": [],
+  "files_failed": [],
+  "manifest_path": "state/reconstruction_manifest_166S.json",
+  "reconstruction_status": "RESTORED"
+}

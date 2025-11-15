@@ -1,0 +1,16 @@
+{
+  "global_confidence": 0.12,
+  "component_confidence": {
+    "ensemble_1": 0.12,
+    "ensemble_2": 0.12,
+    "ensemble_4": 0.12,
+    "ensemble_5": 0.12,
+    "ensemble_3": 0.0
+  },
+  "timestamp": "2025-11-15T17:09:00Z",
+  "provenance": {
+    "source": "chat_summary",
+    "approximate": true,
+    "notes": "Assumed per-component confidence due to missing canonical list."
+  }
+}
