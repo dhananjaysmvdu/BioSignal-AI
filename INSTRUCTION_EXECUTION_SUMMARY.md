@@ -450,6 +450,93 @@ Critical Achievement: System now closes observation→prediction→response loop
 
 ---
 
+## Phase XXXIX — MV-CRS Unified Long-Horizon Governance Synthesizer (HLGS)
+
+**Instructions Executed**:
+1. Long-Horizon Governance Synthesizer (`mvcrs_hlgs.py`) — 45-day predictive planning combining all MV-CRS signals, RDGL patterns, ATTE drifts, fusion cycles, trust events, forensic trends, strategic influence
+2. Trend Analysis — MV-CRS health (improving/stable/declining), RDGL trajectory (upward/sideways/downward), ATTE pressure (low/medium/high), fusion cycle (relax/steady/tighten)
+3. Risk Projection — forensic risk (0.0-1.0), policy instability (0.0-1.0), expected trust events (1-3)
+4. Instability Detection — cluster detection (3+ concurrent warnings → critical status)
+5. Action Recommendation — status-based governance actions (stable: 0-1 advisory, volatile: 1-2 stabilizers, critical: 2-3 preventive interventions)
+6. Confidence Scoring — strategic influence quality × feedback freshness × optional data completeness
+7. CI Workflow (`mvcrs_hlgs.yml`) — daily 07:45 UTC, critical detection (status=critical + confidence>0.7), fix-branch creation
+8. Portal Integration — Long-Horizon Governance Plan card with status, trends, projections, recommended actions (15s refresh)
+9. Test Suite (8 tests) — stable/volatile/critical scenarios, numeric clamping, confidence drops, idempotency, fix-branch, trend analysis accuracy
+10. Phase XXXIX Documentation — 45-day planning model, trend extraction, risk projection, instability clusters, human oversight API
+
+**45-Day Planning Model**:
+- **Stable** (0-1 warnings, instability <0.4): Advisory actions only (monitor_governance_metrics, lower_adaptive_response_frequency)
+- **Volatile** (2 warnings, instability 0.4-0.7): 1-2 stabilizers (hold_current_policy, increase_threshold_headroom, raise_fusion_sensitivity)
+- **Critical** (3+ warnings, instability >0.7): 2-3 preventive interventions (increase_threshold_headroom, prepare_self_healing_window, raise_fusion_sensitivity, hold_current_policy)
+
+**Trend Extraction**:
+- **MV-CRS Health Trend**: ok+aggressive→improving, warning+stable→stable, failed+cautious→declining
+- **RDGL Trajectory**: policy_score >0.7→upward, 0.4-0.7→sideways, <0.4→downward
+- **ATTE Pressure**: ceiling ≥3.5%→low, ≤2.0%→high, else→medium (aggressive profile bonus)
+- **Fusion Cycle**: GREEN/relax→relax, RED/tighten→tighten, else→steady
+
+**Risk Projection**:
+- **Forensic Risk**: (anomaly_count/100) × 0.5 + drift_probability × 0.5 (clamped 0.0-1.0)
+- **Policy Instability**: failed+0.4, warning+0.2, RED+0.3, YELLOW+0.15, (1-confidence)×0.3 (clamped 0.0-1.0)
+- **Trust Events**: |trust_delta| >0.04→3 events, >0.02→2 events, else→1 event
+
+**Instability Cluster Detection**:
+- Declining MV-CRS trend: +1 warning
+- Forensic risk >0.6: +1 warning
+- Policy instability >0.5: +1 warning
+- Fusion cycle=tighten: +1 warning
+- ATTE pressure=high: +1 warning
+- **Cluster threshold**: 3+ warnings → critical status
+
+**Key Artifacts**:
+- `scripts/mvcrs/mvcrs_hlgs.py` — HLGS engine (700+ lines)
+- `state/mvcrs_long_horizon_plan.json` — 45-day governance plan
+- `logs/mvcrs_hlgs_log.jsonl` — append-only planning history
+- `.github/workflows/mvcrs_hlgs.yml` — daily CI workflow
+- `portal/index.html` — Long-Horizon Governance Plan card
+- `tests/mvcrs/test_hlgs_engine.py` — 8 comprehensive tests
+
+**Complete CI Chain**:
+- 03:30 UTC: Verifier → Correction → 06:40 UTC: Lifecycle → 06:50 UTC: Integration → 07:10 UTC: Feedback → 07:30 UTC: Strategic → **07:45 UTC: HLGS**
+- Critical detection: status=critical + confidence>0.7 → workflow failure + fix-branch
+- Success marker: `<!-- MVCRS_HLGS: VERIFIED <UTC> -->`
+- Critical marker: `<!-- MVCRS_HLGS: CRITICAL <UTC> -->` + fix-branch
+
+**Safety Constraints**:
+- Numeric clamping: forensic risk [0.0-1.0], policy instability [0.0-1.0], confidence [0.0-1.0]
+- Atomic writes (1s/3s/9s retry pattern)
+- Idempotent audit markers (UPDATED/CRITICAL)
+- Fix-branch creation on persistent failures
+- Confidence-based gating (critical + confidence<0.7 → exit code 0, monitoring only)
+
+**Validation**:
+- 8/8 HLGS tests passing (0.85s)
+- Full MV-CRS suite: 75/75 passing (67 prior + 8 HLGS)
+- Portal card renders with live long-horizon plan
+- CI workflow integrates as final step in daily orchestration
+
+**Meta-Governance Achievement**:
+- **Planning Cortex**: Extends governance from daily reactive responses to 45-day strategic planning
+- **Trend Synthesis**: Unifies MV-CRS health, RDGL learning, ATTE pressure, fusion cycles into cohesive trajectory analysis
+- **Proactive Risk Management**: Projects forensic threats, policy instability, trust volatility 45 days ahead
+- **Human-Guided Autonomy**: Confidence-gated approval for critical status (>0.7 threshold)
+
+**Downstream Consumption**:
+- **Strategic Planning Dashboard**: Critical status → alert governance team, schedule emergency review
+- **Adaptive Response Prioritization**: Recommended actions → schedule threshold adjustments, self-healing windows
+- **Policy Planning Automation**: Improving trend → reduce overhead, declining trend → increase monitoring
+
+**Human Oversight API**:
+- Endpoint: `state/mvcrs_long_horizon_plan.json`
+- Fields: status, horizon_days, trends (MV-CRS, RDGL, ATTE, fusion), projections (forensic risk, policy instability, trust events), recommended_governance_actions, confidence, timestamp
+- Portal: Live dashboard with 15s auto-refresh, badge colors (stable=green, volatile=yellow, critical=red)
+
+**Reference**: `PHASE_XXXIX_LONG_HORIZON_GOVERNANCE.md`
+
+**Summary Last Updated**: 2025-11-15T08:00:00Z
+
+---
+
 ## Phase XXXV — MV-CRS Escalation Lifecycle Orchestration
 
 **Instructions Executed**:

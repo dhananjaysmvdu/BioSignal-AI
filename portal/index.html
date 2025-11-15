@@ -358,6 +358,58 @@
                 </div>
             </div>
             
+            <!-- MV-CRS Long-Horizon Governance Plan (45 Days) -->
+            <div class="metric-card">
+                <div class="metric-header">
+                    <span class="metric-title">Long-Horizon Governance Plan (45 Days)</span>
+                    <span class="status-badge" id="hlgs-status-badge">—</span>
+                </div>
+                <div class="metric-value" style="font-size:1.5em;" id="hlgs-status-value">—</div>
+                <div class="metric-label">Overall Governance Status</div>
+                <div style="margin-top:20px;">
+                    <div class="metric-detail">
+                        <span class="detail-label">MV-CRS Health Trend</span>
+                        <span class="detail-value" id="hlgs-mvcrs-trend">—</span>
+                    </div>
+                    <div class="metric-detail">
+                        <span class="detail-label">Forensic Risk Projection</span>
+                        <span class="detail-value" id="hlgs-forensic-risk">—</span>
+                    </div>
+                    <div class="metric-detail">
+                        <span class="detail-label">Policy Instability Prediction</span>
+                        <span class="detail-value" id="hlgs-policy-instability">—</span>
+                    </div>
+                    <div class="metric-detail">
+                        <span class="detail-label">Expected Trust Events</span>
+                        <span class="detail-value" id="hlgs-trust-events">—</span>
+                    </div>
+                    <div class="metric-detail">
+                        <span class="detail-label">RDGL Trajectory</span>
+                        <span class="detail-value" id="hlgs-rdgl-trajectory">—</span>
+                    </div>
+                    <div class="metric-detail">
+                        <span class="detail-label">ATTE Pressure</span>
+                        <span class="detail-value" id="hlgs-atte-pressure">—</span>
+                    </div>
+                    <div class="metric-detail">
+                        <span class="detail-label">Fusion Cycle Prediction</span>
+                        <span class="detail-value" id="hlgs-fusion-cycle">—</span>
+                    </div>
+                    <div class="metric-detail">
+                        <span class="detail-label">Recommended Actions</span>
+                        <div class="detail-value" id="hlgs-actions" style="display:block; margin-top:5px; line-height:1.6;">—</div>
+                    </div>
+                    <div class="metric-detail">
+                        <span class="detail-label">Plan Confidence</span>
+                        <span class="detail-value" id="hlgs-confidence">—</span>
+                    </div>
+                    <div class="metric-detail">
+                        <span class="detail-label">Last Updated</span>
+                        <span class="detail-value" id="hlgs-last-updated">—</span>
+                    </div>
+                </div>
+            </div>
+            
             <!-- Integrity Card -->
             <div class="metric-card">
                 <div class="metric-header">
@@ -1680,6 +1732,88 @@
         }
         loadStrategicInfluence();
         setInterval(loadStrategicInfluence, 15000);
+
+        // Load Long-Horizon Governance Plan
+        async function loadLongHorizonPlan(){
+            try{
+                const response = await fetch('state/mvcrs_long_horizon_plan.json');
+                if(!response.ok){
+                    document.getElementById('hlgs-status-value').textContent='—';
+                    document.getElementById('hlgs-mvcrs-trend').textContent='—';
+                    document.getElementById('hlgs-forensic-risk').textContent='—';
+                    document.getElementById('hlgs-policy-instability').textContent='—';
+                    document.getElementById('hlgs-trust-events').textContent='—';
+                    document.getElementById('hlgs-rdgl-trajectory').textContent='—';
+                    document.getElementById('hlgs-atte-pressure').textContent='—';
+                    document.getElementById('hlgs-fusion-cycle').textContent='—';
+                    document.getElementById('hlgs-actions').innerHTML='—';
+                    document.getElementById('hlgs-confidence').textContent='—';
+                    document.getElementById('hlgs-last-updated').textContent='—';
+                    document.getElementById('hlgs-status-badge').textContent='—';
+                    return;
+                }
+                const data = await response.json();
+                if(data){
+                    const status = data.status ?? 'unknown';
+                    const mvcrsTrend = data.mvcrs_health_trend ?? '—';
+                    const forensicRisk = data.forensic_risk_projection ?? 0.0;
+                    const policyInstability = data.predicted_policy_instability ?? 0.0;
+                    const trustEvents = data.expected_trust_events ?? 0;
+                    const rdglTrajectory = data.rdgl_trajectory ?? '—';
+                    const attePressure = data.atte_pressure ?? '—';
+                    const fusionCycle = data.fusion_cycle_prediction ?? '—';
+                    const actions = data.recommended_governance_actions ?? [];
+                    const confidence = data.confidence ?? 0.0;
+                    const timestamp = data.timestamp ?? '—';
+                    
+                    document.getElementById('hlgs-status-value').textContent=status.toUpperCase();
+                    document.getElementById('hlgs-mvcrs-trend').textContent=mvcrsTrend.toUpperCase();
+                    document.getElementById('hlgs-forensic-risk').textContent=(forensicRisk * 100).toFixed(1) + '%';
+                    document.getElementById('hlgs-policy-instability').textContent=(policyInstability * 100).toFixed(1) + '%';
+                    document.getElementById('hlgs-trust-events').textContent=trustEvents;
+                    document.getElementById('hlgs-rdgl-trajectory').textContent=rdglTrajectory.toUpperCase();
+                    document.getElementById('hlgs-atte-pressure').textContent=attePressure.toUpperCase();
+                    document.getElementById('hlgs-fusion-cycle').textContent=fusionCycle.toUpperCase();
+                    document.getElementById('hlgs-confidence').textContent=(confidence * 100).toFixed(1) + '%';
+                    
+                    // Format actions as list
+                    if(actions.length > 0){
+                        const actionsList = actions.map(a => '<span style="display:block; margin:3px 0;">• ' + a.replace(/_/g, ' ') + '</span>').join('');
+                        document.getElementById('hlgs-actions').innerHTML=actionsList;
+                    } else {
+                        document.getElementById('hlgs-actions').innerHTML='<em>None</em>';
+                    }
+                    
+                    if(timestamp !== '—'){
+                        const ts = new Date(timestamp);
+                        document.getElementById('hlgs-last-updated').textContent=ts.toLocaleString();
+                    } else {
+                        document.getElementById('hlgs-last-updated').textContent='—';
+                    }
+                    
+                    // Badge color logic
+                    const badge = document.getElementById('hlgs-status-badge');
+                    if(status === 'stable'){
+                        badge.className='status-badge status-green';
+                        badge.textContent='STABLE';
+                    } else if(status === 'volatile') {
+                        badge.className='status-badge';
+                        badge.style.background='#f59e0b'; badge.style.color='white';
+                        badge.textContent='VOLATILE';
+                    } else if(status === 'critical') {
+                        badge.className='status-badge';
+                        badge.style.background='#ef4444'; badge.style.color='white';
+                        badge.textContent='CRITICAL';
+                    } else {
+                        badge.className='status-badge';
+                        badge.style.background='#6b7280'; badge.style.color='white';
+                        badge.textContent='UNKNOWN';
+                    }
+                }
+            } catch(e){ /* silent */ }
+        }
+        loadLongHorizonPlan();
+        setInterval(loadLongHorizonPlan, 15000);
 
         // Load Human Approval Status
         async function loadApprovalStatus(){
