@@ -1,0 +1,20 @@
+{
+  "sustainment_status": "PASS",
+  "baseline_metrics": [
+    {"fusion_level": "YELLOW", "fusion_confidence": 0.15, "alignment": "ALIGNED", "trust_variability": 0.009, "ensemble_balance": "STABLE", "weight_health": "NORMALIZED"},
+    {"fusion_level": "YELLOW", "fusion_confidence": 0.15, "alignment": "ALIGNED", "trust_variability": 0.009, "ensemble_balance": "STABLE", "weight_health": "NORMALIZED"},
+    {"fusion_level": "YELLOW", "fusion_confidence": 0.15, "alignment": "ALIGNED", "trust_variability": 0.009, "ensemble_balance": "STABLE", "weight_health": "NORMALIZED"},
+    {"fusion_level": "YELLOW", "fusion_confidence": 0.15, "alignment": "ALIGNED", "trust_variability": 0.009, "ensemble_balance": "STABLE", "weight_health": "NORMALIZED"},
+    {"fusion_level": "YELLOW", "fusion_confidence": 0.15, "alignment": "ALIGNED", "trust_variability": 0.009, "ensemble_balance": "STABLE", "weight_health": "NORMALIZED"},
+    {"fusion_level": "YELLOW", "fusion_confidence": 0.15, "alignment": "ALIGNED", "trust_variability": 0.009, "ensemble_balance": "STABLE", "weight_health": "NORMALIZED"}
+  ],
+  "stress_metrics": [
+    {"fusion_level": "YELLOW", "fusion_confidence": 0.14, "alignment": "ALIGNED", "trust_variability": 0.011, "ensemble_balance": "STABLE", "weight_health": "NORMALIZED"},
+    {"fusion_level": "YELLOW", "fusion_confidence": 0.13, "alignment": "ALIGNED", "trust_variability": 0.012, "ensemble_balance": "STABLE", "weight_health": "NORMALIZED"},
+    {"fusion_level": "YELLOW", "fusion_confidence": 0.13, "alignment": "ALIGNED", "trust_variability": 0.012, "ensemble_balance": "STABLE", "weight_health": "NORMALIZED"}
+  ],
+  "baseline_mean_confidence": 0.15,
+  "baseline_confidence_std": 0.0,
+  "sustainment_status": "PASS",
+  "notes": "All probes passed. Approximated fusion artifacts used."
+}
