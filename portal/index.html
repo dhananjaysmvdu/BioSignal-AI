@@ -501,6 +501,46 @@
                     </div>
                 </div>
             </div>
+
+            <!-- Governance Drift (90-Day) -->
+            <div class="metric-card">
+                <div class="metric-header">
+                    <span class="metric-title">Governance Drift (90-Day)</span>
+                    <span class="status-badge" id="gda-drift-badge">—</span>
+                </div>
+                <div style="margin-top:15px;">
+                    <div class="metric-detail">
+                        <span class="detail-label">Drift Score</span>
+                        <span class="detail-value"><strong id="gda-drift-score">—</strong></span>
+                    </div>
+                    <div class="metric-detail">
+                        <span class="detail-label">Drift Direction</span>
+                        <span class="detail-value" id="gda-drift-direction">—</span>
+                    </div>
+                    <div class="metric-detail">
+                        <span class="detail-label">Drift Class</span>
+                        <span class="detail-value" id="gda-drift-class">—</span>
+                    </div>
+                    <div class="metric-detail">
+                        <span class="detail-label">Confidence</span>
+                        <span class="detail-value"><meter id="gda-confidence-meter" min="0" max="1" low="0.3" high="0.7" optimum="0.9" value="0"></meter> <strong id="gda-confidence-value">—</strong></span>
+                    </div>
+                    <div class="metric-detail">
+                        <span class="detail-label">Contributing Factors</span>
+                        <span class="detail-value" id="gda-factors" style="display:block;margin-top:5px;line-height:1.4;">—</span>
+                    </div>
+                    <div class="metric-detail" style="margin-top:15px;">
+                        <details>
+                            <summary style="cursor:pointer;color:#667eea;font-weight:600;">🧪 Raw JSON</summary>
+                            <pre id="gda-raw-json" style="margin-top:10px;padding:10px;background:#f9fafb;border-left:3px solid #667eea;font-size:0.75em;color:#555;white-space:pre-wrap;word-break:break-word;">—</pre>
+                        </details>
+                    </div>
+                    <div class="metric-detail">
+                        <span class="detail-label">Last Updated</span>
+                        <span class="detail-value" id="gda-last-updated">—</span>
+                    </div>
+                </div>
+            </div>
             
             <!-- Integrity Card -->
             <div class="metric-card">
@@ -2067,6 +2107,67 @@
         }
         loadPredictiveEnsemble();
         setInterval(loadPredictiveEnsemble, 15000);
+
+        // Load Governance Drift Auditor (90-Day)
+        async function loadGovernanceDrift(){
+            try{
+                const response = await fetch('../state/mvcrs_governance_drift.json', {cache:'no-store'});
+                if(!response.ok){
+                    document.getElementById('gda-drift-score').textContent='—';
+                    document.getElementById('gda-drift-direction').textContent='—';
+                    document.getElementById('gda-drift-class').textContent='—';
+                    document.getElementById('gda-confidence-value').textContent='—';
+                    document.getElementById('gda-factors').textContent='—';
+                    document.getElementById('gda-last-updated').textContent='—';
+                    document.getElementById('gda-raw-json').textContent='—';
+                    document.getElementById('gda-drift-badge').textContent='—';
+                    return;
+                }
+                const data = await response.json();
+                if(data){
+                    const driftScore = data.drift_score ?? 0.0;
+                    const driftDirection = data.drift_direction ?? 'unknown';
+                    const driftClass = data.drift_class ?? 'unknown';
+                    const confidence = data.confidence ?? 0.0;
+                    const factors = data.contributing_factors ?? [];
+                    const timestamp = data.timestamp ?? '—';
+
+                    document.getElementById('gda-drift-score').textContent=(driftScore*100).toFixed(1)+'%';
+                    document.getElementById('gda-drift-direction').textContent=driftDirection.toUpperCase();
+                    document.getElementById('gda-drift-class').textContent=driftClass.toUpperCase();
+                    document.getElementById('gda-confidence-value').textContent=(confidence*100).toFixed(1)+'%';
+                    document.getElementById('gda-factors').innerHTML = factors.length ? factors.map(f=>'<span style="display:block">• '+f.replace(/_/g,' ')+'</span>').join('') : '<em>None</em>';
+                    document.getElementById('gda-raw-json').textContent = JSON.stringify(data, null, 2);
+
+                    if(timestamp !== '—'){
+                        const ts = new Date(timestamp);
+                        document.getElementById('gda-last-updated').textContent=ts.toLocaleString();
+                    } else {
+                        document.getElementById('gda-last-updated').textContent='—';
+                    }
+
+                    // Badge coloring
+                    const badge = document.getElementById('gda-drift-badge');
+                    if(driftScore < 0.25){
+                        badge.className='status-badge status-green';
+                        badge.textContent='LOW';
+                    } else if(driftScore < 0.45){
+                        badge.className='status-badge'; badge.style.background='#fbbf24'; badge.style.color='white';
+                        badge.textContent='MODERATE';
+                    } else if(driftScore < 0.65){
+                        badge.className='status-badge'; badge.style.background='#f97316'; badge.style.color='white';
+                        badge.textContent='ELEVATED';
+                    } else {
+                        badge.className='status-badge'; badge.style.background='#ef4444'; badge.style.color='white';
+                        badge.textContent='HIGH';
+                    }
+                    const confMeter = document.getElementById('gda-confidence-meter');
+                    confMeter.value = confidence;
+                }
+            } catch(e){ /* silent */ }
+        }
+        loadGovernanceDrift();
+        setInterval(loadGovernanceDrift, 15000);
 
         async function loadApprovalStatus(){
             try{

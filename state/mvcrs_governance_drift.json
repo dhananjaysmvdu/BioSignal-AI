@@ -1,0 +1,32 @@
+{
+  "components": {
+    "overcorrection": 0.0,
+    "stability_loss": 0.0,
+    "stubbornness": 0.0,
+    "volatility_cycle": 0.0
+  },
+  "confidence": 0.3134,
+  "contributing_factors": [
+    "alignment_delta(0.06)"
+  ],
+  "drift_class": "low",
+  "drift_direction": "overcorrection",
+  "drift_score": 0.0,
+  "expected_mean": 0.0402,
+  "observed_mean": 0.1,
+  "sources_present": {
+    "adaptive": false,
+    "coherence": false,
+    "feedback": false,
+    "fusion": true,
+    "mhpe": true,
+    "strategic": false
+  },
+  "stats": {
+    "interventions": 0,
+    "length": 30,
+    "oscillations": 0,
+    "transitions": 0
+  },
+  "timestamp": "2025-11-15T07:36:11.544149+00:00"
+}

@@ -1815,3 +1815,44 @@ Workflow:
 
 **Summary Last Updated**: 2025-11-15T10:30:00Z
 <!-- MVCRS_MHPE: UPDATED 2025-11-15T07:26:39.854396+00:00 -->
+\n+## Phase XLII — Governance Drift Auditor (GDA)
+\n+**Instructions Executed**:
+1. Governance Drift Auditor Engine (`mvcrs_governance_drift_auditor.py`) — computes 90-day drift score, direction, class, confidence
+2. Component Model — stability_loss, volatility_cycle, stubbornness, overcorrection (each ∈ [0,1])
+3. Drift Score — average of components ×0.25 (clamped) with classification thresholds (<0.35 low, <0.65 moderate, else high)
+4. Confidence — availability × (1 - volatility_cycle) × alignment (1 - |expected_mean - observed_mean|)
+5. Contributing Factors — top ≤5 ranked (deterministic ordering) including alignment delta
+6. CI Workflow (`mvcrs_governance_drift.yml`) — daily 08:45 UTC, failure gate: drift_score>0.65 & confidence>0.60
+7. Portal Integration — “Governance Drift (90-Day)” card (score badge, direction, class, confidence meter, factors, raw JSON viewer)
+8. Test Suite (9 tests) — missing history, stubbornness, overcorrection, volatility cycle, factor determinism, confidence clamp, write failure, marker idempotency, deterministic score
+9. Documentation (`PHASE_XLII_GOVERNANCE_DRIFT_AUDIT.md`) — window logic, math, classification, CI thresholds, portal UX, safety
+\n+**Component Definitions**:
+- stability_loss: expected calm (<0.30) vs observed elevated (>0.60)
+- volatility_cycle: transitions/length scaled (×2.0)
+- stubbornness: high expected risk without interventions OR low expected risk with high observed mean
+- overcorrection: oscillating intervene/monitor patterns relative to interventions
+\n+**Confidence Formula**:
+`confidence = availability * (1 - volatility_cycle) * (1 - |expected_mean - observed_mean|)` (clamped [0,1])
+\n+**Safety**:
+- Atomic writes 1s/3s/9s (state + log)
+- Fix branch `fix/mvcrs-gda-<timestamp>` on persistent write failure or CI high drift
+- Idempotent audit marker: `<!-- MVCRS_GDA: UPDATED <UTC ISO> -->`
+- Deterministic tie-breaking (alphabetical) & factor ordering (-value, name)
+\n+**Artifacts**:
+- `scripts/audit/mvcrs_governance_drift_auditor.py`
+- `state/mvcrs_governance_drift.json`
+- `logs/mvcrs_gda_log.jsonl`
+- `.github/workflows/mvcrs_governance_drift.yml`
+- `portal/index.html` (Governance Drift card + loader)
+- `tests/audit/test_governance_drift_auditor.py`
+- `docs/PHASE_XLII_GOVERNANCE_DRIFT_AUDIT.md`
+\n+**Validation**:
+- 9/9 drift auditor tests passing (0.40s)
+- Deterministic scores & factor ordering confirmed
+- Portal card rendering logic added (15s refresh)
+- CI workflow scheduled after MHPE (08:20) at 08:45 UTC
+\n+**Meta-Governance Expansion**:
+- Adds longitudinal self-awareness layer over 90-day horizon
+- Complements temporal reconciliation (HCE) + predictive ensemble (MHPE)
+\n+**Summary Last Updated**: 2025-11-15T11:15:00Z
+<!-- MVCRS_GDA: UPDATED 2025-11-15T07:36:11.546279+00:00 -->
