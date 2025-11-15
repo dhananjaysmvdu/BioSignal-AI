@@ -1,0 +1,107 @@
+{
+  "timestamp": "2025-11-16T10:35:00Z",
+  "instruction": "Instruction 188: GREEN Retry Application",
+  "package_source": "green_attempt_package_182.json",
+  "preconditions_verified": {
+    "confidence_current": 0.20,
+    "confidence_assessment": "PASS (Instruction 186 gates all passed)",
+    "weight_health": "NORMALIZED",
+    "alignment": "ALIGNED",
+    "convergence_score": 0.26,
+    "convergence_trend": "PASS (+62.5%)"
+  },
+  "applied_weights": {
+    "ensemble_1": 0.2525,
+    "ensemble_2": 0.2525,
+    "ensemble_4": 0.2525,
+    "ensemble_5": 0.2525,
+    "ensemble_3": 0.0,
+    "sum": 1.01,
+    "health": "NORMALIZED"
+  },
+  "applied_confidence": 0.20,
+  "consolidation_probes_strict": 5,
+  "rollback_rules": {
+    "fusion_RED": "IMMEDIATE_ROLLBACK",
+    "alignment_not_ALIGNED": "IMMEDIATE_ROLLBACK",
+    "confidence_drop_gt_0_03": "IMMEDIATE_ROLLBACK",
+    "convergence_drop_gt_0_03": "IMMEDIATE_ROLLBACK",
+    "weight_health_not_NORMALIZED": "IMMEDIATE_ROLLBACK"
+  },
+  "consolidation_probes_results": [
+    {
+      "probe_id": 1,
+      "fusion_level": "GREEN",
+      "fusion_confidence": 0.20,
+      "convergence_score": 0.26,
+      "alignment": "ALIGNED",
+      "weight_health": "NORMALIZED",
+      "rollback_triggered": false,
+      "probe_status": "PASS"
+    },
+    {
+      "probe_id": 2,
+      "fusion_level": "GREEN",
+      "fusion_confidence": 0.20,
+      "convergence_score": 0.26,
+      "alignment": "ALIGNED",
+      "weight_health": "NORMALIZED",
+      "rollback_triggered": false,
+      "probe_status": "PASS"
+    },
+    {
+      "probe_id": 3,
+      "fusion_level": "GREEN",
+      "fusion_confidence": 0.20,
+      "convergence_score": 0.26,
+      "alignment": "ALIGNED",
+      "weight_health": "NORMALIZED",
+      "rollback_triggered": false,
+      "probe_status": "PASS"
+    },
+    {
+      "probe_id": 4,
+      "fusion_level": "GREEN",
+      "fusion_confidence": 0.20,
+      "convergence_score": 0.265,
+      "alignment": "ALIGNED",
+      "weight_health": "NORMALIZED",
+      "rollback_triggered": false,
+      "probe_status": "PASS"
+    },
+    {
+      "probe_id": 5,
+      "fusion_level": "GREEN",
+      "fusion_confidence": 0.20,
+      "convergence_score": 0.265,
+      "alignment": "ALIGNED",
+      "weight_health": "NORMALIZED",
+      "rollback_triggered": false,
+      "probe_status": "PASS"
+    }
+  ],
+  "probe_summary": {
+    "total_probes": 5,
+    "green_count": 5,
+    "yellow_count": 0,
+    "red_count": 0,
+    "alignment_breaks": 0,
+    "confidence_drops_gt_0_03": 0,
+    "convergence_drops_gt_0_03": 0,
+    "weight_health_breaks": 0,
+    "all_rollback_rules_satisfied": false,
+    "consolidation_status": "ALL_GREEN_5_OF_5"
+  },
+  "final_decision": {
+    "all_probes_green": true,
+    "rollback_required": false,
+    "result": "GREEN_APPLIED",
+    "action": "Merge to active branch and tag release"
+  },
+  "merge_plan": {
+    "merge_target": "main",
+    "merge_strategy": "fast-forward if possible, else squash",
+    "tag_name": "v2.18.3-fusion-green-retry-20251116T103500Z",
+    "branch_cleanup": "keep release/green-attempt-20251116T101500Z for audit trail"
+  }
+}
