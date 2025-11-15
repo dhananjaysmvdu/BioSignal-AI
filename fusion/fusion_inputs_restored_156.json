@@ -1,0 +1,20 @@
+{
+  "timestamp_utc": "2025-11-15T15:45:00Z",
+  "consensus": {
+    "convergence_score": 0.2,
+    "alignment_status": "aligned",
+    "ensemble_confidence": 0.0,
+    "signals": {"drift": 0.031, "coherence": 0.0, "ensemble": 0.0, "rdgl": 0.6}
+  },
+  "policy": {
+    "fusion_level": "FUSION_RED",
+    "policy": "RED",
+    "policy_evaluated_at": "2025-11-15T14:35:42.714047+00:00",
+    "trust_locked": false,
+    "weighted_consensus_pct": 100.0
+  },
+  "trust": {
+    "trust_locked": false
+  },
+  "fusion_inputs_status": "RESTORED"
+}
