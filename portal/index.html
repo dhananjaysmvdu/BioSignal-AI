@@ -558,6 +558,34 @@
                         <span class="detail-value" id="gdse-threshold-shift">—</span>
                     </div>
                     <div class="metric-detail">
+
+            <!-- Stability Convergence -->
+            <div class="metric-card">
+                <div class="metric-header">
+                    <span class="metric-title">Stability Convergence</span>
+                    <span class="status-badge" id="convergence-risk-badge">OK</span>
+                </div>
+                <div id="stability-convergence-card" style="margin-top:15px;">
+                    <div style="color:#999; text-align:center; padding:20px;">Loading...</div>
+                </div>
+            </div>
+            
+            <!-- Drift Stabilization Profile (continued) -->
+            <div class="metric-card">
+                <div class="metric-header">
+                    <span class="metric-title">Drift Stabilization Profile</span>
+                    <span class="status-badge" id="gdse-intensity-badge">—</span>
+                </div>
+                <div style="margin-top:15px;">
+                    <div class="metric-detail">
+                        <span class="detail-label">Stabilization Intensity</span>
+                        <span class="detail-value" id="gdse-intensity-value">—</span>
+                    </div>
+                    <div class="metric-detail">
+                        <span class="detail-label">Threshold Shift (%)</span>
+                        <span class="detail-value" id="gdse-threshold-shift">—</span>
+                    </div>
+                    <div class="metric-detail">
                         <span class="detail-label">RDGL Learning Rate</span>
                         <span class="detail-value" id="gdse-rdgl-lr">—</span>
                     </div>
@@ -2313,6 +2341,51 @@
         }
         loadApprovalStatus();
         setInterval(loadApprovalStatus, 15000);
+        
+        // Load Stability Convergence Profile
+        async function loadStabilityConvergence(){
+            try{
+                const response = await fetch('../state/mvcrs_stability_convergence.json', {cache:'no-store'});
+                if(!response.ok) return;
+                const profile = await response.json();
+                const card = document.getElementById('stability-convergence-card');
+                if(card){
+                    const score = profile.convergence_score || 0;
+                    const alignment = profile.alignment_status || 'unknown';
+                    const risk = profile.potential_gating_risk || false;
+                    const riskColor = risk ? '#ef4444' : (score > 0.55 ? '#22c55e' : '#eab308');
+                    const riskText = risk ? 'RISK' : 'OK';
+                    
+                    card.innerHTML = `
+                        <h3>Stability Convergence</h3>
+                        <div style="display:grid; grid-template-columns:1fr 1fr; gap:15px; margin:15px 0;">
+                            <div style="background:#f3f4f6; padding:10px; border-radius:8px;">
+                                <div style="font-size:0.9em; color:#666;">Convergence Score</div>
+                                <div style="font-size:1.8em; font-weight:bold; color:#667eea;">${score.toFixed(3)}</div>
+                            </div>
+                            <div style="background:#f3f4f6; padding:10px; border-radius:8px;">
+                                <div style="font-size:0.9em; color:#666;">Alignment</div>
+                                <div style="font-size:1.5em; font-weight:bold; color:#667eea;">${alignment}</div>
+                            </div>
+                        </div>
+                        <div style="display:flex; gap:10px; margin:10px 0;">
+                            <div style="background:#f3f4f6; padding:8px 12px; border-radius:6px; flex:1;">
+                                <div style="font-size:0.8em; color:#666;">Confidence Adj</div>
+                                <div style="font-weight:bold;">${(profile.confidence_adjust || 1).toFixed(2)}</div>
+                            </div>
+                            <div style="background:${riskColor}; padding:8px 12px; border-radius:6px; color:white; font-weight:bold; flex:1; text-align:center;">
+                                ${riskText}
+                            </div>
+                        </div>
+                        <div style="font-size:0.85em; color:#666; margin-top:10px;">
+                            Updated: ${new Date(profile.timestamp).toLocaleTimeString()}
+                        </div>
+                    `;
+                }
+            }catch(e){}
+        }
+        loadStabilityConvergence();
+        setInterval(loadStabilityConvergence, 15000);
     </script>
 </body>
 </html>
