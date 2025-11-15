@@ -553,7 +553,7 @@ def run_mhpe_engine() -> int:
     update_audit_marker('UPDATED')
     
     print('\n' + '=' * 60)
-    print('✓ Multi-horizon ensemble computation completed')
+    print('[OK] Multi-horizon ensemble computation completed')
     print('=' * 60)
     return 0
 

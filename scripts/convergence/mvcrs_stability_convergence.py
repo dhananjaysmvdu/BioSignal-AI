@@ -279,11 +279,11 @@ def run_convergence_engine() -> bool:
     update_audit_marker('UPDATED')
     
     # Print summary
-    risk_indicator = "⚠ RISK" if potential_gating_risk else "OK"
+    risk_indicator = "[RISK]" if potential_gating_risk else "OK"
     print(f"\nConvergence: {convergence_score:.4f} | Alignment: {alignment_status} | {risk_indicator}")
     print(f"Confidence Adjust: {confidence_adjust:.4f} | Sources: {sources_count}/4")
     print(f"Ensemble Conf: {ensemble_confidence:.4f}")
-    print(f"✓ Stability convergence profile generated")
+    print(f"[OK] Stability convergence profile generated")
     
     return True
 

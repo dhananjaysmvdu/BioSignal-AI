@@ -378,7 +378,7 @@ def run_hce_engine() -> int:
         return 1
 
     print('='*60)
-    print('✓ Horizon coherence computation completed')
+    print('[OK] Horizon coherence computation completed')
     print('='*60)
     return 0
 
