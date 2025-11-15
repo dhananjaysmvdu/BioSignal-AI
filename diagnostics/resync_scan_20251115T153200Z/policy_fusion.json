@@ -1,0 +1,19 @@
+{
+  "fusion_level": "FUSION_RED",
+  "computed_at": "2025-11-15T15:29:33.893748+00:00",
+  "inputs": {
+    "policy": "RED",
+    "policy_evaluated_at": "2025-11-15T14:35:42.714047+00:00",
+    "trust_locked": false,
+    "weighted_consensus_pct": 100.0,
+    "safety_brake_engaged": false,
+    "policy_responses_24h": 0,
+    "adaptive_responses_24h": 0
+  },
+  "reasons": [
+    "policy_red"
+  ],
+  "thresholds": {
+    "consensus_escalation": 92.0
+  }
+}

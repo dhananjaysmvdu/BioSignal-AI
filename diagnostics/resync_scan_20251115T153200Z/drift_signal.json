@@ -1,0 +1,19 @@
+{
+  "reference": "data/sample/metadata.csv",
+  "current": "data/sample/metadata.csv",
+  "threshold": 0.1,
+  "features": {
+    "age": {"type": "numeric", "jsd": 0.0, "drift": false},
+    "image_path": {"type": "categorical", "jsd": 0.0, "drift": false},
+    "gender": {"type": "categorical", "jsd": 0.0, "drift": false},
+    "lesion_site": {"type": "categorical", "jsd": 0.0, "drift": false},
+    "label": {"type": "categorical", "jsd": 0.0, "drift": false}
+  },
+  "feature_drifts": {
+    "age": {"type": "numeric", "jsd": 0.0, "drift": false},
+    "image_path": {"type": "categorical", "jsd": 0.0, "drift": false},
+    "gender": {"type": "categorical", "jsd": 0.0, "drift": false},
+    "lesion_site": {"type": "categorical", "jsd": 0.0, "drift": false},
+    "label": {"type": "categorical", "jsd": 0.0, "drift": false}
+  }
+}

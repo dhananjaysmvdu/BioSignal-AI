@@ -1,0 +1,14 @@
+{
+  "timestamp": "2025-11-15T15:32:00Z",
+  "alignment": "aligned",
+  "convergence_score": 0.2,
+  "drift_signal": 0.0,
+  "mhpe_confidence": 0.472,
+  "readiness_decision": "blocked",
+  "reasons": [
+    "convergence_score below threshold (0.2 < 0.4)",
+    "Policy Fusion is RED",
+    "Ensemble confidence is moderate",
+    "No feature drift detected"
+  ]
+}

@@ -1,0 +1,12 @@
+{
+  "timestamp": "2025-11-15T15:32:00Z",
+  "drift_signal": 0.0,
+  "ensemble_confidence": 0.472,
+  "coherence": 0.0,
+  "alignment_status": "aligned",
+  "details": {
+    "drift": "No feature drift detected (JSD=0.0)",
+    "ensemble": "Short-term signals dominate, stable trajectory",
+    "coherence": "No coherence deviation detected"
+  }
+}
