@@ -1,0 +1,10 @@
+{
+  "seed": 0.16,
+  "post": 0.27,
+  "delta": 0.11,
+  "trend_ok": true,
+  "reliability_ok": true,
+  "alignment_ok": true,
+  "fusion_ok": true,
+  "status": "READY_FOR_EXIT_WORK"
+}
