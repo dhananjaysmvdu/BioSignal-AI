@@ -240,3 +240,5 @@ Updated: 2025-11-13T16:35:00+00:00
 
 <!-- POLICY_RESPONSE: BLOCKED 2025-11-14T07:13:10.910399+00:00 reason: safety_brake_engaged -->
 <!-- POLICY_FUSION: UPDATED 2025-11-14T17:20:58.344673+00:00 -->
+
+<!-- MVCRS_HOTFIX_ESCALATED: 2025-11-15T12:09:14Z branch=fix/mvcrs-posthotfix-investigation-20251115_120914Z reason=drift_signal_systemic_failure -->
