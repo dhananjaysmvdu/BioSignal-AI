@@ -1,0 +1,23 @@
+{
+  "timestamp_utc": "2025-11-15T15:55:00Z",
+  "ensemble_status": "DEGRADED",
+  "weight_health": "DEGRADED",
+  "confidence_level": 0.094,
+  "member_status": {
+    "ensemble_1": "WARN",
+    "ensemble_2": "WARN",
+    "ensemble_3": "FAIL"
+  },
+  "probe_metrics": {
+    "ensemble_1": {"response": true, "health": "partial"},
+    "ensemble_2": {"response": true, "health": "partial"},
+    "ensemble_3": {"response": false, "health": "fail"}
+  },
+  "recovery_actions": [
+    "weight_map_reinitialized",
+    "ensemble_warmstart_attempted",
+    "synthetic_warmstart_applied",
+    "confidence_seeded"
+  ],
+  "recovery_outcome": "PARTIAL_FAIL"
+}
