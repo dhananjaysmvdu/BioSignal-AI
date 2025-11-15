@@ -1,0 +1,17 @@
+{
+  "dryrun_step": "A",
+  "proposed_confidence": 0.20,
+  "proposed_weights": {
+    "ensemble_1": 0.2525,
+    "ensemble_2": 0.2525,
+    "ensemble_4": 0.2525,
+    "ensemble_5": 0.2525,
+    "ensemble_3": 0.0
+  },
+  "dryrun_probes": [
+    {"fusion_level": "YELLOW", "confidence": 0.19, "weight_health": "NORMALIZED", "alignment": "ALIGNED"},
+    {"fusion_level": "YELLOW", "confidence": 0.20, "weight_health": "NORMALIZED", "alignment": "ALIGNED"},
+    {"fusion_level": "YELLOW", "confidence": 0.20, "weight_health": "NORMALIZED", "alignment": "ALIGNED"}
+  ],
+  "dryrun_status": "PASS_NO_RED"
+}

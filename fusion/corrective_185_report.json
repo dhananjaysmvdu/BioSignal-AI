@@ -1,0 +1,21 @@
+{
+  "extended_sustainment_baseline": [
+    {"fusion_level": "YELLOW", "confidence": 0.20, "weight_health": "NORMALIZED", "alignment": "ALIGNED"},
+    {"fusion_level": "YELLOW", "confidence": 0.20, "weight_health": "NORMALIZED", "alignment": "ALIGNED"},
+    {"fusion_level": "YELLOW", "confidence": 0.20, "weight_health": "NORMALIZED", "alignment": "ALIGNED"},
+    {"fusion_level": "YELLOW", "confidence": 0.20, "weight_health": "NORMALIZED", "alignment": "ALIGNED"},
+    {"fusion_level": "YELLOW", "confidence": 0.20, "weight_health": "NORMALIZED", "alignment": "ALIGNED"},
+    {"fusion_level": "YELLOW", "confidence": 0.20, "weight_health": "NORMALIZED", "alignment": "ALIGNED"},
+    {"fusion_level": "YELLOW", "confidence": 0.20, "weight_health": "NORMALIZED", "alignment": "ALIGNED"},
+    {"fusion_level": "YELLOW", "confidence": 0.20, "weight_health": "NORMALIZED", "alignment": "ALIGNED"},
+    {"fusion_level": "YELLOW", "confidence": 0.20, "weight_health": "NORMALIZED", "alignment": "ALIGNED"}
+  ],
+  "extended_sustainment_stress": [
+    {"fusion_level": "YELLOW", "confidence": 0.19, "weight_health": "NORMALIZED", "alignment": "ALIGNED"},
+    {"fusion_level": "YELLOW", "confidence": 0.19, "weight_health": "NORMALIZED", "alignment": "ALIGNED"},
+    {"fusion_level": "YELLOW", "confidence": 0.18, "weight_health": "NORMALIZED", "alignment": "ALIGNED"}
+  ],
+  "post_mean_confidence": 0.195,
+  "confidence_increase_vs_baseline_181": 0.045,
+  "corrective_result": "APPLIED_SUCCESS"
+}
