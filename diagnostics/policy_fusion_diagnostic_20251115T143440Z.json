@@ -1,0 +1,25 @@
+﻿{
+    "inputs":  {
+                   "safety_brake_engaged":  false,
+                   "policy":  "RED",
+                   "policy_age_hours":  26.16,
+                   "weighted_consensus_pct":  null,
+                   "trust_age_hours":  26.68,
+                   "policy_evaluated_at":  "2025-11-14T06:55:16.464707+00:00",
+                   "trust_locked":  true
+               },
+    "computed_at":  "2025-11-15T14:34:40.8006670Z",
+    "fusion_level":  "FUSION_RED",
+    "reasons":  [
+                    "policy_red",
+                    "consensus_low_%"
+                ],
+    "mode":  "diagnostic_readonly",
+    "validation":  {
+                       "missing_files":  [
+
+                                         ],
+                       "stale_policy":  true,
+                       "stale_trust":  true
+                   }
+}

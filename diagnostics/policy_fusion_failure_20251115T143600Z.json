@@ -1,0 +1,36 @@
+{
+  "status": "FUSION_RED_CONFIRMED",
+  "timestamp": "2025-11-15T14:36:00Z",
+  "diagnostic_ref": "diagnostics/policy_fusion_diagnostic_20251115T143440Z.json",
+  "root_causes": [
+    {
+      "rank": 1,
+      "cause": "policy_orchestrator_red",
+      "evidence": "policy=RED, evaluated 26.16h ago (stale)",
+      "impact": "PRIMARY_BLOCKER"
+    },
+    {
+      "rank": 2,
+      "cause": "consensus_missing_or_null",
+      "evidence": "weighted_consensus_pct=null (federation file missing or unreadable)",
+      "impact": "ESCALATION_TRIGGER"
+    },
+    {
+      "rank": 3,
+      "cause": "trust_locked_prolonged",
+      "evidence": "trust_locked=true for 26.68h (exceeds 24h threshold)",
+      "impact": "SECONDARY_BLOCKER"
+    }
+  ],
+  "recommendations": [
+    "Re-run policy_orchestrator.py to refresh policy state and reassess RED condition",
+    "Check federation/weighted_consensus.json exists and has recent data",
+    "Verify trust_guard scheduled unlock executed (expected 2025-11-15T06:23:42Z) or force unlock",
+    "If policy remains RED after refresh, investigate upstream integrity/consensus/reputation signals"
+  ],
+  "computed_fusion": {
+    "fusion_level": "FUSION_RED",
+    "reasons": ["policy_red", "consensus_low_%"],
+    "inputs_stale": true
+  }
+}
