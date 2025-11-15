@@ -83,7 +83,7 @@ class TestStabilityConvergence:
     # Test 2: Missing artifact → confidence adjustment applied
     def test_confidence_adjustment_missing_sources(self):
         """Test confidence penalty when sources are missing."""
-        # Only drift present
+        # Only drift present (1/4 sources)
         self._write_state('mvcrs_stabilization_profile.json', {
             'final_confidence': 0.8
         })
@@ -95,8 +95,8 @@ class TestStabilityConvergence:
         assert profile is not None
         assert profile['confidence_adjust'] < 1.0
         assert profile['confidence_adjust'] >= 0.2  # floor
-        # Missing 3 sources but floor at 0.2 applies
-        assert profile['confidence_adjust'] == 0.2
+        # Missing 3 sources (4-1=3): penalty = 3 * 0.2 = 0.6, confidence = max(0.2, 1.0-0.6) = 0.4
+        assert profile['confidence_adjust'] == 0.4
     
     # Test 3: Divergent inputs → alignment=divergent
     def test_divergent_alignment(self):
