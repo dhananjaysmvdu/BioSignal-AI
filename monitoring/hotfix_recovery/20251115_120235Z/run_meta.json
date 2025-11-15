@@ -1,0 +1,8 @@
+{
+    "hotfix_tag":  "v2.18.1-mvcrs-hotfix",
+    "iteration_1_completed":  "2025-11-15T12:00:22Z",
+    "required_consecutive_aligned_hours":  3,
+    "monitor_window_hours":  12,
+    "safe_mode":  true,
+    "start_time":  "2025-11-15T12:02:35.6243234Z"
+}
