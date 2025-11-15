@@ -1,0 +1,8 @@
+{
+  "timestamp_utc": "2025-11-15T16:26:00Z",
+  "block_convergence": true,
+  "block_fusion": true,
+  "block_trust": false,
+  "block_alignment": false,
+  "dominant_block": "fusion"
+}
