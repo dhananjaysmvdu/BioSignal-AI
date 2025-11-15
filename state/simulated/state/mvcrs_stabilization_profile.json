@@ -1,0 +1,29 @@
+{
+  "coherence_stress": 0.0,
+  "correction_vector": {
+    "fusion_bias_delta": -0.05,
+    "rdgl_learning_rate_factor": 1.0,
+    "response_sensitivity": 0.8,
+    "threshold_shift_pct": 0.0
+  },
+  "drift_pressure": 0.0,
+  "final_confidence": 0.5,
+  "forecast_weight": 0.0,
+  "reason_matrix": [
+    "coherence_stress(0.00):-0.500",
+    "drift_pressure(0.00):-0.500",
+    "forecast_weight(0.00):-0.500",
+    "fusion_bias_delta(-0.050):-0.500",
+    "response_sensitivity(0.80):-0.200"
+  ],
+  "recent_drift_entries": 0,
+  "sources_present": {
+    "coherence": false,
+    "drift": false,
+    "feedback": false,
+    "mhpe": false,
+    "strategic": false
+  },
+  "stabilization_intensity": "low",
+  "timestamp": "2025-11-15T08:31:09.465802+00:00"
+}

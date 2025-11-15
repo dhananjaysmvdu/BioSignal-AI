@@ -1,0 +1,9 @@
+{
+  "forecasts": [
+    {
+      "horizon": "7d",
+      "instability_score": 0.96
+    }
+  ],
+  "timestamp": "2025-11-15T12:00:00Z"
+}
