@@ -1,0 +1,13 @@
+{
+  "timestamp_utc": "2025-11-15T15:40:00Z",
+  "fusion_level": "FUSION_RED",
+  "root_cause": "MISSING_INPUTS",
+  "details": {
+    "policy": "RED",
+    "policy_age_hours": 26.16,
+    "weighted_consensus_pct": null,
+    "trust_locked": true,
+    "inputs_stale": true,
+    "reasons": ["policy_red", "consensus_low_%"]
+  }
+}
