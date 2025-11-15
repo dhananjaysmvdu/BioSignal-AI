@@ -1,0 +1,23 @@
+{
+    "analysis":  {
+                     "MISMATCH":  false,
+                     "GDA_output_drift":  0.0,
+                     "expected_drift_non_zero":  false,
+                     "MHPE_instability_high":  false,
+                     "HCE_instability_high":  false
+                 },
+    "signals":  {
+                    "MHPE":  {
+                                 "instability_1d":  null,
+                                 "instability_7d":  null,
+                                 "mean_confidence":  0.68,
+                                 "instability_30d":  null
+                             },
+                    "HCE":  {
+                                "confidence":  0.5,
+                                "instability":  0.02
+                            }
+                },
+    "timestamp":  "2025-11-15T13:54:37.0217625Z",
+    "GDA_STATUS":  "OK"
+}
