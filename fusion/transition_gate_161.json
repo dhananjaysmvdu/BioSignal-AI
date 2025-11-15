@@ -1,0 +1,7 @@
+{
+  "timestamp_utc": "2025-11-15T16:10:00Z",
+  "transition_status": "PASS",
+  "gate_fusion": true,
+  "gate_confidence": true,
+  "gate_balance": true
+}
