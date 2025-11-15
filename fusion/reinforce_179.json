@@ -1,0 +1,21 @@
+{
+  "action_result": "APPLIED",
+  "new_confidence": 0.15,
+  "confidence_delta": 0.03,
+  "dry_run_probes": [
+    {"fusion_level": "YELLOW", "confidence": 0.14, "ensemble_balance": "STABLE", "weight_health": "NORMALIZED"},
+    {"fusion_level": "YELLOW", "confidence": 0.15, "ensemble_balance": "STABLE", "weight_health": "NORMALIZED"},
+    {"fusion_level": "YELLOW", "confidence": 0.15, "ensemble_balance": "STABLE", "weight_health": "NORMALIZED"}
+  ],
+  "weight_deltas": {
+    "ensemble_1": 0.0025,
+    "ensemble_2": 0.0025,
+    "ensemble_4": 0.0025,
+    "ensemble_5": 0.0025,
+    "ensemble_3": 0.0
+  },
+  "provenance": {
+    "source": "Instruction 179: Fusion reinforcement",
+    "timestamp": "2025-11-16T10:01:00Z"
+  }
+}

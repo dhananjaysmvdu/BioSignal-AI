@@ -1,16 +1,16 @@
 {
   "weights": {
-    "ensemble_1": 0.25,
-    "ensemble_2": 0.25,
-    "ensemble_4": 0.25,
-    "ensemble_5": 0.25,
+    "ensemble_1": 0.2525,
+    "ensemble_2": 0.2525,
+    "ensemble_4": 0.2525,
+    "ensemble_5": 0.2525,
     "ensemble_3": 0.0
   },
-  "sum": 1.0,
-  "timestamp": "2025-11-15T17:09:00Z",
+  "sum": 1.01,
+  "timestamp": "2025-11-16T10:01:00Z",
   "provenance": {
-    "source": "chat_summary",
+    "source": "instruction_179",
     "approximate": true,
-    "notes": "Assumed ensemble member list due to missing canonical list. Normalized weights, ensemble_3 quarantined."
+    "notes": "Conservative weight nudge applied."
   }
 }
