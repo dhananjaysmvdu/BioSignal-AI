@@ -1,0 +1,9 @@
+{
+  "drift_ok": true,
+  "fusion_ok": true,
+  "horizon_ok": true,
+  "alignment_ok": true,
+  "trust_lock_ok": true,
+  "status": "PASS",
+  "failing_checks": []
+}
