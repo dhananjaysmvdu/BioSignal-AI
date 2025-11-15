@@ -1,5 +1,11 @@
 # Audit Summary
 
+<!-- MVCRS_POSTMERGE_DIAG_START: 2025-11-15T14:37:07Z -->
+**Post-Merge Divergence Investigation:** convergence_score 0.466 → 0.2186 (diagnostic runbook active)
+**Safe-Mode:** ENABLED (state/mvcrs_safe_mode.lock created)
+**Monitoring Cadence:** Increased to hourly
+<!-- MVCRS_POSTMERGE_DIAG_START:END -->
+
 <!-- FEDERATION_ERROR_RECOVERY:BEGIN -->
 Updated: 2025-11-14T09:20:00+00:00
 ✅ Federation sync executed with auto-recovery safeguards (configuration regenerated, status manifest validated, log appended).

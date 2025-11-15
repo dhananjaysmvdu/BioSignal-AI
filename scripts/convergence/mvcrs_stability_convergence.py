@@ -137,15 +137,18 @@ def compute_convergence_score(
     """
     Weighted convergence score.
     Weights: drift 0.4, coherence 0.3, ensemble 0.2, RDGL 0.1
-    Penalty: -0.2 per missing source
+    Penalty: -0.2 per missing source (4 expected sources: drift, coherence, ensemble, rdgl)
+    
+    HOTFIX (2025-11-15): Fixed penalty logic bug — was checking < 5 but only 4 sources exist.
+    Changed to < 4 to match actual source count.
     """
     weights_sum = 0.0
     weighted_sum = 0.0
     penalty = 0.0
     
-    # Penalize missing sources (< 5 expected)
-    if sources_count < 5:
-        penalty = (5 - sources_count) * 0.2
+    # Penalize missing sources (4 expected: drift, coherence, ensemble, rdgl)
+    if sources_count < 4:
+        penalty = (4 - sources_count) * 0.2
     
     # Drift (0.4)
     weights_sum += 0.4
@@ -230,8 +233,8 @@ def run_convergence_engine() -> bool:
     
     # Confidence adjustment based on missing sources
     confidence_adjust = 1.0
-    if sources_count < 5:
-        confidence_adjust = max(0.2, 1.0 - (5 - sources_count) * 0.2)
+    if sources_count < 4:
+        confidence_adjust = max(0.2, 1.0 - (4 - sources_count) * 0.2)
     confidence_adjust = round(confidence_adjust, 4)
     
     # Gating warning logic

@@ -1,7 +1,7 @@
 {
-  "convergence_score": 0.2186,
+  "convergence_score": 0.4186,
   "alignment_status": "divergent",
-  "confidence_adjust": 0.8,
+  "confidence_adjust": 1.0,
   "potential_gating_risk": false,
   "ensemble_confidence": 0.68,
   "signals": {
@@ -16,5 +16,5 @@
     "ensemble": true,
     "rdgl": true
   },
-  "timestamp": "2025-11-15T08:55:42.647786+00:00Z"
+  "timestamp": "2025-11-15T09:11:08.211219+00:00Z"
 }

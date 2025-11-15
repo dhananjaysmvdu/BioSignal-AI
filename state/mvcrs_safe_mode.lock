@@ -1,0 +1,18 @@
+{
+  "safe_mode_enabled": true,
+  "timestamp": "2025-11-15T14:37:07Z",
+  "reason": "Post-merge divergence investigation (convergence_score 0.466 → 0.2186)",
+  "affected_systems": [
+    "mvcrs_governance_drift_stabilizer",
+    "mvcrs_stability_convergence",
+    "autonomous_threshold_tuning",
+    "reinforcement_governance_learning"
+  ],
+  "restrictions": [
+    "No policy changes (ATTE max_shift_percent locked at 0%)",
+    "No RDGL learning rate updates",
+    "No ensemble score adjustments",
+    "Manual unlock required after recovery or 48-hour window"
+  ],
+  "expected_unlock": "2025-11-17T14:37:07Z"
+}
