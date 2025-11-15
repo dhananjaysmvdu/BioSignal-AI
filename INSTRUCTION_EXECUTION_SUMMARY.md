@@ -1884,10 +1884,18 @@ HIGH if drift_pressure>0.65 & coherence_stress>0.65; MODERATE if max>0.40; else 
 - `tests/stabilization/test_gdse.py`
 - `docs/PHASE_XLIII_STABILIZATION_ENGINE.md`
 \n+**Validation**:
-- 8/8 stabilization tests passing (pending full suite rerun)
+- 8/8 stabilization tests passing
 - Portal card added with auto-refresh
-- Workflow scheduled after drift audit
+- Workflow scheduled after drift audit (daily 09:00 UTC)
+- Dry-run profile generated: moderate intensity, confidence 0.0316
+
+**Release**:
+- Tag: v2.17.0-mvcrs-stabilization
+- Acceptance bundle: release/PHASE_XLIII_ACCEPTANCE_BUNDLE.md
+- Verification report: release/INSTRUCTION_144_VERIFICATION_REPORT.md
+- Status: RELEASED (2025-11-15)
+
 \n+**Meta-Governance Progression**:
 Adds stabilization layer (Phase XLIII) completing drift insight → corrective guidance loop (Phases XL–XLIII stack).
 \n+**Summary Last Updated**: 2025-11-15T11:45:00Z
-<!-- MVCRS_GDSE: UPDATED 2025-11-15T07:43:51.662829+00:00 -->
+<!-- MVCRS_GDSE: RELEASED 2025-11-15T13:30:00Z -->
