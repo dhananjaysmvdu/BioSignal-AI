@@ -1,0 +1,9 @@
+{
+  "drift_variance": 0.01,
+  "convergence_variance": 0.037,
+  "fusion_confidence": 0.12,
+  "ensemble_weight_health": "NORMALIZED",
+  "horizon_coherence": "stable",
+  "failing_checks": [],
+  "reliability_status": "PASS"
+}
