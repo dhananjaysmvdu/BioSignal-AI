@@ -1,0 +1,16 @@
+{
+  "rehab_result": "QUARANTINE_PERSIST",
+  "member_status": "QUARANTINED",
+  "applied_weight_for_member": null,
+  "probes": [
+    {"step": "last_good_checkpoint", "result": "FAILED", "notes": "No checkpoint found."},
+    {"step": "alternative_checkpoint", "result": "FAILED", "notes": "No alternative checkpoint found."},
+    {"step": "synthetic_warm_start", "result": "FAILED", "notes": "Synthetic warm-start not possible without checkpoint."},
+    {"step": "isolated_simulation", "result": "FAILED", "notes": "No simulation possible without member artifact."}
+  ],
+  "notes": "ensemble_3 remains quarantined due to missing checkpoint and simulation artifacts. Manual review required.",
+  "provenance": {
+    "source": "Instruction 180: Targeted Ensemble Member Rehabilitation",
+    "timestamp": "2025-11-16T10:05:00Z"
+  }
+}
