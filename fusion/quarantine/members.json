@@ -1,0 +1,9 @@
+[
+  {
+    "member": "ensemble_3",
+    "quarantined": true,
+    "timestamp": "2025-11-15T16:05:00Z",
+    "failure_reason": "Repeated recovery failure",
+    "probe_logs": ["FAIL after checkpoint, synthetic, and isolated simulation attempts"]
+  }
+]
