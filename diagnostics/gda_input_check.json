@@ -1,0 +1,42 @@
+{
+    "timestamp":  "2025-11-15T13:52:05.5425825Z",
+    "GDA_STATUS":  "INPUT_PIPELINE_BROKEN",
+    "files_checked":  [
+                          {
+                              "size_bytes":  463,
+                              "non_empty":  true,
+                              "file":  "state/policy_fusion_state.json",
+                              "exists":  true
+                          },
+                          {
+                              "size_bytes":  35,
+                              "non_empty":  true,
+                              "file":  "state/rdgl_policy_adjustments.json",
+                              "exists":  true
+                          },
+                          {
+                              "size_bytes":  0,
+                              "non_empty":  false,
+                              "file":  "state/adaptive_response_history.jsonl",
+                              "exists":  false
+                          },
+                          {
+                              "size_bytes":  322,
+                              "non_empty":  true,
+                              "file":  "state/mvcrs_horizon_coherence.json",
+                              "exists":  true
+                          },
+                          {
+                              "size_bytes":  40,
+                              "non_empty":  true,
+                              "file":  "state/mvcrs_multi_horizon_ensemble_state.json",
+                              "exists":  true
+                          },
+                          {
+                              "size_bytes":  698,
+                              "non_empty":  true,
+                              "file":  "state/mvcrs_governance_drift.json",
+                              "exists":  true
+                          }
+                      ]
+}
