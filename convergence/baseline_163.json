@@ -1,0 +1,8 @@
+{
+  "timestamp_utc": "2025-11-15T16:20:00Z",
+  "seed_convergence_score": 0.16,
+  "drift_influence": "low",
+  "horizon_influence": "low",
+  "fusion_weight_effect": "stable",
+  "raw_score": 0.16
+}
