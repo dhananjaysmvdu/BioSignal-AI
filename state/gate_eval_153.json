@@ -1,0 +1,7 @@
+{
+  "timestamp_utc": "2025-11-15T16:25:00Z",
+  "gate_convergence": false,
+  "gate_fusion": false,
+  "gate_trust": true,
+  "gate_alignment": true
+}
