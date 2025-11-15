@@ -1,0 +1,95 @@
+{
+  "escalation_type": "CONSENSUS_INFRASTRUCTURE_FAILURE",
+  "timestamp": "2025-11-15T14:38:00Z",
+  "status": "CRITICAL_BLOCKER",
+  "summary": "Federation consensus at 0% (catastrophic) - only 1 peer (local-self) with 0.0 score, blocking safe-mode exit",
+  "chain_of_failures": [
+    {
+      "step": 1,
+      "issue": "Safe-mode exit gates failed",
+      "blockers": ["FUSION_RED", "trust_locked", "convergence<0.40"]
+    },
+    {
+      "step": 2,
+      "issue": "Policy Fusion diagnostic → FUSION_RED confirmed",
+      "root_cause": "policy=RED (policy orchestrator)"
+    },
+    {
+      "step": 3,
+      "issue": "Policy orchestrator refreshed → still RED",
+      "root_cause": "consensus_pct=0.0 (federation)"
+    },
+    {
+      "step": 4,
+      "issue": "Weighted consensus re-run → still 0%",
+      "root_cause": "peers_checked=1, only local-self with score 0.0, no external peers"
+    }
+  ],
+  "immediate_impacts": [
+    "Policy remains RED → FUSION_RED persists",
+    "FUSION_RED → safe-mode exit blocked",
+    "Convergence cannot recover without policy clearance",
+    "Trust guard unlock ineffective while fusion RED"
+  ],
+  "root_cause_analysis": {
+    "primary": "Federation peer discovery/connectivity failure",
+    "evidence": [
+      "peers_checked=1 (expected: 3-5 configured peers)",
+      "ledger_weighted_agreement_pct=0.0",
+      "anchor_weighted_agreement_pct=0.0",
+      "bundle_weighted_agreement_pct=0.0",
+      "Only peer: local-self with score 0.0"
+    ],
+    "hypotheses": [
+      "Federation peer network unreachable or misconfigured",
+      "Peer discovery service not running",
+      "Network connectivity issue to external peers",
+      "Peer authentication/credentials expired or invalid",
+      "Federation database/state corrupted"
+    ]
+  },
+  "recommended_actions": [
+    {
+      "priority": 1,
+      "action": "Check federation peer configuration",
+      "commands": ["cat federation/peers_config.json", "grep 'peer' federation/*.json"]
+    },
+    {
+      "priority": 2,
+      "action": "Verify network connectivity to peers",
+      "commands": ["ping peer1.example.com", "curl -I https://peer1.example.com/health"]
+    },
+    {
+      "priority": 3,
+      "action": "Restart federation services",
+      "commands": ["systemctl restart federation-sync", "python scripts/federation/init_peers.py"]
+    },
+    {
+      "priority": 4,
+      "action": "Review federation logs for errors",
+      "files": ["logs/federation/*.log", "federation/error_log.jsonl"]
+    },
+    {
+      "priority": 5,
+      "action": "Manual consensus override (emergency only)",
+      "commands": ["python scripts/federation/emergency_consensus_override.py --set 100 --reason safe_mode_recovery"]
+    }
+  ],
+  "artifacts": [
+    "diagnostics/policy_fusion_diagnostic_20251115T143440Z.json",
+    "diagnostics/policy_fusion_failure_20251115T143600Z.json",
+    "diagnostics/policy_orchestrator_rerun_20251115T143700Z.log",
+    "diagnostics/weighted_consensus_rerun_20251115T143800Z.log",
+    "federation/weighted_consensus.json (0% consensus)"
+  ],
+  "branches_created": [
+    "fix/safe-exit-blocked-20251115T142206Z",
+    "fix/policy-fusion-investigate-20251115T143516Z"
+  ],
+  "next_steps": [
+    "Human operator must investigate federation peer connectivity",
+    "Once consensus restored >85%, re-run policy orchestrator",
+    "Once policy clears to YELLOW/GREEN, retry safe-mode exit",
+    "If consensus cannot be restored, consider emergency override procedure"
+  ]
+}
