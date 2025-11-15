@@ -1,0 +1,9 @@
+{
+  "schema_check": true,
+  "null_check": true,
+  "delta_check": false,
+  "freshness_check": true,
+  "contradiction_check": true,
+  "deltas_detected": [],
+  "classification": "PASS"
+}
