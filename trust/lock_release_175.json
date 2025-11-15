@@ -1,0 +1,15 @@
+{
+  "lock_transition_result": "APPLIED",
+  "sim_checks": {
+    "sim_fusion_level": "YELLOW",
+    "sim_alignment": "ALIGNED",
+    "sim_drift_spike_flag": false,
+    "sim_trust_response_time": 0.7
+  },
+  "post_checks": {
+    "fusion_level_post": "YELLOW",
+    "alignment_post": "ALIGNED",
+    "drift_flag_post": false,
+    "trust_response_post": 0.7
+  }
+}
