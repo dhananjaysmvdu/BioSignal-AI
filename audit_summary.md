@@ -1,6 +1,14 @@
 # Audit Summary
 
-<!-- MVCRS_POSTMERGE_FIXBRANCH: fix/mvcrs-gdse-20251115T091219Z 2025-11-15T14:40:00Z -->
+# Audit Summary
+
+<!-- MVCRS_POSTMERGE_FIX_PARTIAL: 2025-11-15T14:55:00Z -->
+**Post-Merge Convergence Status:** Score 0.4186 (caution range), alignment divergent
+**Recovery Status:** PARTIAL (score >= 0.40 but alignment not fully aligned; keep monitoring)
+**Action:** Maintain monitoring for 12 hours; safe-mode remains active until aligned status
+<!-- MVCRS_POSTMERGE_FIX_PARTIAL:END -->
+
+<!-- MVCRS_HOTFIX_READY: 2025-11-15T14:50:00Z -->
 **Hotfix Applied:** Convergence penalty logic bug corrected (score 0.2186 → 0.4186 post-fix)
 **Root Cause:** sources_count check was < 5 but only 4 sources defined; penalty always applied
 **Status:** Fix committed (8/8 convergence tests + 8/8 GDSE tests passing); ready for PR

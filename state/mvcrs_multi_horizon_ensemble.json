@@ -10,5 +10,5 @@
   "dominant_horizon": "short_term",
   "ensemble_confidence": 0.472,
   "explanation": "Ensemble forecast is dominated by short-term operational signals (100% contribution). 1-day instability risk is low (6.2%), 7-day risk is low (5.1%), and 30-day risk is low (4.9%). All horizons indicate stable governance trajectory.",
-  "timestamp": "2025-11-15T07:26:39.852088+00:00"
+  "timestamp": "2025-11-15T10:56:52.760207+00:00"
 }

@@ -1,3 +1,11 @@
 {
-  "stability_score": 0.7
+  "coherence_status": "aligned",
+  "short_term_signal": "stable",
+  "mid_term_projection": "normal",
+  "long_term_outlook": "stable",
+  "conflict_sources": [],
+  "instability_score": 0.02,
+  "governance_alignment_recommendation": "hold",
+  "confidence": 0.5,
+  "timestamp": "2025-11-15T10:57:26.397266+00:00"
 }
