@@ -1,0 +1,36 @@
+{
+    "timestamp":  "2025-11-15T13:53:13.5647601Z",
+    "files_freshness":  [
+                            {
+                                "timestamp":  "MISSING",
+                                "file":  "state/policy_fusion_state.json",
+                                "age_hours":  null,
+                                "stale":  true
+                            },
+                            {
+                                "timestamp":  "MISSING",
+                                "file":  "state/rdgl_policy_adjustments.json",
+                                "age_hours":  null,
+                                "stale":  true
+                            },
+                            {
+                                "timestamp":  "2025-11-15T10:57:26.397266+00:00",
+                                "file":  "state/mvcrs_horizon_coherence.json",
+                                "age_hours":  -2.57,
+                                "stale":  false
+                            },
+                            {
+                                "timestamp":  "MISSING",
+                                "file":  "state/mvcrs_multi_horizon_ensemble_state.json",
+                                "age_hours":  null,
+                                "stale":  true
+                            },
+                            {
+                                "timestamp":  "2025-11-15T07:36:11.544149+00:00",
+                                "file":  "state/mvcrs_governance_drift.json",
+                                "age_hours":  0.78,
+                                "stale":  false
+                            }
+                        ],
+    "GDA_STATUS":  "OK"
+}

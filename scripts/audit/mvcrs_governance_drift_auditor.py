@@ -378,7 +378,7 @@ def run_gda_engine() -> int:
         update_audit_marker('FAILED')
         return 2
     update_audit_marker('UPDATED')
-    print('✓ Governance drift audit completed')
+    print('[OK] Governance drift audit completed')
     return 0
 
 if __name__ == '__main__':

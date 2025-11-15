@@ -196,7 +196,7 @@ def run_convergence_engine() -> bool:
     # Load all input sources
     drift_state = _load_json(_p('state/mvcrs_stabilization_profile.json'))
     coherence_state = _load_json(_p('state/mvcrs_horizon_coherence.json'))
-    ensemble_state = _load_json(_p('state/mvcrs_multi_horizon_ensemble_state.json'))
+    ensemble_state = _load_json(_p('state/mvcrs_multi_horizon_ensemble.json'))
     rdgl_state = _load_json(_p('state/rdgl_policy_adjustments.json'))
     
     sources_present = {
