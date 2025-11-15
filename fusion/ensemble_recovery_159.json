@@ -1,0 +1,25 @@
+{
+  "timestamp_utc": "2025-11-15T16:00:00Z",
+  "failed_members": ["ensemble_3"],
+  "members_for_manual_review": ["ensemble_3"],
+  "member_status": {
+    "ensemble_1": "OK",
+    "ensemble_2": "OK",
+    "ensemble_3": "FAIL"
+  },
+  "weight_health": "NORMALIZED",
+  "ensemble_status": "ENGAGED",
+  "confidence_level": 0.12,
+  "recovery_actions": [
+    "alternative_checkpoint_attempted",
+    "degraded_synthetic_warmstart_attempted",
+    "isolated_simulation_attempted",
+    "weight_map_rebuilt",
+    "confidence_bootstrapped"
+  ],
+  "provenance": {
+    "sources": ["ensemble_recovery_158.json", "policy_fusion_state.json", "resync_scan_20251115T153200Z/convergence.json"],
+    "formula": "confidence_level = min(0.25, median(0.094, 0.2, 0.2, 0.12))"
+  },
+  "recovery_outcome": "PARTIAL_FAIL"
+}
