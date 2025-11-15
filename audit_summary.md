@@ -1,5 +1,11 @@
 # Audit Summary
 
+<!-- MVCRS_POSTMERGE_FIXBRANCH: fix/mvcrs-gdse-20251115T091219Z 2025-11-15T14:40:00Z -->
+**Hotfix Applied:** Convergence penalty logic bug corrected (score 0.2186 → 0.4186 post-fix)
+**Root Cause:** sources_count check was < 5 but only 4 sources defined; penalty always applied
+**Status:** Fix committed (8/8 convergence tests + 8/8 GDSE tests passing); ready for PR
+<!-- MVCRS_POSTMERGE_FIXBRANCH:END -->
+
 <!-- MVCRS_POSTMERGE_DIAG_START: 2025-11-15T14:37:07Z -->
 **Post-Merge Divergence Investigation:** convergence_score 0.466 → 0.2186 (diagnostic runbook active)
 **Safe-Mode:** ENABLED (state/mvcrs_safe_mode.lock created)
