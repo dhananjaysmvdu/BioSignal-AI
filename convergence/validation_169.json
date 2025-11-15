@@ -1,0 +1,8 @@
+{
+  "last3_scores": [0.22, 0.24, 0.26],
+  "max_negative_spike": 0.02,
+  "ma_slope": 0.04,
+  "overall_slope": 0.10,
+  "per_iteration_alignment": ["ALIGNED", "ALIGNED", "ALIGNED"],
+  "classification": "PASS"
+}
