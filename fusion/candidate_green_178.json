@@ -1,0 +1,12 @@
+{
+  "candidate_result": "MARGINAL",
+  "final_fusion_level": "YELLOW",
+  "final_confidence": 0.13,
+  "members_reactivated": [],
+  "members_quarantined_during_test": ["ensemble_3"],
+  "per_probe_fusion_levels": ["YELLOW", "YELLOW", "YELLOW"],
+  "provenance": {
+    "source": "Instruction 178: Fusion Re-evaluation (candidate-GREEN)",
+    "timestamp": "2025-11-16T09:55:00Z"
+  }
+}
