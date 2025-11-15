@@ -1,0 +1,10 @@
+{
+  "unlock_result": "UNLOCKED",
+  "cycles_passed": 3,
+  "metrics_summary": {
+    "trust_variability_mean": 0.009,
+    "trust_variability_max": 0.012,
+    "fusion_confidence_mean": 0.13,
+    "fusion_confidence_max": 0.15
+  }
+}

@@ -1,8 +1,8 @@
 {
   "locked": false,
-  "lock_state": "SOFT_LOCK",
-  "locked_at": "2025-11-16T09:30:00Z",
-  "reason": "Instruction 175: Controlled transition HARD_LOCK -> SOFT_LOCK",
+  "lock_state": "UNLOCKED",
+  "locked_at": "2025-11-16T09:45:00Z",
+  "reason": "Instruction 176: Final unlock after 3 stable cycles",
   "metrics": {
     "integrity": 97.5,
     "consensus": 0.0,
