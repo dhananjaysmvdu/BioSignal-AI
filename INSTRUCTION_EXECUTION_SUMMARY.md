@@ -537,6 +537,73 @@ Critical Achievement: System now closes observation→prediction→response loop
 
 ---
 
+## Phase XL — MV-CRS Horizon Coherence Engine (HCE)
+
+**Instructions Executed**:
+1. Horizon Coherence Engine (`mvcrs_horizon_coherence.py`) — reconciles short-term, mid-term, and 45-day HLGS outlooks into a unified forecast
+2. Divergence Classification — pairwise horizon deltas (short_vs_mid, short_vs_long, mid_vs_long) map to aligned / tension / conflict
+3. Instability Scoring — weighted blend: divergence (×0.3) + forecast drift (×0.35) + fusion drift (×0.2) + long-term instability (×0.15) + severe bonus
+4. Confidence Scoring — completeness × consistency × HLGS stability with penalty when completeness <50%
+5. CI Workflow (`mvcrs_horizon_coherence.yml`) — daily 08:00 UTC (after HLGS), conflict gating: coherence_status=conflict & confidence>0.65 → fail + fix branch
+6. Portal Integration — “Horizon Coherence (Short / Mid / Long)” card with status badge, signals, conflicts, instability %, recommendation, confidence (15s refresh)
+7. Test Suite (8 tests) — alignment, tension, conflict, divergence cluster, instability bounds, confidence reduction, fix-branch simulation, idempotent marker
+8. Documentation (`PHASE_XL_HORIZON_COHERENCE.md`) — three-horizon model, divergence math, scoring formulas, UX semantics, safety architecture
+
+**Three-Horizon Normalization**:
+- Short-Term → `stable|quiet|escalating|intervening`
+- Mid-Term → `normal|watch|elevated`
+- Long-Term → `stable|volatile|critical`
+
+**Coherence Rules**:
+- `max_diff <0.30` → aligned
+- `0.30–0.59` (no ≥2 contradictions) → tension
+- `≥0.60` OR ≥2 contradictions (deltas ≥0.50) → conflict
+
+**Instability Metric**:
+```
+instability = divergence*0.3 + forecast*0.35 + fusion_drift*0.2 + long_instab*0.15 (+0.1 severe bonus)
+```
+Severe bonus when forecast>0.9 AND long_instab>0.9.
+
+**Alignment Recommendations**:
+- aligned & instability<0.40 → hold
+- tension OR 0.40≤instability<0.70 → stabilize
+- conflict OR instability≥0.70 OR divergence cluster → intervene
+
+**Confidence**:
+```
+confidence = completeness*0.4 + consistency*0.3 + hlgs_factor*0.3
+if completeness<0.5: confidence *= 0.75
+```
+
+**Safety Constraints**:
+- Atomic writes: 1s/3s/9s retry
+- Idempotent audit marker: `<!-- MVCRS_HCE: UPDATED <UTC> -->`
+- CI markers: VERIFIED / CONFLICT
+- Fix branch: `fix/mvcrs-hce-<timestamp>` on persistent failure or CI conflict
+- Clamping: instability & confidence forced to [0.0, 1.0]
+
+**Artifacts**:
+- `scripts/mvcrs/mvcrs_horizon_coherence.py`
+- `state/mvcrs_horizon_coherence.json`
+- `logs/mvcrs_hce_log.jsonl`
+- `.github/workflows/mvcrs_horizon_coherence.yml`
+- `portal/index.html` (Horizon Coherence card)
+- `tests/mvcrs/test_hce_engine.py`
+- `PHASE_XL_HORIZON_COHERENCE.md`
+
+**Validation**:
+- 8/8 HCE tests passing (0.61s)
+- Full MV-CRS suite (with HLGS): expected 83 tests after inclusion
+- Conflict gating logic exercised via tests (exit codes 0/1/2 scenarios covered)
+
+**Meta-Governance Expansion**:
+- Completes temporal reconciliation layer: prevents contradictory autonomic directives between immediate responses, emerging drifts, and strategic plans.
+
+**Summary Last Updated**: 2025-11-15T08:20:00Z
+
+---
+
 ## Phase XXXV — MV-CRS Escalation Lifecycle Orchestration
 
 **Instructions Executed**:

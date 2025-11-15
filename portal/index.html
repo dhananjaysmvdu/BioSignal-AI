@@ -409,6 +409,50 @@
                     </div>
                 </div>
             </div>
+
+            <!-- Horizon Coherence (Short / Mid / Long) -->
+            <div class="metric-card">
+                <div class="metric-header">
+                    <span class="metric-title">Horizon Coherence (Short / Mid / Long)</span>
+                    <span class="status-badge" id="hce-status-badge">—</span>
+                </div>
+                <div class="metric-value" style="font-size:1.5em;" id="hce-coherence-value">—</div>
+                <div class="metric-label">Overall Coherence Status</div>
+                <div style="margin-top:20px;">
+                    <div class="metric-detail">
+                        <span class="detail-label">Short-Term Signal</span>
+                        <span class="detail-value" id="hce-short-signal">—</span>
+                    </div>
+                    <div class="metric-detail">
+                        <span class="detail-label">Mid-Term Projection</span>
+                        <span class="detail-value" id="hce-mid-projection">—</span>
+                    </div>
+                    <div class="metric-detail">
+                        <span class="detail-label">Long-Term Outlook</span>
+                        <span class="detail-value" id="hce-long-outlook">—</span>
+                    </div>
+                    <div class="metric-detail">
+                        <span class="detail-label">Conflict Sources</span>
+                        <span class="detail-value" id="hce-conflicts">—</span>
+                    </div>
+                    <div class="metric-detail">
+                        <span class="detail-label">Instability Score</span>
+                        <span class="detail-value" id="hce-instability">—</span>
+                    </div>
+                    <div class="metric-detail">
+                        <span class="detail-label">Alignment Recommendation</span>
+                        <span class="detail-value" id="hce-recommendation">—</span>
+                    </div>
+                    <div class="metric-detail">
+                        <span class="detail-label">Confidence</span>
+                        <span class="detail-value" id="hce-confidence">—</span>
+                    </div>
+                    <div class="metric-detail">
+                        <span class="detail-label">Last Updated</span>
+                        <span class="detail-value" id="hce-last-updated">—</span>
+                    </div>
+                </div>
+            </div>
             
             <!-- Integrity Card -->
             <div class="metric-card">
@@ -1816,6 +1860,71 @@
         setInterval(loadLongHorizonPlan, 15000);
 
         // Load Human Approval Status
+        // Load Horizon Coherence
+        async function loadHorizonCoherence(){
+            try{
+                const response = await fetch('../state/mvcrs_horizon_coherence.json', {cache:'no-store'});
+                if(!response.ok){
+                    document.getElementById('hce-coherence-value').textContent='—';
+                    document.getElementById('hce-short-signal').textContent='—';
+                    document.getElementById('hce-mid-projection').textContent='—';
+                    document.getElementById('hce-long-outlook').textContent='—';
+                    document.getElementById('hce-conflicts').textContent='—';
+                    document.getElementById('hce-instability').textContent='—';
+                    document.getElementById('hce-recommendation').textContent='—';
+                    document.getElementById('hce-confidence').textContent='—';
+                    document.getElementById('hce-last-updated').textContent='—';
+                    document.getElementById('hce-status-badge').textContent='—';
+                    return;
+                }
+                const data = await response.json();
+                if(data){
+                    const status = data.coherence_status ?? 'aligned';
+                    const shortSig = data.short_term_signal ?? 'stable';
+                    const midProj = data.mid_term_projection ?? 'normal';
+                    const longOut = data.long_term_outlook ?? 'stable';
+                    const conflicts = data.conflict_sources ?? [];
+                    const instability = data.instability_score ?? 0.0;
+                    const rec = data.governance_alignment_recommendation ?? 'hold';
+                    const confidence = data.confidence ?? 0.0;
+                    const timestamp = data.timestamp ?? '—';
+
+                    document.getElementById('hce-coherence-value').textContent=status.toUpperCase();
+                    document.getElementById('hce-short-signal').textContent=shortSig.toUpperCase();
+                    document.getElementById('hce-mid-projection').textContent=midProj.toUpperCase();
+                    document.getElementById('hce-long-outlook').textContent=longOut.toUpperCase();
+                    document.getElementById('hce-conflicts').textContent=conflicts.length ? conflicts.map(c=>c.replace(/_/g,' ').toUpperCase()).join(', ') : 'NONE';
+                    document.getElementById('hce-instability').textContent=(instability*100).toFixed(1) + '%';
+                    document.getElementById('hce-recommendation').textContent=rec.toUpperCase();
+                    document.getElementById('hce-confidence').textContent=(confidence*100).toFixed(1) + '%';
+                    if(timestamp !== '—'){
+                        const ts = new Date(timestamp);
+                        document.getElementById('hce-last-updated').textContent=ts.toLocaleString();
+                    } else {
+                        document.getElementById('hce-last-updated').textContent='—';
+                    }
+                    const badge = document.getElementById('hce-status-badge');
+                    if(status === 'aligned'){
+                        badge.className='status-badge status-green';
+                        badge.textContent='ALIGNED';
+                    } else if(status === 'tension') {
+                        badge.className='status-badge';
+                        badge.style.background='#f59e0b'; badge.style.color='white';
+                        badge.textContent='TENSION';
+                    } else if(status === 'conflict') {
+                        badge.className='status-badge';
+                        badge.style.background='#ef4444'; badge.style.color='white';
+                        badge.textContent='CONFLICT';
+                    } else {
+                        badge.className='status-badge';
+                        badge.style.background='#6b7280'; badge.style.color='white';
+                        badge.textContent='UNKNOWN';
+                    }
+                }
+            } catch(e){ /* silent */ }
+        }
+        loadHorizonCoherence();
+        setInterval(loadHorizonCoherence, 15000);
         async function loadApprovalStatus(){
             try{
                 const response = await fetch('../state/approval_state.json', {cache:'no-store'});
