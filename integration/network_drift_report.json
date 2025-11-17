@@ -1,32 +1,27 @@
 {
-  "timestamp": "2025-11-13T18:00:00+00:00",
+  "timestamp": "2025-11-17T04:46:50+00:00",
   "sources": {
     "local": {
       "integrity_score": 97.5
     },
     "zenodo": {
-      "status": "ok",
-      "source": "zenodo",
-      "title": "Reflex Governance Architecture v1.0",
-      "doi": "10.5281/zenodo.14173152",
-      "created": "2025-11-11T14:50:00Z"
+      "status": "error",
+      "source": "zenodo"
     },
     "github": {
       "status": "ok",
       "source": "github",
       "name": "BioSignal-AI",
-      "description": "Reflex Governance Architecture",
-      "pushed_at": "2025-11-13T18:00:00Z"
+      "description": "Multimodal skin lesion classifier (image + metadata) – research prototype",
+      "pushed_at": "2025-11-17T04:05:53Z"
     }
   },
   "cross_instance_drift": {
-    "timestamp": "2025-11-13T18:00:00+00:00",
+    "timestamp": "2025-11-17T04:46:50+00:00",
     "local_integrity": 97.5,
     "external_integrity_expected": 98.0,
     "drift_percentage": 0.51,
     "drift_threshold": 0.5,
-    "status": "acceptable"
-  },
-  "section": "general",
-  "message": "auto-filled"
+    "status": "drifting"
+  }
 }
