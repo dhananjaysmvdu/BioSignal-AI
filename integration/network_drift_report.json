@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-01-19T05:05:26+00:00",
+  "timestamp": "2026-01-26T05:07:44+00:00",
   "sources": {
     "local": {
       "integrity_score": 97.5
@@ -13,11 +13,11 @@
       "source": "github",
       "name": "BioSignal-AI",
       "description": "Multimodal skin lesion classifier (image + metadata) – research prototype",
-      "pushed_at": "2026-01-19T04:43:02Z"
+      "pushed_at": "2026-01-26T04:46:02Z"
     }
   },
   "cross_instance_drift": {
-    "timestamp": "2026-01-19T05:05:26+00:00",
+    "timestamp": "2026-01-26T05:07:44+00:00",
     "local_integrity": 97.5,
     "external_integrity_expected": 98.0,
     "drift_percentage": 0.51,
