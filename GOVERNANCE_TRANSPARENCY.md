@@ -1,6 +1,6 @@
 # Governance Transparency Manifest
 
-Generated: 2026-06-10T07:08:26+00:00
+Generated: 2026-06-11T08:03:00+00:00
 
 - Integrity Score: 97.5% — Violations: 0
 
@@ -8,17 +8,17 @@ Generated: 2026-06-10T07:08:26+00:00
 
 Name | Status | Updated (UTC) | Size | Notes
 ---|---|---:|---:|---
-Audit Summary | present | 2026-06-10T07:08:25+00:00 | 7047 | Consolidated audit run markers and notes
-Reflex Integrity | present | 2026-06-10T07:08:25+00:00 | 173 | Integrity score, violations, and warnings
-Reflex Self-Audit | present | 2026-06-10T07:08:25+00:00 | 802 | Comprehensive reflex health and classification
-Reflex Reinforcement | present | 2026-06-10T07:08:25+00:00 | 408 | Reinforcement index and alignment
-Confidence Adaptation | present | 2026-06-10T07:08:25+00:00 | 97 | Confidence-weighted adaptation details
+Audit Summary | present | 2026-06-11T08:02:59+00:00 | 7047 | Consolidated audit run markers and notes
+Reflex Integrity | present | 2026-06-11T08:02:59+00:00 | 173 | Integrity score, violations, and warnings
+Reflex Self-Audit | present | 2026-06-11T08:02:59+00:00 | 802 | Comprehensive reflex health and classification
+Reflex Reinforcement | present | 2026-06-11T08:02:59+00:00 | 408 | Reinforcement index and alignment
+Confidence Adaptation | present | 2026-06-11T08:02:59+00:00 | 97 | Confidence-weighted adaptation details
 Governance Health | missing |  | 0 | Composite Governance Health Score (GHS)
-Health Timeline CSV | present | 2026-06-10T07:08:25+00:00 | 283 | Reflex health timeline export
-Health Dashboard | present | 2026-06-10T07:08:25+00:00 | 11015 | HTML dashboard with reflex health charts
-Integrity Metrics Registry | present | 2026-06-10T07:08:25+00:00 | 568 | Longitudinal integrity metrics for analytics
-Provenance Dashboard | present | 2026-06-10T07:08:25+00:00 | 22958 | Governance pulse dashboard
-Governance Policy | present | 2026-06-10T07:08:25+00:00 | 630 | Adaptive governance coefficients and thresholds
+Health Timeline CSV | present | 2026-06-11T08:02:59+00:00 | 283 | Reflex health timeline export
+Health Dashboard | present | 2026-06-11T08:02:59+00:00 | 11015 | HTML dashboard with reflex health charts
+Integrity Metrics Registry | present | 2026-06-11T08:02:59+00:00 | 568 | Longitudinal integrity metrics for analytics
+Provenance Dashboard | present | 2026-06-11T08:02:59+00:00 | 22958 | Governance pulse dashboard
+Governance Policy | present | 2026-06-11T08:02:59+00:00 | 630 | Adaptive governance coefficients and thresholds
 
 ## Integrity Metrics Registry (last 10)
 
