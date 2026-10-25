@@ -16,7 +16,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Optional
 
-ROOT = Path(__file__).resolve().parents[1]
+ROOT = Path(__file__).resolve().parents[2]
 CONFIG = ROOT / "ethics_engine" / "ethics_config.yaml"
 FAIRNESS_METRICS = ROOT / "observatory" / "fairness_metrics.csv"
 AUDIT_SUMMARY = ROOT / "audit_summary.md"
